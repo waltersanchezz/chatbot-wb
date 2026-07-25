@@ -1,0 +1,39 @@
+services:
+  - type: web
+    name: rodacenter-ai
+    runtime: node
+    plan: free
+    region: oregon
+    buildCommand: npm install && npm run build
+    startCommand: npm start
+    healthCheckPath: /health
+    envVars:
+      - key: NODE_ENV
+        value: production
+      - key: NODE_VERSION
+        value: "20"
+      - key: APP_NAME
+        value: Rodacenter AI
+      - key: COMPANY_NAME
+        value: Rodacenter Manizales
+      - key: AI_PROVIDER
+        value: rule-based
+      - key: LOG_LEVEL
+        value: info
+      - key: LOG_DIR
+        value: logs
+      - key: SESSION_TTL_MINUTES
+        value: "120"
+      - key: WHATSAPP_API_VERSION
+        value: v21.0
+      # Configurar en el dashboard de Render (no commitear secretos):
+      - key: WHATSAPP_VERIFY_TOKEN
+        sync: false
+      - key: WHATSAPP_ACCESS_TOKEN
+        sync: false
+      - key: WHATSAPP_PHONE_NUMBER_ID
+        sync: false
+      - key: TELEGRAM_BOT_TOKEN
+        sync: false
+      - key: TELEGRAM_CHAT_ID
+        sync: false
