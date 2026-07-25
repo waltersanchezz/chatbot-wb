@@ -1,0 +1,69 @@
+<!DOCTYPE html>
+<html lang="es">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Rodacenter AI · CRM</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Oswald:wght@500;600;700&family=Manrope:wght@400;500;600;700&display=swap"
+      rel="stylesheet"
+    />
+    <link rel="stylesheet" href="/dashboard/styles.css" />
+  </head>
+  <body>
+    <div class="bg-glow" aria-hidden="true"></div>
+    <div class="bg-grid" aria-hidden="true"></div>
+
+    <div class="app">
+      <header class="topbar">
+        <div class="brand-block">
+          <p class="brand-eyebrow">CRM · WhatsApp</p>
+          <h1 class="brand">RODACENTER</h1>
+          <p class="brand-sub">Panel de clientes · Rodacenter AI</p>
+        </div>
+        <div class="topbar-meta">
+          <span class="pill" id="today-label">Hoy</span>
+          <span class="pill pill-muted" id="live-pill">En vivo</span>
+        </div>
+      </header>
+
+      <section class="stats" aria-label="Estadísticas">
+        <article class="stat-card" data-stat="today">
+          <span class="stat-label">Clientes de hoy</span>
+          <strong class="stat-value" id="stat-today">0</strong>
+        </article>
+        <article class="stat-card" data-stat="pending">
+          <span class="stat-label">Nuevos</span>
+          <strong class="stat-value" id="stat-pending">0</strong>
+        </article>
+        <article class="stat-card" data-stat="sold">
+          <span class="stat-label">Vendidos</span>
+          <strong class="stat-value" id="stat-sold">0</strong>
+        </article>
+        <article class="stat-card" data-stat="lost">
+          <span class="stat-label">Perdidos</span>
+          <strong class="stat-value" id="stat-lost">0</strong>
+        </article>
+      </section>
+
+      <section class="clients-section">
+        <div class="section-head">
+          <h2>Clientes</h2>
+          <div class="filters" role="tablist" aria-label="Filtrar por estado">
+            <button class="filter-btn is-active" data-filter="all" type="button">Todos</button>
+            <button class="filter-btn" data-filter="nuevo" type="button">Nuevos</button>
+            <button class="filter-btn" data-filter="cotizado" type="button">Cotizados</button>
+            <button class="filter-btn" data-filter="vendido" type="button">Vendidos</button>
+            <button class="filter-btn" data-filter="perdido" type="button">Perdidos</button>
+          </div>
+        </div>
+        <div class="clients-grid" id="clients-grid"></div>
+        <p class="empty-state" id="empty-state" hidden>No hay clientes en este filtro.</p>
+      </section>
+    </div>
+
+    <script src="/dashboard/app.js"></script>
+  </body>
+</html>

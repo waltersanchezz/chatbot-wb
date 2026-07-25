@@ -1,0 +1,27 @@
+{
+  "version": "1.0",
+  "brand": "Willard",
+  "vehicles": [
+    {
+      "brand": "Renault",
+      "model": "Twingo",
+      "aliases": ["twingo"],
+      "yearFrom": null,
+      "yearTo": null,
+      "options": [
+        {
+          "soundSystem": false,
+          "reference": "36D-750",
+          "amperage": 750,
+          "caseType": "36D"
+        },
+        {
+          "soundSystem": true,
+          "reference": "36D-850",
+          "amperage": 850,
+          "caseType": "36D"
+        }
+      ]
+    }
+  ]
+}
