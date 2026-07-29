@@ -1,9 +1,11 @@
 import { readFileSync } from 'fs';
 import path from 'path';
 import type {
+  WillardApplicationHit,
   WillardBatteryKnowledge,
   WillardBatteryMatch,
   WillardLookupQuery,
+  WillardReferenceSpec,
 } from '../../domain/ports/WillardBatteryKnowledge';
 import { logger } from '../logging/logger';
 
@@ -87,6 +89,22 @@ export class FileWillardBatteryKnowledge implements WillardBatteryKnowledge {
     }
 
     return matches;
+  }
+
+  /**
+   * Stubs del catálogo estructurado: este adaptador solo sirve el JSON legado.
+   * La implementación real está en CatalogFileWillardBatteryKnowledge.
+   */
+  findApplicationsByVehicle(): WillardApplicationHit[] {
+    return [];
+  }
+
+  findApplicationsByReference(): WillardApplicationHit[] {
+    return [];
+  }
+
+  findReferenceSpec(): WillardReferenceSpec | null {
+    return null;
   }
 
   private matchesVehicle(
