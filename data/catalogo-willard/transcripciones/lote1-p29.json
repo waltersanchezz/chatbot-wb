@@ -1,0 +1,92 @@
+[
+  {
+    "marca": "JOHN DEERE",
+    "categoria": "Maquinaria agricola",
+    "modelo": "Tractores",
+    "version": null,
+    "textoCatalogo": "Tractores",
+    "referencias": {
+      "willardAgmEfb": [],
+      "increibleTitanio": [],
+      "willard": [],
+      "extrema": ["31H-1250 P"]
+    },
+    "fuente": { "lote": 1, "imagen": "lote1-img-29.jpeg", "fila": 1 },
+    "revisionPendiente": false
+  },
+  {
+    "marca": "KUBOTA",
+    "categoria": "Maquinaria agricola",
+    "modelo": "L3600 / L4000 / L4200",
+    "version": null,
+    "textoCatalogo": "L3600/L4000/L4200",
+    "referencias": {
+      "willardAgmEfb": ["27-80 EFB"],
+      "increibleTitanio": ["27AI-1250"],
+      "willard": ["27AI-1150"],
+      "extrema": ["27AI-1000"]
+    },
+    "fuente": { "lote": 1, "imagen": "lote1-img-29.jpeg", "fila": 2 },
+    "revisionPendiente": true
+  },
+  {
+    "marca": "KUBOTA",
+    "categoria": "Maquinaria agricola",
+    "modelo": "M110 / M120",
+    "version": null,
+    "textoCatalogo": "M110/ M120",
+    "referencias": {
+      "willardAgmEfb": [],
+      "increibleTitanio": [],
+      "willard": ["4DBT-1450"],
+      "extrema": ["4DBT-1350"]
+    },
+    "fuente": { "lote": 1, "imagen": "lote1-img-29.jpeg", "fila": 3 },
+    "revisionPendiente": true
+  },
+  {
+    "marca": "KUBOTA",
+    "categoria": "Maquinaria agricola",
+    "modelo": "Series M4000 / series M5000",
+    "version": null,
+    "textoCatalogo": "Series M4000/series M5000",
+    "referencias": {
+      "willardAgmEfb": [],
+      "increibleTitanio": [],
+      "willard": ["31H-1250 P"],
+      "extrema": ["31H-1250 P"]
+    },
+    "fuente": { "lote": 1, "imagen": "lote1-img-29.jpeg", "fila": 4 },
+    "revisionPendiente": true
+  },
+  {
+    "marca": "MASSEY FERGUSON",
+    "categoria": "Maquinaria agricola",
+    "modelo": "Tractores",
+    "version": null,
+    "textoCatalogo": "Tractores",
+    "referencias": {
+      "willardAgmEfb": [],
+      "increibleTitanio": [],
+      "willard": ["31H-1250 P"],
+      "extrema": ["31H-1250 P"]
+    },
+    "fuente": { "lote": 1, "imagen": "lote1-img-29.jpeg", "fila": 5 },
+    "revisionPendiente": true
+  },
+  {
+    "marca": "STEWART & STEVENSON",
+    "categoria": "Maquinaria agricola",
+    "modelo": "Bombas 55P3500",
+    "version": null,
+    "textoCatalogo": "Bombas 55P3500",
+    "referencias": {
+      "willardAgmEfb": ["27-80 EFB"],
+      "increibleTitanio": ["27AI-1250"],
+      "willard": ["27AI-1150"],
+      "extrema": ["27AI-1000"]
+    },
+    "fuente": { "lote": 1, "imagen": "lote1-img-29.jpeg", "fila": 6 },
+    "revisionPendiente": false
+  }
+]
