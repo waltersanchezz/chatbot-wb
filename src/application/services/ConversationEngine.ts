@@ -1,6 +1,5 @@
 import type { Conversation, ConversationContext } from '../../domain/entities/Conversation';
 import type { ProductRepository } from '../../domain/ports/ProductRepository';
-import type { WillardBatteryKnowledge } from '../../domain/ports/WillardBatteryKnowledge';
 import type { ConversationIntent } from '../../shared/types';
 import {
   batteryNextQuestion,
@@ -15,6 +14,7 @@ import { handoffMessage } from '../flows/handoffFlow';
 import { categoryPrompt, welcomeMessage } from '../flows/welcomeFlow';
 import { ContextExtractor } from './ContextExtractor';
 import { IntentDetector } from './IntentDetector';
+import { RecommendationService } from './RecommendationService';
 import { SecurityGuard } from './SecurityGuard';
 
 export interface EngineConfig {
@@ -34,7 +34,7 @@ export class ConversationEngine {
 
   constructor(
     private readonly products: ProductRepository,
-    private readonly willardKnowledge: WillardBatteryKnowledge,
+    private readonly recommendations: RecommendationService,
     private readonly config: EngineConfig,
   ) {}
 
@@ -148,14 +148,18 @@ export class ConversationEngine {
       };
     }
 
-    const options = this.willardKnowledge.findRecommendations({
-      brand: context.vehicle.brand,
-      model: context.vehicle.model,
-      year: context.vehicle.year,
-      soundSystem: Boolean(context.battery.soundSystem),
+    const marca = context.vehicle.brand?.trim() || context.vehicle.model?.trim() || '';
+    const modelo =
+      context.vehicle.brand && context.vehicle.model
+        ? context.vehicle.model
+        : undefined;
+
+    const result = this.recommendations.recommendByVehicle({
+      marca,
+      modelo,
     });
 
-    const recommendation = formatBatteryRecommendation(context, options);
+    const recommendation = formatBatteryRecommendation(context, result);
 
     return {
       reply: recommendation.text,
@@ -164,7 +168,7 @@ export class ConversationEngine {
         stage: recommendation.stage,
         needsHumanHandoff: Boolean(recommendation.needsHandoff),
         handoffReason: recommendation.handoffReason,
-        recommendedProductIds: options.map((o) => `willard:${o.reference}`),
+        recommendedProductIds: result.options.map((o) => `willard:${o.reference}`),
       },
     };
   }

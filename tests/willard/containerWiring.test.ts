@@ -5,7 +5,7 @@ import { FileWillardBatteryKnowledge } from '../../src/infrastructure/catalog/Fi
 import { buildContainer } from '../../src/infrastructure/di/container';
 
 describe('buildContainer Willard DI (PR1)', () => {
-  it('injects RecommendationService over the catalog adapter without replacing legacy knowledge', () => {
+  it('injects RecommendationService over the catalog adapter and wires it into ConversationEngine', () => {
     const container = buildContainer();
 
     expect(container.willardKnowledge).toBeInstanceOf(FileWillardBatteryKnowledge);

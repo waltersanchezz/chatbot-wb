@@ -1,5 +1,8 @@
 import type { ConversationContext } from '../../domain/entities/Conversation';
-import type { WillardBatteryMatch } from '../../domain/ports/WillardBatteryKnowledge';
+import type {
+  RecommendationResult,
+  WillardRecommendedOption,
+} from '../../domain/willard/catalogTypes';
 
 export interface FlowReply {
   text: string;
@@ -71,19 +74,23 @@ export function batteryNextQuestion(ctx: ConversationContext): FlowReply {
   };
 }
 
-function formatWillardOption(option: WillardBatteryMatch): string {
-  return [
-    `🔋 Willard ${option.reference}`,
-    `⚡ ${option.amperage} A`,
-    `📦 Caja ${option.caseType}`,
-  ].join('\n');
+/** Presentación mínima compatible con el flujo actual; el PR3 mejorará el formatter. */
+function formatWillardOption(option: WillardRecommendedOption): string {
+  const lines = [`🔋 Willard ${option.reference}`];
+  if (option.spec?.c20Ah != null) {
+    lines.push(`⚡ ${option.spec.c20Ah} A`);
+  }
+  if (option.spec?.terminal) {
+    lines.push(`📦 ${option.spec.terminal}`);
+  }
+  return lines.join('\n');
 }
 
 export function formatBatteryRecommendation(
   _ctx: ConversationContext,
-  options: WillardBatteryMatch[],
+  result: RecommendationResult,
 ): FlowReply {
-  if (options.length === 0) {
+  if (result.outcome !== 'matched' || result.options.length === 0) {
     return {
       text: [
         '🚗 Con los datos de tu vehículo voy a validar la referencia Willard correcta.',
@@ -96,7 +103,7 @@ export function formatBatteryRecommendation(
     };
   }
 
-  const blocks = options.map((o) => formatWillardOption(o)).join('\n\n');
+  const blocks = result.options.map((o) => formatWillardOption(o)).join('\n\n');
 
   return {
     text: ['🔋 Para tu vehículo te recomiendo:', '', blocks, '', CLOSING].join('\n'),

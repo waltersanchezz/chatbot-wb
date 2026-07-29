@@ -49,7 +49,7 @@ export function buildContainer() {
       })
     : new ConsoleMessagingProvider();
 
-  const engine = new ConversationEngine(products, willardKnowledge, {
+  const engine = new ConversationEngine(products, recommendationService, {
     appName: env.appName,
     companyName: env.companyName,
   });
