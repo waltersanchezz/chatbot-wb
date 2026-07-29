@@ -1,11 +1,13 @@
 import { ConversationEngine } from '../../application/services/ConversationEngine';
 import { LeadService } from '../../application/services/LeadService';
 import { NotificationService } from '../../application/services/NotificationService';
+import { RecommendationService } from '../../application/services/RecommendationService';
 import { HandleIncomingMessage } from '../../application/use-cases/HandleIncomingMessage';
 import type { AIProvider } from '../../domain/ports/AIProvider';
 import type { MessagingProvider } from '../../domain/ports/MessagingProvider';
 import { OpenAIProviderStub } from '../ai/OpenAIProviderStub';
 import { RuleBasedAIProvider } from '../ai/RuleBasedAIProvider';
+import { CatalogFileWillardBatteryKnowledge } from '../catalog/CatalogFileWillardBatteryKnowledge';
 import { FileWillardBatteryKnowledge } from '../catalog/FileWillardBatteryKnowledge';
 import { env } from '../config/env';
 import { ConsoleMessagingProvider } from '../messaging/ConsoleMessagingProvider';
@@ -20,7 +22,11 @@ export function buildContainer() {
   const customers = new InMemoryCustomerRepository();
   const conversations = new InMemoryConversationRepository();
   const products = new InMemoryProductRepository();
+  /** Legado: sigue alimentando ConversationEngine hasta el PR de wiring del flow. */
   const willardKnowledge = new FileWillardBatteryKnowledge();
+  /** Catálogo estructurado: puerto para RecommendationService (aún no cableado al chatbot). */
+  const willardCatalogKnowledge = new CatalogFileWillardBatteryKnowledge();
+  const recommendationService = new RecommendationService(willardCatalogKnowledge);
   const logs = new FileLogRepository(env.logDir);
 
   // CRM: memoria ahora → mañana SqliteLeadRepository (mismo puerto).
@@ -63,6 +69,8 @@ export function buildContainer() {
     conversations,
     products,
     willardKnowledge,
+    willardCatalogKnowledge,
+    recommendationService,
     leadRepository,
     leadService,
     notificationService,
