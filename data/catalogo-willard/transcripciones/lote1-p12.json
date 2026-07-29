@@ -1,0 +1,467 @@
+[
+  {
+    "marca": "HYUNDAI",
+    "categoria": "Autos y camionetas",
+    "modelo": "Santro",
+    "version": "1.0",
+    "textoCatalogo": "Santro 1.0",
+    "referencias": {
+      "willardAgmEfb": [],
+      "increibleTitanio": [],
+      "willard": [],
+      "extrema": ["NS40D PD 670"]
+    },
+    "fuente": { "lote": 1, "imagen": "lote1-img-12.jpeg", "fila": 1 },
+    "revisionPendiente": false
+  },
+  {
+    "marca": "HYUNDAI",
+    "categoria": "Autos y camionetas",
+    "modelo": "Terracan",
+    "version": "Diesel",
+    "textoCatalogo": "Terracan Diesel",
+    "referencias": {
+      "willardAgmEfb": ["27R-80 EFB"],
+      "increibleTitanio": ["27AD-1250"],
+      "willard": ["27AD-1150"],
+      "extrema": ["27AD-1000"]
+    },
+    "fuente": { "lote": 1, "imagen": "lote1-img-12.jpeg", "fila": 2 },
+    "revisionPendiente": false
+  },
+  {
+    "marca": "HYUNDAI",
+    "categoria": "Autos y camionetas",
+    "modelo": "Terracan",
+    "version": "Gasolina",
+    "textoCatalogo": "Terracan Gasolina",
+    "referencias": {
+      "willardAgmEfb": [],
+      "increibleTitanio": ["34D-1200"],
+      "willard": ["34D-1100"],
+      "extrema": ["34D-950"]
+    },
+    "fuente": { "lote": 1, "imagen": "lote1-img-12.jpeg", "fila": 3 },
+    "revisionPendiente": false
+  },
+  {
+    "marca": "HYUNDAI",
+    "categoria": "Autos y camionetas",
+    "modelo": "Tucson",
+    "version": "Diesel",
+    "textoCatalogo": "Tucson Diesel",
+    "referencias": {
+      "willardAgmEfb": ["27R-80 EFB"],
+      "increibleTitanio": ["27AD-1250"],
+      "willard": ["27AD-1150"],
+      "extrema": ["27AD-1000"]
+    },
+    "fuente": { "lote": 1, "imagen": "lote1-img-12.jpeg", "fila": 4 },
+    "revisionPendiente": false
+  },
+  {
+    "marca": "HYUNDAI",
+    "categoria": "Autos y camionetas",
+    "modelo": "Tucson",
+    "version": "Gasolina",
+    "textoCatalogo": "Tucson Gasolina",
+    "referencias": {
+      "willardAgmEfb": [],
+      "increibleTitanio": ["34D-1200"],
+      "willard": ["34D-1100"],
+      "extrema": ["34D-950"]
+    },
+    "fuente": { "lote": 1, "imagen": "lote1-img-12.jpeg", "fila": 5 },
+    "revisionPendiente": false
+  },
+  {
+    "marca": "HYUNDAI",
+    "categoria": "Autos y camionetas",
+    "modelo": "Tucson IX35",
+    "version": "4x4 2.0 Diesel / 2.4",
+    "textoCatalogo": "Tucson IX35 4x4 2.0 Diésel /2.4",
+    "referencias": {
+      "willardAgmEfb": ["27-80 EFB"],
+      "increibleTitanio": ["27AI-1250"],
+      "willard": ["27AI-1150"],
+      "extrema": ["27AI-1000"]
+    },
+    "fuente": { "lote": 1, "imagen": "lote1-img-12.jpeg", "fila": 6 },
+    "revisionPendiente": false
+  },
+  {
+    "marca": "HYUNDAI",
+    "categoria": "Autos y camionetas",
+    "modelo": "Tucson IX35",
+    "version": "4x4 2.0 Gasolina / 2.4",
+    "textoCatalogo": "Tucson IX35 4x4 2.0 Gasolina /2.4",
+    "referencias": {
+      "willardAgmEfb": ["35-65 EFB"],
+      "increibleTitanio": ["34D-1200"],
+      "willard": ["35-800"],
+      "extrema": ["34D-950"]
+    },
+    "fuente": { "lote": 1, "imagen": "lote1-img-12.jpeg", "fila": 7 },
+    "revisionPendiente": false
+  },
+  {
+    "marca": "HYUNDAI",
+    "categoria": "Autos y camionetas",
+    "modelo": "Veloster",
+    "version": "1.6",
+    "textoCatalogo": "Veloster 1.6",
+    "referencias": {
+      "willardAgmEfb": [],
+      "increibleTitanio": ["24BD-900"],
+      "willard": ["24BD-850"],
+      "extrema": ["24BD-750"]
+    },
+    "fuente": { "lote": 1, "imagen": "lote1-img-12.jpeg", "fila": 8 },
+    "revisionPendiente": false
+  },
+  {
+    "marca": "HYUNDAI",
+    "categoria": "Autos y camionetas",
+    "modelo": "Veracruz",
+    "version": null,
+    "textoCatalogo": "Veracruz",
+    "referencias": {
+      "willardAgmEfb": [],
+      "increibleTitanio": ["24BD-900"],
+      "willard": ["24BD-850"],
+      "extrema": ["24BD-750"]
+    },
+    "fuente": { "lote": 1, "imagen": "lote1-img-12.jpeg", "fila": 9 },
+    "revisionPendiente": false
+  },
+  {
+    "marca": "HYUNDAI",
+    "categoria": "Autos y camionetas",
+    "modelo": "Veracruz",
+    "version": "Diesel",
+    "textoCatalogo": "Veracruz Diesel",
+    "referencias": {
+      "willardAgmEfb": ["27R-80 EFB"],
+      "increibleTitanio": ["27AD-1250"],
+      "willard": ["27AD-1150"],
+      "extrema": ["27AD-1000"]
+    },
+    "fuente": { "lote": 1, "imagen": "lote1-img-12.jpeg", "fila": 10 },
+    "revisionPendiente": false
+  },
+  {
+    "marca": "JAC",
+    "categoria": "Autos y camionetas",
+    "modelo": "B-cross",
+    "version": null,
+    "textoCatalogo": "B-cross",
+    "referencias": {
+      "willardAgmEfb": [],
+      "increibleTitanio": ["24BD-900"],
+      "willard": ["48D-900"],
+      "extrema": ["48D-850"]
+    },
+    "fuente": { "lote": 1, "imagen": "lote1-img-12.jpeg", "fila": 11 },
+    "revisionPendiente": true
+  },
+  {
+    "marca": "JAC",
+    "categoria": "Autos y camionetas",
+    "modelo": "J3 / Veloce J3",
+    "version": null,
+    "textoCatalogo": "J3 / Veloce J3",
+    "referencias": {
+      "willardAgmEfb": [],
+      "increibleTitanio": ["24BD-900"],
+      "willard": ["24BD-750"],
+      "extrema": []
+    },
+    "fuente": { "lote": 1, "imagen": "lote1-img-12.jpeg", "fila": 12 },
+    "revisionPendiente": true
+  },
+  {
+    "marca": "JAC",
+    "categoria": "Autos y camionetas",
+    "modelo": "S2",
+    "version": null,
+    "textoCatalogo": "S2",
+    "referencias": {
+      "willardAgmEfb": [],
+      "increibleTitanio": ["34I-1200"],
+      "willard": ["34I-1100"],
+      "extrema": ["34I-950"]
+    },
+    "fuente": { "lote": 1, "imagen": "lote1-img-12.jpeg", "fila": 13 },
+    "revisionPendiente": false
+  },
+  {
+    "marca": "JAC",
+    "categoria": "Autos y camionetas",
+    "modelo": "S3 Grand",
+    "version": null,
+    "textoCatalogo": "S3 Grand",
+    "referencias": {
+      "willardAgmEfb": ["35-65 EFB"],
+      "increibleTitanio": [],
+      "willard": ["35-800"],
+      "extrema": []
+    },
+    "fuente": { "lote": 1, "imagen": "lote1-img-12.jpeg", "fila": 14 },
+    "revisionPendiente": false
+  },
+  {
+    "marca": "JAC",
+    "categoria": "Autos y camionetas",
+    "modelo": "J6",
+    "version": null,
+    "textoCatalogo": "J6",
+    "referencias": {
+      "willardAgmEfb": [],
+      "increibleTitanio": ["24BD-900"],
+      "willard": ["48D-900"],
+      "extrema": ["48D-850"]
+    },
+    "fuente": { "lote": 1, "imagen": "lote1-img-12.jpeg", "fila": 15 },
+    "revisionPendiente": true
+  },
+  {
+    "marca": "JAC",
+    "categoria": "Autos y camionetas",
+    "modelo": "E 10X",
+    "version": "Electrico",
+    "textoCatalogo": "E 10X Electrico",
+    "referencias": {
+      "willardAgmEfb": [],
+      "increibleTitanio": ["NS60D-750 PD"],
+      "willard": [],
+      "extrema": []
+    },
+    "fuente": { "lote": 1, "imagen": "lote1-img-12.jpeg", "fila": 16 },
+    "revisionPendiente": false
+  },
+  {
+    "marca": "JEEP",
+    "categoria": "Autos y camionetas",
+    "modelo": "Cherokee Laredo / Renegade",
+    "version": null,
+    "textoCatalogo": "Cherokee Laredo /Renegade",
+    "referencias": {
+      "willardAgmEfb": ["W-L2-60AH", "47-60 EFB"],
+      "increibleTitanio": ["24BD-900"],
+      "willard": [],
+      "extrema": []
+    },
+    "fuente": { "lote": 1, "imagen": "lote1-img-12.jpeg", "fila": 17 },
+    "revisionPendiente": false
+  },
+  {
+    "marca": "JEEP",
+    "categoria": "Autos y camionetas",
+    "modelo": "Comando Americano",
+    "version": null,
+    "textoCatalogo": "Comando Americano",
+    "referencias": {
+      "willardAgmEfb": ["27-80 EFB"],
+      "increibleTitanio": ["27AI-1250"],
+      "willard": ["27AI-1150"],
+      "extrema": ["27AI-1000"]
+    },
+    "fuente": { "lote": 1, "imagen": "lote1-img-12.jpeg", "fila": 18 },
+    "revisionPendiente": false
+  },
+  {
+    "marca": "JEEP",
+    "categoria": "Autos y camionetas",
+    "modelo": "Compass",
+    "version": "2.4",
+    "textoCatalogo": "Compass 2.4",
+    "referencias": {
+      "willardAgmEfb": [],
+      "increibleTitanio": ["34I-1200"],
+      "willard": ["34I-1100"],
+      "extrema": ["34I-950"]
+    },
+    "fuente": { "lote": 1, "imagen": "lote1-img-12.jpeg", "fila": 19 },
+    "revisionPendiente": false
+  },
+  {
+    "marca": "JEEP",
+    "categoria": "Autos y camionetas",
+    "modelo": "Compass",
+    "version": "2018",
+    "textoCatalogo": "Compass 2018",
+    "referencias": {
+      "willardAgmEfb": ["W-L3-70AH", "48D-70 EFB"],
+      "increibleTitanio": ["48D-1000", "48-1100"],
+      "willard": ["48D-900"],
+      "extrema": ["48D-850"]
+    },
+    "fuente": { "lote": 1, "imagen": "lote1-img-12.jpeg", "fila": 20 },
+    "revisionPendiente": false
+  },
+  {
+    "marca": "JEEP",
+    "categoria": "Autos y camionetas",
+    "modelo": "Compass Limited",
+    "version": "4x4 Aut",
+    "textoCatalogo": "Compass Limited 4x4 Aut",
+    "referencias": {
+      "willardAgmEfb": ["W-L2-60AH", "47-60 EFB"],
+      "increibleTitanio": ["24BI-900"],
+      "willard": [],
+      "extrema": []
+    },
+    "fuente": { "lote": 1, "imagen": "lote1-img-12.jpeg", "fila": 21 },
+    "revisionPendiente": false
+  },
+  {
+    "marca": "JEEP",
+    "categoria": "Autos y camionetas",
+    "modelo": "Gand Cherokee",
+    "version": "2.015",
+    "textoCatalogo": "Gand Cherokee 2.015",
+    "referencias": {
+      "willardAgmEfb": ["W-L3-70AH", "48D-70 EFB"],
+      "increibleTitanio": [],
+      "willard": [],
+      "extrema": []
+    },
+    "fuente": { "lote": 1, "imagen": "lote1-img-12.jpeg", "fila": 22 },
+    "revisionPendiente": true
+  },
+  {
+    "marca": "JEEP",
+    "categoria": "Autos y camionetas",
+    "modelo": "Grand Cherokee Laredo",
+    "version": "3.6 / 5.7",
+    "textoCatalogo": "Grand Cherokee Laredo 3.6/ 5.7",
+    "referencias": {
+      "willardAgmEfb": ["W-L3-70AH", "48D-70 EFB"],
+      "increibleTitanio": ["48I-1000", "48-1100"],
+      "willard": ["48I-900"],
+      "extrema": ["48I-850"]
+    },
+    "fuente": { "lote": 1, "imagen": "lote1-img-12.jpeg", "fila": 23 },
+    "revisionPendiente": false
+  },
+  {
+    "marca": "JEEP",
+    "categoria": "Autos y camionetas",
+    "modelo": "Liberty",
+    "version": null,
+    "textoCatalogo": "Liberty",
+    "referencias": {
+      "willardAgmEfb": ["W-L3-70AH", "48D-70 EFB"],
+      "increibleTitanio": ["48D-1000", "48-1100"],
+      "willard": ["48I-900"],
+      "extrema": ["48I-850"]
+    },
+    "fuente": { "lote": 1, "imagen": "lote1-img-12.jpeg", "fila": 24 },
+    "revisionPendiente": true
+  },
+  {
+    "marca": "JEEP",
+    "categoria": "Autos y camionetas",
+    "modelo": "Patriot",
+    "version": null,
+    "textoCatalogo": "Patriot",
+    "referencias": {
+      "willardAgmEfb": ["W-L3-70AH", "48D-70 EFB"],
+      "increibleTitanio": ["48D-1000", "48-1100"],
+      "willard": ["48D-900"],
+      "extrema": ["48D-850"]
+    },
+    "fuente": { "lote": 1, "imagen": "lote1-img-12.jpeg", "fila": 25 },
+    "revisionPendiente": false
+  },
+  {
+    "marca": "JEEP",
+    "categoria": "Autos y camionetas",
+    "modelo": "Renegade",
+    "version": "2.017 1.8 / 2.4",
+    "textoCatalogo": "Renegade 2.017 1.8/2.4",
+    "referencias": {
+      "willardAgmEfb": ["W-L3-70AH", "48D-70 EFB"],
+      "increibleTitanio": ["48D-1000", "48-1100"],
+      "willard": ["48D-900"],
+      "extrema": ["48D-850"]
+    },
+    "fuente": { "lote": 1, "imagen": "lote1-img-12.jpeg", "fila": 26 },
+    "revisionPendiente": false
+  },
+  {
+    "marca": "JEEP",
+    "categoria": "Autos y camionetas",
+    "modelo": "Rubicon",
+    "version": "4 Aut",
+    "textoCatalogo": "Rubicon 4 Aut",
+    "referencias": {
+      "willardAgmEfb": ["W-L3-70AH", "48D-70 EFB"],
+      "increibleTitanio": ["48D-1000", "48-1100"],
+      "willard": ["48D-900"],
+      "extrema": ["48D-850"]
+    },
+    "fuente": { "lote": 1, "imagen": "lote1-img-12.jpeg", "fila": 27 },
+    "revisionPendiente": false
+  },
+  {
+    "marca": "JEEP",
+    "categoria": "Autos y camionetas",
+    "modelo": "Sport X",
+    "version": null,
+    "textoCatalogo": "Sport X",
+    "referencias": {
+      "willardAgmEfb": ["W-L3-70AH", "48D-70 EFB"],
+      "increibleTitanio": ["48I-1000", "48-1100"],
+      "willard": ["48I-900"],
+      "extrema": ["48I-850"]
+    },
+    "fuente": { "lote": 1, "imagen": "lote1-img-12.jpeg", "fila": 28 },
+    "revisionPendiente": false
+  },
+  {
+    "marca": "JEEP",
+    "categoria": "Autos y camionetas",
+    "modelo": "Willis CJ-5 / CJ-7",
+    "version": null,
+    "textoCatalogo": "Willis CJ-5 / CJ-7",
+    "referencias": {
+      "willardAgmEfb": [],
+      "increibleTitanio": ["34I-1200"],
+      "willard": ["34I-1100"],
+      "extrema": ["34I-950"]
+    },
+    "fuente": { "lote": 1, "imagen": "lote1-img-12.jpeg", "fila": 29 },
+    "revisionPendiente": false
+  },
+  {
+    "marca": "JEEP",
+    "categoria": "Autos y camionetas",
+    "modelo": "Wrangler",
+    "version": null,
+    "textoCatalogo": "Wrangler",
+    "referencias": {
+      "willardAgmEfb": [],
+      "increibleTitanio": ["34D-1200"],
+      "willard": ["34D-1100"],
+      "extrema": ["34D-950"]
+    },
+    "fuente": { "lote": 1, "imagen": "lote1-img-12.jpeg", "fila": 30 },
+    "revisionPendiente": false
+  },
+  {
+    "marca": "JEEP",
+    "categoria": "Autos y camionetas",
+    "modelo": "Wrangler",
+    "version": "V-6 2.014",
+    "textoCatalogo": "Wrangler V-6 2.014",
+    "referencias": {
+      "willardAgmEfb": ["W-L3-70AH", "48D-70 EFB"],
+      "increibleTitanio": ["48I-1000", "48-1100"],
+      "willard": ["48D-900"],
+      "extrema": ["48D-850"]
+    },
+    "fuente": { "lote": 1, "imagen": "lote1-img-12.jpeg", "fila": 31 },
+    "revisionPendiente": true
+  }
+]
