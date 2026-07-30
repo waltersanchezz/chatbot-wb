@@ -74,4 +74,38 @@ describe('formatBatteryRecommendation formatter (PR3)', () => {
       reply.text.indexOf('📦 Willard\n'),
     );
   });
+
+  it('AMBIGUOUS_MODEL asks which model and does not list battery refs', () => {
+    const cx3 = hit({
+      marca: 'MAZDA',
+      modelo: 'CX3',
+      textoCatalogo: 'CX3',
+      refs: { willard: ['FAKE-CX3'] },
+      fila: 1,
+    });
+    const cx30 = hit({
+      marca: 'MAZDA',
+      modelo: 'CX30',
+      textoCatalogo: 'CX30',
+      refs: { willard: ['FAKE-CX30'] },
+      fila: 2,
+    });
+    const result: RecommendationResult = {
+      outcome: 'partial',
+      query: { marca: 'MAZDA', modelo: 'cx' },
+      applications: [cx3, cx30],
+      options: [],
+      reasonCode: 'AMBIGUOUS_MODEL',
+    };
+
+    const reply = formatBatteryRecommendation(emptyCtx, result);
+    expect(reply.stage).toBe('collecting_vehicle');
+    expect(reply.needsHandoff).toBe(false);
+    expect(reply.text).toContain('varios modelos');
+    expect(reply.text).toContain('• CX3');
+    expect(reply.text).toContain('• CX30');
+    expect(reply.text).not.toContain('FAKE-CX3');
+    expect(reply.text).not.toContain('FAKE-CX30');
+    expect(reply.text).not.toContain('📦');
+  });
 });

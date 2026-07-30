@@ -213,4 +213,58 @@ describe('RecommendationService', () => {
     expect(result.options).toHaveLength(1);
     expect(result.options[0]?.productLine).toBe('extrema');
   });
+
+  it('AMBIGUOUS_MODEL when ≥2 modelos con firmas de refs distintas', () => {
+    const knowledge = new FakeWillardBatteryKnowledge([
+      hit({
+        marca: 'MAZDA',
+        modelo: 'CX3',
+        textoCatalogo: 'CX3',
+        refs: { willard: ['FAKE-CX3'] },
+        fila: 1,
+      }),
+      hit({
+        marca: 'MAZDA',
+        modelo: 'CX30',
+        textoCatalogo: 'CX30',
+        refs: { willard: ['FAKE-CX30'] },
+        fila: 2,
+      }),
+    ]);
+    const service = new RecommendationService(knowledge);
+
+    const result = service.recommendByVehicle({ marca: 'MAZDA', modelo: 'cx' });
+
+    expect(result.outcome).toBe('partial');
+    expect(result.reasonCode).toBe('AMBIGUOUS_MODEL');
+    expect(result.options).toEqual([]);
+    expect(result.applications).toHaveLength(2);
+  });
+
+  it('mismas firmas de refs en modelos distintos → matched (no ambigüedad)', () => {
+    const knowledge = new FakeWillardBatteryKnowledge([
+      hit({
+        marca: 'MAZDA',
+        modelo: 'CX3',
+        textoCatalogo: 'CX3',
+        refs: { willard: ['SAME-REF'] },
+        fila: 1,
+      }),
+      hit({
+        marca: 'MAZDA',
+        modelo: 'CX30',
+        textoCatalogo: 'CX30',
+        refs: { willard: ['SAME-REF'] },
+        fila: 2,
+      }),
+    ]);
+    const service = new RecommendationService(knowledge);
+
+    const result = service.recommendByVehicle({ marca: 'MAZDA', modelo: 'cx' });
+
+    expect(result.outcome).toBe('matched');
+    expect(result.reasonCode).toBeUndefined();
+    expect(result.options).toHaveLength(2);
+    expect(result.applications).toHaveLength(2);
+  });
 });

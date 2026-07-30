@@ -116,4 +116,44 @@ describe('CatalogFileWillardBatteryKnowledge', () => {
       kb.findRecommendations({ brand: 'BMW', model: '320i', soundSystem: false }),
     ).toEqual([]);
   });
+
+  describe('token model matching (Fase 2)', () => {
+    it('mazda / 3 matches only Mazda 3 All New (not CX3/CX30)', () => {
+      const kb = loadCatalog();
+      const hits = kb.findApplicationsByVehicle({ marca: 'MAZDA', modelo: '3' });
+      expect(hits.map((h) => h.modelo)).toEqual(['Mazda 3 All New']);
+    });
+
+    it('cx3 matches CX3 and does not match CX30', () => {
+      const kb = loadCatalog();
+      const hits = kb.findApplicationsByVehicle({ marca: 'MAZDA', modelo: 'cx3' });
+      expect(hits.map((h) => h.modelo)).toEqual(['CX3']);
+    });
+
+    it('cx30 keeps top-tier CX30 rows (not CX3)', () => {
+      const kb = loadCatalog();
+      const hits = kb.findApplicationsByVehicle({ marca: 'MAZDA', modelo: 'cx30' });
+      expect(hits.map((h) => h.modelo).sort()).toEqual(['CX30', 'CX30']);
+      expect(hits.map((h) => h.textoCatalogo).sort()).toEqual([
+        'CX30',
+        'CX30 Hybrid',
+      ]);
+    });
+
+    it('mazda3 matches Mazda 3 All New via glued alternate tokens', () => {
+      const kb = loadCatalog();
+      const hits = kb.findApplicationsByVehicle({
+        marca: 'MAZDA',
+        modelo: 'mazda3',
+      });
+      expect(hits.map((h) => h.modelo)).toEqual(['Mazda 3 All New']);
+    });
+
+    it('BMW / 3 does not false-match 320i via character includes', () => {
+      const kb = loadCatalog();
+      expect(kb.findApplicationsByVehicle({ marca: 'BMW', modelo: '3' })).toEqual(
+        [],
+      );
+    });
+  });
 });

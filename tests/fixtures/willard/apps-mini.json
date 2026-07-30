@@ -4,8 +4,8 @@
   "descripcion": "Fixture mínima para tests del adaptador de catálogo",
   "reglaDeConsumo": "test",
   "cobertura": {},
-  "totales": { "registros": 6, "marcas": 4, "pendientesRevision": 1 },
-  "marcas": ["BMW", "CHANA", "CHEVROLET", "ALFA ROMEO"],
+  "totales": { "registros": 12, "marcas": 5, "pendientesRevision": 1 },
+  "marcas": ["BMW", "CHANA", "CHEVROLET", "ALFA ROMEO", "MAZDA", "HINO"],
   "aplicaciones": [
     {
       "marca": "BMW",
@@ -125,6 +125,81 @@
         "extrema": []
       },
       "fuente": { "lote": 1, "imagen": "lote1-img-25.jpeg", "fila": 2 },
+      "revisionPendiente": false
+    },
+    {
+      "marca": "MAZDA",
+      "categoria": "Autos y camionetas",
+      "modelo": "CX3",
+      "version": null,
+      "textoCatalogo": "CX3",
+      "referencias": {
+        "willardAgmEfb": [],
+        "increibleTitanio": [],
+        "willard": ["FAKE-CX3-100"],
+        "extrema": []
+      },
+      "fuente": { "lote": 1, "imagen": "fixture-mazda.jpeg", "fila": 1 },
+      "revisionPendiente": false
+    },
+    {
+      "marca": "MAZDA",
+      "categoria": "Autos y camionetas",
+      "modelo": "CX30",
+      "version": null,
+      "textoCatalogo": "CX30",
+      "referencias": {
+        "willardAgmEfb": [],
+        "increibleTitanio": [],
+        "willard": ["FAKE-CX30-200"],
+        "extrema": []
+      },
+      "fuente": { "lote": 1, "imagen": "fixture-mazda.jpeg", "fila": 2 },
+      "revisionPendiente": false
+    },
+    {
+      "marca": "MAZDA",
+      "categoria": "Autos y camionetas",
+      "modelo": "CX30",
+      "version": "Hybrid",
+      "textoCatalogo": "CX30 Hybrid",
+      "referencias": {
+        "willardAgmEfb": [],
+        "increibleTitanio": [],
+        "willard": ["FAKE-CX30H-210"],
+        "extrema": []
+      },
+      "fuente": { "lote": 1, "imagen": "fixture-mazda.jpeg", "fila": 3 },
+      "revisionPendiente": false
+    },
+    {
+      "marca": "MAZDA",
+      "categoria": "Autos y camionetas",
+      "modelo": "Mazda 3 All New",
+      "version": null,
+      "textoCatalogo": "Mazda 3 All New",
+      "referencias": {
+        "willardAgmEfb": [],
+        "increibleTitanio": [],
+        "willard": ["FAKE-M3-300"],
+        "extrema": []
+      },
+      "fuente": { "lote": 1, "imagen": "fixture-mazda.jpeg", "fila": 4 },
+      "revisionPendiente": false
+    },
+    {
+      "marca": "MAZDA",
+      "categoria": "Autos y camionetas",
+      "modelo": "CX7",
+      "version": null,
+      "textoCatalogo": "CX7",
+      "referencias": {
+        "willardAgmEfb": [],
+        "increibleTitanio": [],
+        "willard": ["FAKE-CX7-400"],
+        "extrema": []
+      },
+      "fuente": { "lote": 1, "imagen": "fixture-mazda.jpeg", "fila": 5 },
       "revisionPendiente": false
     }
   ]
