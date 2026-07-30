@@ -138,6 +138,27 @@ export function formatBatteryRecommendation(
   _ctx: ConversationContext,
   result: RecommendationResult,
 ): FlowReply {
+  if (result.reasonCode === 'AMBIGUOUS_MODEL') {
+    const labels = uniqueTextos(result.applications);
+    const list =
+      labels.length > 0
+        ? labels.map((t) => `• ${t}`).join('\n')
+        : '• (varios modelos del catálogo)';
+
+    return {
+      text: [
+        '🚗 Encontré varios modelos que podrían coincidir.',
+        '',
+        '¿Cuál es exactamente el tuyo?',
+        list,
+        '',
+        '📝 Escribe el modelo tal como aparece arriba.',
+      ].join('\n'),
+      stage: 'collecting_vehicle',
+      needsHandoff: false,
+    };
+  }
+
   if (result.outcome !== 'matched' || result.options.length === 0) {
     return {
       text: [
@@ -174,4 +195,18 @@ export function formatBatteryRecommendation(
     needsHandoff: true,
     handoffReason: 'Confirmación de disponibilidad y precio de batería',
   };
+}
+
+function uniqueTextos(
+  applications: RecommendationResult['applications'],
+): string[] {
+  const seen = new Set<string>();
+  const out: string[] = [];
+  for (const app of applications) {
+    const label = app.textoCatalogo.trim();
+    if (!label || seen.has(label)) continue;
+    seen.add(label);
+    out.push(label);
+  }
+  return out;
 }
