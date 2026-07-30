@@ -36,13 +36,16 @@ function pickAck(seed: string): string {
   return ACKS[hash];
 }
 
-/** Flujo simplificado: vehículo (marca+modelo juntos) + año. */
+/**
+ * Datos mínimos del vehículo para buscar en Willard.
+ * Exige marca y modelo: no recomendar (ni transferir) solo con marca.
+ */
 export function hasBatteryVehicle(ctx: ConversationContext): boolean {
-  return Boolean(ctx.vehicle.brand || ctx.vehicle.model);
+  return Boolean(ctx.vehicle.brand?.trim() && ctx.vehicle.model?.trim());
 }
 
 export function batteryNextQuestion(ctx: ConversationContext): FlowReply {
-  if (!hasBatteryVehicle(ctx)) {
+  if (!ctx.vehicle.brand?.trim() && !ctx.vehicle.model?.trim()) {
     return {
       text: [
         '🔋 Perfecto, te ayudo con la batería.',
@@ -52,6 +55,21 @@ export function batteryNextQuestion(ctx: ConversationContext): FlowReply {
         '• Renault Symbol',
         '• Mazda 3',
         '• Kia Picanto',
+      ].join('\n'),
+      stage: 'collecting_vehicle',
+    };
+  }
+
+  if (!ctx.vehicle.brand?.trim() || !ctx.vehicle.model?.trim()) {
+    const known = ctx.vehicle.brand?.trim() || ctx.vehicle.model?.trim() || 'vehículo';
+    return {
+      text: [
+        `${pickAck(known)}`,
+        '',
+        ctx.vehicle.brand?.trim() && !ctx.vehicle.model?.trim()
+          ? '🚗 ¿Qué modelo es?'
+          : '🚗 ¿Cuál es la marca del vehículo?',
+        '📝 Ejemplo: Symbol, Mazda 3, Picanto',
       ].join('\n'),
       stage: 'collecting_vehicle',
     };
@@ -159,6 +177,7 @@ export function formatBatteryRecommendation(
     };
   }
 
+  // Transferencia al asesor SOLO cuando la búsqueda ya corrió y no hubo match usable.
   if (result.outcome !== 'matched' || result.options.length === 0) {
     return {
       text: [
@@ -189,11 +208,12 @@ export function formatBatteryRecommendation(
     ? `🔋 Para tu ${vehicleLabel} el catálogo Willard sugiere:`
     : '🔋 Para tu vehículo el catálogo Willard sugiere:';
 
+  // Match válido: mostrar opciones. El cierre comercial no es handoff por fallo de búsqueda.
   return {
     text: [intro, '', ...blocks, '', CLOSING].join('\n'),
     stage: 'closing',
-    needsHandoff: true,
-    handoffReason: 'Confirmación de disponibilidad y precio de batería',
+    needsHandoff: false,
+    handoffReason: undefined,
   };
 }
 

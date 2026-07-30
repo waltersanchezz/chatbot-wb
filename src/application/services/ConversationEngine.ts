@@ -62,7 +62,9 @@ export class ConversationEngine {
     const intent = this.intentDetector.detect(userMessage, context.intent);
     context = { ...context, intent };
 
-    if (intent === 'handoff' || context.needsHumanHandoff) {
+    // Handoff explícito del cliente (pide asesor). No usar needsHumanHandoff pegado
+    // de un intento anterior: eso se limpia al reiniciar baterías/rodamientos.
+    if (intent === 'handoff') {
       context.stage = 'handoff';
       context.needsHumanHandoff = true;
       context.handoffReason = context.handoffReason ?? 'Solicitud del cliente';
@@ -85,25 +87,65 @@ export class ConversationEngine {
       };
     }
 
-    // "Baterías" / "Rodamientos" (u otras frases) → entrar al flujo, sin repetir el menú.
+    // "Baterías" / "Rodamientos" → entrar/reiniciar flujo de recolección.
+    // Limpia handoff previo para no transferir antes de terminar la búsqueda.
     if (intent === 'baterias') {
+      const restartingAfterHandoff =
+        conversation.context.needsHumanHandoff ||
+        conversation.context.stage === 'handoff' ||
+        conversation.context.stage === 'closing';
+
       context.category = 'baterias';
       context.intent = 'baterias';
-      context.stage =
-        context.stage === 'welcome' || context.stage === 'awaiting_category'
-          ? 'collecting_vehicle'
-          : context.stage;
+      context.needsHumanHandoff = false;
+      context.handoffReason = undefined;
+      context.recommendedProductIds = [];
+
+      if (restartingAfterHandoff) {
+        context.stage = 'collecting_vehicle';
+        context.vehicle = {};
+        context.battery = {};
+      } else if (
+        context.stage === 'welcome' ||
+        context.stage === 'awaiting_category'
+      ) {
+        context.stage = 'collecting_vehicle';
+      }
+
       return this.handleBattery(context);
     }
 
     if (intent === 'rodamientos') {
+      const restartingAfterHandoff =
+        conversation.context.needsHumanHandoff ||
+        conversation.context.stage === 'handoff' ||
+        conversation.context.stage === 'closing';
+
       context.category = 'rodamientos';
       context.intent = 'rodamientos';
-      context.stage =
-        context.stage === 'welcome' || context.stage === 'awaiting_category'
-          ? 'collecting_vehicle'
-          : context.stage;
+      context.needsHumanHandoff = false;
+      context.handoffReason = undefined;
+      context.recommendedProductIds = [];
+
+      if (restartingAfterHandoff) {
+        context.stage = 'collecting_vehicle';
+        context.vehicle = {};
+        context.bearing = {};
+      } else if (
+        context.stage === 'welcome' ||
+        context.stage === 'awaiting_category'
+      ) {
+        context.stage = 'collecting_vehicle';
+      }
+
       return this.handleBearing(context, userMessage);
+    }
+
+    // Handoff ya decidido por el flujo (búsqueda fallida al final) y sin reinicio.
+    if (context.needsHumanHandoff) {
+      context.stage = 'handoff';
+      context.handoffReason = context.handoffReason ?? 'Solicitud del cliente';
+      return { reply: handoffMessage(context.handoffReason), context };
     }
 
     if (intent === 'otro_producto') {
@@ -141,18 +183,43 @@ export class ConversationEngine {
 
   private async handleBattery(context: ConversationContext): Promise<EngineResult> {
     const next = batteryNextQuestion(context);
+    // Mientras faltan vehículo / año / planta de sonido: solo preguntar.
+    // Nunca recomendar ni marcar handoff en esta fase.
     if (next.stage !== 'recommending') {
       return {
         reply: next.text,
-        context: { ...context, stage: next.stage },
+        context: {
+          ...context,
+          stage: next.stage,
+          needsHumanHandoff: false,
+          handoffReason: undefined,
+        },
       };
     }
 
-    const marca = context.vehicle.brand?.trim() || context.vehicle.model?.trim() || '';
-    const modelo =
-      context.vehicle.brand && context.vehicle.model
-        ? context.vehicle.model
-        : undefined;
+    const marca = context.vehicle.brand?.trim() || '';
+    const modelo = context.vehicle.model?.trim() || undefined;
+    if (!marca || !modelo) {
+      // Defensa: no buscar Willard incompleto.
+      const ask = batteryNextQuestion({
+        ...context,
+        vehicle: {
+          ...context.vehicle,
+          brand: marca || undefined,
+          model: modelo,
+        },
+        battery: { ...context.battery, soundSystem: undefined },
+      });
+      return {
+        reply: ask.text || '🚗 ¿Para qué vehículo necesitas la batería?',
+        context: {
+          ...context,
+          stage: 'collecting_vehicle',
+          needsHumanHandoff: false,
+          handoffReason: undefined,
+        },
+      };
+    }
 
     const result = this.recommendations.recommendByVehicle({
       marca,

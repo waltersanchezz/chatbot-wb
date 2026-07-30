@@ -62,6 +62,8 @@ describe('formatBatteryRecommendation formatter (PR3)', () => {
 
     const reply = formatBatteryRecommendation(emptyCtx, result);
     expect(reply.stage).toBe('closing');
+    expect(reply.needsHandoff).toBe(false);
+    expect(reply.handoffReason).toBeUndefined();
     expect(reply.text).toContain('Para tu 320i');
     expect(reply.text).toContain('Willard AGM / EFB');
     expect(reply.text).toContain('W-L5-95AH');

@@ -194,11 +194,13 @@ export class ContextExtractor {
     return null;
   }
 
-  /** Flujo de baterías: vehículo junto + año (sin motor separado). */
+  /** Flujo de baterías: marca + modelo + año (sin motor separado). */
   private firstMissingBatteryVehicleField(
     vehicle: ConversationContext['vehicle'],
-  ): 'vehicle' | 'year' | null {
+  ): 'vehicle' | 'brand' | 'model' | 'year' | null {
     if (!vehicle.brand && !vehicle.model) return 'vehicle';
+    if (!vehicle.brand) return 'brand';
+    if (!vehicle.model) return 'model';
     if (!vehicle.year) return 'year';
     return null;
   }
