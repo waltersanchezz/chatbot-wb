@@ -28,6 +28,7 @@
   "dependencies": {
     "@types/cors": "^2.8.17",
     "@types/express": "^4.17.21",
+    "@types/node": "^24.0.0",
     "cors": "^2.8.5",
     "dotenv": "^16.4.7",
     "express": "^4.21.2",
@@ -37,7 +38,6 @@
     "zod": "^3.24.1"
   },
   "devDependencies": {
-    "@types/node": "^26.1.2",
     "@vitest/coverage-v8": "^3.2.4",
     "tsx": "^4.19.2",
     "vitest": "^3.2.4"
