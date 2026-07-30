@@ -4,7 +4,10 @@ services:
     runtime: node
     plan: free
     region: oregon
-    buildCommand: npm install --include=dev && npm run build
+    # All packages required by `tsc` (typescript, @types/*) live in dependencies.
+    # Use omit=dev so NODE_ENV=production cannot skip @types/node.
+    # Explicit reinstall of @types/node guards against lockfile/hoist edge cases on Render.
+    buildCommand: npm ci --omit=dev && npm install @types/node@24.13.3 --no-save && npm run build
     startCommand: npm start
     healthCheckPath: /health
     envVars:

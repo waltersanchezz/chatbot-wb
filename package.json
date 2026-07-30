@@ -6,6 +6,7 @@
   "type": "commonjs",
   "scripts": {
     "dev": "tsx watch src/main.ts",
+    "prebuild": "node -e \"const fs=require('fs'); const p='node_modules/@types/node/package.json'; if(!fs.existsSync(p)){console.error('FATAL: missing '+p+' — @types/node must be installed before tsc'); process.exit(1)} console.log('prebuild: @types/node OK ->', require('./'+p).version)\"",
     "build": "tsc -p tsconfig.json",
     "start": "node dist/main.js",
     "typecheck": "tsc -p tsconfig.json --noEmit",
@@ -28,7 +29,7 @@
   "dependencies": {
     "@types/cors": "^2.8.17",
     "@types/express": "^4.17.21",
-    "@types/node": "^24.0.0",
+    "@types/node": "24.13.3",
     "cors": "^2.8.5",
     "dotenv": "^16.4.7",
     "express": "^4.21.2",
