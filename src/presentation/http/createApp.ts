@@ -1,13 +1,16 @@
 import cors from 'cors';
 import express, { type Express } from 'express';
 import helmet from 'helmet';
+import type { CustomerProfileService } from '../../application/services/CustomerProfileService';
 import type { LeadService } from '../../application/services/LeadService';
+import type { InteractionService } from '../../application/services/InteractionService';
 import type { HandleIncomingMessage } from '../../application/use-cases/HandleIncomingMessage';
 import type { LogRepository } from '../../domain/ports/LogRepository';
 import type { ProductRepository } from '../../domain/ports/ProductRepository';
 import { env } from '../../infrastructure/config/env';
 import { logger } from '../../infrastructure/logging/logger';
 import { createChatRouter } from './routes/chatRoutes';
+import { createCustomerRouter } from './routes/customerRoutes';
 import {
   createDashboardRouter,
   getDashboardStaticPath,
@@ -23,6 +26,8 @@ export interface AppDeps {
   products: ProductRepository;
   logs: LogRepository;
   leadService: LeadService;
+  customerProfileService: CustomerProfileService;
+  interactionService: InteractionService;
 }
 
 export function createApp(deps: AppDeps): Express {
@@ -67,6 +72,10 @@ export function createApp(deps: AppDeps): Express {
 
   app.use(createHealthRouter());
   app.use('/api/leads', createLeadRouter(deps.leadService));
+  app.use(
+    '/api/customers',
+    createCustomerRouter(deps.customerProfileService, deps.interactionService),
+  );
   app.use('/api/chat', createChatRouter(deps.handleIncomingMessage));
   app.use('/api/products', createProductRouter(deps.products));
   app.use('/api/logs', createLogsRouter(deps.logs));

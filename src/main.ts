@@ -10,6 +10,8 @@ async function bootstrap(): Promise<void> {
     products: container.products,
     logs: container.logs,
     leadService: container.leadService,
+    customerProfileService: container.customerProfileService,
+    interactionService: container.interactionService,
   });
 
   app.listen(env.port, () => {

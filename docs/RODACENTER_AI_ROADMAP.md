@@ -56,7 +56,7 @@ Detalle: `docs/WILLARD_INTEGRATION_SPEC.md`. Comportamiento conversacional: `doc
 |---|---|---|---|
 | 1 | Base de conocimiento | **En curso (avanzada)** | Catálogo Willard estructurado + motor de recomendación en producción |
 | 2 | Chatbot inteligente | **En curso (operativo)** | WhatsApp live; flujos baterías/rodamientos; motor de reglas |
-| 3 | CRM | **MVP inicial + PR1–PR3** | Spec aprobado; dominio + repos InMemory + servicios/políticas; sin API/WA wiring/PG/dashboard aún |
+| 3 | CRM | **MVP inicial + PR1–PR4** | Spec aprobado; dominio + repos + servicios + **API HTTP**; sin WA snapshot wiring / PG / dashboard CRM nuevo |
 | 4 | Panel web | **MVP inicial** | Dashboard estático + API de leads |
 | 5 | Automatizaciones | **Parcial** | Handoff y alertas Telegram; sin workflows avanzados |
 | 6 | Producción | **Operativa / iterativa** | Render + health + logs; endurecimiento continuo |
@@ -137,7 +137,7 @@ Detalle: `docs/WILLARD_INTEGRATION_SPEC.md`. Comportamiento conversacional: `doc
 
 **Diseño (fuente de verdad):** `docs/CRM_SPEC.md` — especificación técnica de arquitectura MVP **aprobada con enmiendas** (CustomerProfile 1→N Lead / VehicleProfile, timeline de interacciones, prioridad Alta|Media|Baja solo CRM, estados, eventos, API, puertos/persistencia, flujo WhatsApp → Dashboard).
 
-**Implementación:** PR1 dominio + PR2 repos InMemory + **PR3 servicios/políticas** hechos. **Aún no es CRM completo** — faltan API HTTP nueva, cableado WA/DI de repos CRM, panel y PostgreSQL.
+**Implementación:** PR1 dominio + PR2 repos InMemory + PR3 servicios/políticas + **PR4 API HTTP** hechos. **Aún no es CRM completo** — faltan cableado WA/snapshot boundary, panel CRM enriquecido y PostgreSQL.
 
 ### Completado
 
@@ -147,11 +147,12 @@ Detalle: `docs/WILLARD_INTEGRATION_SPEC.md`. Comportamiento conversacional: `doc
 - API HTTP de leads (`leadRoutes`)
 - **PR1 — dominio CRM:** `CustomerProfile`, `VehicleProfile`, `Interaction`, `LeadEvent`; `Lead` ampliado (estados, `LeadPriority`, snapshot, assignment/SLA/recontact opcionales); helpers de transición/validación en `src/domain/crm/`; tests `tests/crm/entities.test.ts`
 - **PR2 — puertos + InMemory:** `LeadRepository` extendido (filtros, by customer, events); `VehicleProfileRepository` + `InteractionRepository` nuevos; `CustomerRepository` InMemory endurecido (copias defensivas); tests `tests/crm/repositories.test.ts`
-- **PR3 — application layer:** `priorityPolicy` (R1–R9), `leadStateMachine`, `toInteraction`; `CustomerProfileService`, `InteractionService`; `LeadService` extendido (create/update/changeStatus/assign/claim/recontact/notes + timeline/events) manteniendo `registerFromConversation` compatible con DI actual; tests `tests/crm/*Service*.test.ts` + policy/state machine. Sin API nueva / sin WA wiring / sin PG / sin dashboard.
+- **PR3 — application layer:** `priorityPolicy` (R1–R9), `leadStateMachine`, `toInteraction`; `CustomerProfileService`, `InteractionService`; `LeadService` extendido (create/update/changeStatus/assign/claim/recontact/notes + timeline/events) manteniendo `registerFromConversation` compatible con DI actual; tests `tests/crm/*Service*.test.ts` + policy/state machine.
+- **PR4 — HTTP API:** `leadRoutes` extendidos (lista filtrada, detalle, events, status vía `changeStatus`→409, assign/claim/recontact/notes) + `customerRoutes` (`/api/customers/:id`, by-phone, leads/vehicles/interactions); DI cablea `InteractionRepository` + `VehicleProfileRepository` + `CustomerProfileService` + `InteractionService`; tests `tests/crm/leadRoutes.test.ts` + `customerRoutes.test.ts`. Sin dashboard nuevo / sin WA snapshot wiring / sin PG.
 
 ### Pendiente
 
-- PR4+: cablear repos CRM + servicios en DI; API (`/api/customers/...`, leads extendidos); panel ficha cliente + prioridad
+- PR5+: panel ficha cliente + prioridad; cablear snapshot/handoff en boundary WA (sin tocar `RecommendationService`)
 - Persistencia real (PostgreSQL según `schema.sql` + tablas `leads` / `lead_events` / `vehicle_profiles` / `interactions` del spec)
 - `CrmPort` / handoff enriquecido con `reasonCode`, query, opciones (captura en boundary; sin tocar `RecommendationService`)
 - Snapshot boundary en `ConversationContext` (sin tocar `RecommendationService`)
@@ -250,7 +251,7 @@ Pendientes de marcas de baja rotación / refs huérfanas **no** bloquean el cier
 |---|---|
 | `docs/SYSTEM_PROMPT.md` | Comportamiento y voz del asesor |
 | `docs/WILLARD_INTEGRATION_SPEC.md` | Contrato técnico Willard + P1–P8 |
-| `docs/CRM_SPEC.md` | Diseño técnico Fase 3 CRM (SoT; aprobado; PR1 dominio + PR2 repos InMemory — CRM aún incompleto) |
+| `docs/CRM_SPEC.md` | Diseño técnico Fase 3 CRM (SoT; aprobado; PR1–PR4: dominio + repos + servicios + API HTTP — aún sin WA snapshot wiring / PG / panel CRM) |
 | `docs/WILLARD_PENDIENTES.md` | Dudas y cotejos abiertos del catálogo |
 | `docs/WILLARD_COBERTURA.md` | Métricas generadas (no editar a mano) |
 | `README.md` | Arranque local y endpoints |

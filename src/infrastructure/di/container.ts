@@ -1,4 +1,6 @@
 import { ConversationEngine } from '../../application/services/ConversationEngine';
+import { CustomerProfileService } from '../../application/services/CustomerProfileService';
+import { InteractionService } from '../../application/services/InteractionService';
 import { LeadService } from '../../application/services/LeadService';
 import { NotificationService } from '../../application/services/NotificationService';
 import { RecommendationService } from '../../application/services/RecommendationService';
@@ -14,8 +16,10 @@ import { WhatsAppCloudProvider } from '../messaging/WhatsAppCloudProvider';
 import { FileLogRepository } from '../persistence/FileLogRepository';
 import { InMemoryConversationRepository } from '../persistence/InMemoryConversationRepository';
 import { InMemoryCustomerRepository } from '../persistence/InMemoryCustomerRepository';
+import { InMemoryInteractionRepository } from '../persistence/InMemoryInteractionRepository';
 import { InMemoryLeadRepository } from '../persistence/InMemoryLeadRepository';
 import { InMemoryProductRepository } from '../persistence/InMemoryProductRepository';
+import { InMemoryVehicleProfileRepository } from '../persistence/InMemoryVehicleProfileRepository';
 
 export function buildContainer() {
   const customers = new InMemoryCustomerRepository();
@@ -27,12 +31,26 @@ export function buildContainer() {
   const recommendationService = new RecommendationService(willardCatalogKnowledge);
   const logs = new FileLogRepository(env.logDir);
 
-  // CRM: memoria ahora → mañana SqliteLeadRepository (mismo puerto).
+  // CRM: memoria ahora → mañana Postgres*Repository (mismo puerto).
   const leadRepository = new InMemoryLeadRepository();
+  const vehicleProfiles = new InMemoryVehicleProfileRepository();
+  const interactions = new InMemoryInteractionRepository();
   const notificationService = new NotificationService();
   console.log('[DI] NotificationService creado:', notificationService?.constructor?.name);
-  const leadService = new LeadService(leadRepository, notificationService);
-  console.log('[DI] LeadService creado con NotificationService inyectado');
+  const leadService = new LeadService(
+    leadRepository,
+    notificationService,
+    interactions,
+  );
+  console.log('[DI] LeadService creado con NotificationService + InteractionRepository');
+
+  const customerProfileService = new CustomerProfileService(
+    customers,
+    leadRepository,
+    vehicleProfiles,
+    interactions,
+  );
+  const interactionService = new InteractionService(interactions);
 
   const ai: AIProvider =
     env.aiProvider === 'openai'
@@ -69,7 +87,11 @@ export function buildContainer() {
     willardCatalogKnowledge,
     recommendationService,
     leadRepository,
+    vehicleProfiles,
+    interactions,
     leadService,
+    customerProfileService,
+    interactionService,
     notificationService,
     logs,
     ai,

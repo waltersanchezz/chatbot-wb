@@ -11,7 +11,10 @@ import type {
 } from '../../domain/entities/Lead';
 import type { LeadEvent, LeadEventActor } from '../../domain/entities/LeadEvent';
 import type { InteractionRepository } from '../../domain/ports/InteractionRepository';
-import type { LeadRepository } from '../../domain/ports/LeadRepository';
+import type {
+  LeadListFilter,
+  LeadRepository,
+} from '../../domain/ports/LeadRepository';
 import type { Channel } from '../../shared/types';
 import {
   assertLeadTransition,
@@ -116,8 +119,18 @@ export class LeadService {
     });
   }
 
-  async listLeads(): Promise<Lead[]> {
-    return this.repository.list();
+  async listLeads(filter?: LeadListFilter): Promise<Lead[]> {
+    return this.repository.list(filter);
+  }
+
+  async getLead(id: string): Promise<Lead | null> {
+    return this.repository.findById(id);
+  }
+
+  async listEvents(leadId: string): Promise<LeadEvent[]> {
+    const lead = await this.repository.findById(leadId);
+    if (!lead) throw new LeadNotFoundError(leadId);
+    return this.repository.listEvents(leadId);
   }
 
   /**
