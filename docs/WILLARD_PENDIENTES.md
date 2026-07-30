@@ -115,16 +115,11 @@ marcado que perder la aplicación oficial. Todas las filas afectadas quedaron co
 `revisionPendiente: true` y conservan su `textoCatalogo` literal. La duda no es el nombre del
 vehículo, que se lee bien, sino **a qué fila corresponde cada referencia**.
 
-### `lote1-img-07.jpeg` — CHEVROLET (continuación), 41 filas
-- **Campo con duda:** asignación de referencia a fila, en las cuatro columnas
-- **Valor leído:** las 41 filas están transcritas en el archivo de datos, de `Jimny` a `Zafira`
-- **Motivo:** una sombra grande cruza el centro de la tabla desde `Luv D-Max 2.5 Diesel` hasta `Suburvan`, y el desplazamiento vertical del texto impreso respecto a las líneas de la tabla hace que la asignación pueda estar corrida una fila. Toda la página quedó marcada.
-- **Zonas de mayor riesgo:** el bloque `Luv` a `Luv D-Max Gasolina`, donde se alternan las familias 27AI, 27AD y 34; y el bloque final `Trooper 960` a `Zafira`, donde `NS40D PD 670` y las familias 24BD y 24BI se intercalan.
-
-### `lote1-img-07.jpeg` — fila sin nombre de vehículo
-- **Campo con duda:** modelo
-- **Valor leído:** `NS40IST-670 PD` en la columna EXTREMA, sin nombre de vehículo visible
-- **Motivo:** es la primera fila de la tabla y el nombre del vehículo no aparece; probablemente viene de la página anterior o quedó fuera del recorte. No se creó registro porque inventar el nombre sería inaceptable. Es la única aplicación de esta página que quedó fuera del archivo de datos.
+### ~~`lote1-img-07.jpeg` — CHEVROLET (continuación), 41 filas~~ — RESUELTO con retoma nítida (2026-07-29)
+- **Motivo del cierre:** la retoma confirma asignación fila a fila de `Jimny` a `Zafira`. La transcripción previa estaba corrida ~1 fila (p. ej. `Jimny` tenía datos de `Lumina`).
+- **Correcciones literales:** `Jimny` → Extrema `NS40IST-670 PD`; `Luv D-Max Diésel` (acento); `Luv D-Max 2.5 Diesel` sin Extrema (el `34D-950` pertenece a `3.0`); `Spark GTI 1.2LT` / `Spark 1.0…`; `Trailblazer 2.8 Diesel ltz 2.013>` (antes `Trailbrazer…2.012>`).
+- **Estado:** 41/41 con `revisionPendiente: false`. Siguen pendientes solo Chevrolet taxis (`lote1-img-21`) y buses (`lote1-img-23`).
+- **Nota:** la duda de “fila sin nombre” con `NS40IST-670 PD` era en realidad la Extrema de `Jimny`.
 
 ### `lote1-img-08.jpeg` — CITROEN — COTEJO parcial con ampliación (2026-07-29)
 Se confirmaron **10 de 17** filas. Corrección de lectura fiel: el modelo `C-6 2.2` es en realidad
@@ -281,12 +276,23 @@ Las siguientes referencias aparecen en las páginas de aplicaciones pero **no** 
 - **Valor leído:** dos filas con valor `65-1150` en la columna WILLARD y sin nombre de vehículo visible
 - **Motivo:** son la continuación de la sección FORD que viene de la página anterior y el nombre quedó fuera del recorte de la foto. No se crearon registros para ellas porque inventar el nombre del vehículo sería inaceptable.
 - **Origen:** `lote1-img-10.jpeg`, filas 1 y 2
+- **Estado (2026-07-29):** la retoma de Ford p.9 cubre hasta `F-351`; **no** incluye el inicio de p.10. Sigue haciendo falta retoma ancha de `lote1-img-10`.
+
+### ~~FORD F-150 / F-150 Ecoboost / F-150 Explorer / F-351~~ — RESUELTO con retoma p.9 (2026-07-29)
+- **Valor confirmado:**
+  - `F-150` → AGM `27-80 EFB`, Tit `27AI-1250`, Wil `27AI-1150`, Ext `27AI-1000`
+  - `F-150 Ecoboost` → AGM `27-80 EFB`, Tit `27AI-1250`, Wil `65-1150`, Ext `65-1150`
+  - `Ford F-150 / Explorer (>88)` → Tit `48I-1000/48-1100`, Wil `48I-900`, Ext `48I-850`
+  - `Ford F-150 / F-350 (<88) F-351` → AGM `27-80 EFB`, Tit `27AI-1250`, Wil `65-1150/27AI-1150`
+- **No se tocaron** filas Ford ya confirmadas en la misma página (Eco Sport…Focus, etc.).
+- **Origen:** retoma `lote1-img-09-retoma-ford.jpeg` (sección FORD de p.9)
 
 ### FORD V-8 Escape sin ninguna referencia
 - **Campo con duda:** las cuatro columnas de referencia
 - **Valor leído:** todas vacías
 - **Motivo:** la fila existe en el catálogo con nombre de vehículo pero no se alcanza a leer ninguna referencia. Puede que el catálogo la traiga vacía, o que los valores estén fuera del recorte.
 - **Origen:** `lote1-img-10.jpeg`, fila 17
+- **Estado:** sigue pendiente; la retoma entregada no cubre p.10.
 
 ### `CHERRY` y `CHERY` conviven como dos marcas
 - **Campo con duda:** marca
@@ -744,7 +750,27 @@ marcados. Script: `scripts/cotejo-estabilizacion-rotacion.mjs`.
 - KIA Besta / Cadenza: polaridad Titanio/Extrema a `48I-*`
 - KIA Sportage Gasolina 2017+: celdas vacías → Tit `24BD-900` / Wil `24BD-850`
 
-**Se mantuvieron pendientes a propósito:**
+**Se mantuvieron pendientes a propósito (antes de la retoma de la noche):**
 - CHEVROLET `lote1-img-07` (41), taxis p21, buses p23 — sombra / desalineación
 - FORD F-150 / Ranger bloque p09–p10 — conflicto entre JSON y zoom
 - KIA Sorento XM + taxis p22; HYUNDAI taxis p22 + Aero/County/H350; MAZDA CX9 2.017
+
+---
+
+## Retoma nítida Chevrolet p.7 / Ford p.9 / EXTREMA TAXI (2026-07-29 noche)
+
+Script: `scripts/cotejo-retoma-chevy-ford.mjs`. Imágenes: `lote1-img-07.jpeg` (reemplazada),
+`lote1-img-09-retoma-ford.jpeg`, `lote1-img-03-extrema-taxi-retoma.jpeg`.
+
+| Ámbito | Pendientes cerrados | Quedan pendientes |
+|---|---|---|
+| CHEVROLET autos `lote1-img-07` | **41** | 0 en esa página |
+| CHEVROLET total marca | 60 → **19** | taxis p21 (5) + buses p23 (14) |
+| FORD `lote1-img-09` (F-150…F-351) | **4** | 0 pendientes en p.9 |
+| FORD total marca | 15 → **11** | todo el bloque `lote1-img-10` (Raptor…V-8 Escape) |
+| EXTREMA TAXI specs | **4** (`NS40DST-670 PD`, `NS40IST-670 PD`, `NS40DST-670 PG`, `48IST-850`) | — |
+
+**Observación (no modificado):** `24BDST-750`, `35DST-800` y `48DST-850` ya tenían
+`revisionPendiente: false`, pero la retoma de EXTREMA TAXI muestra CCA/CA distintos (parece
+desfase previo de filas en specs). Por regla de no tocar confirmados, **no se alteraron**;
+convienen un cotejo deliberado aparte.
