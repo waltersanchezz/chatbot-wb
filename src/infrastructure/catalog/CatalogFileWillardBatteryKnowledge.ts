@@ -13,6 +13,7 @@ import type {
   WillardReferenceSpec,
 } from '../../domain/willard/catalogTypes';
 import { WILLARD_PRODUCT_LINES } from '../../domain/willard/catalogTypes';
+import { scoreWillardModelMatch } from '../../domain/willard/modelMatch';
 import {
   normalizeReferenceLiteral,
   normalizeWillardText,
@@ -82,26 +83,6 @@ function collectLiterals(lines: WillardLineReferences[]): Set<string> {
   return set;
 }
 
-function modelMatchScore(
-  queryModelo: string | undefined,
-  app: IndexedApplication,
-): number | null {
-  if (!queryModelo) return 0;
-  const q = normalizeWillardText(queryModelo);
-  if (!q) return 0;
-  if (app.modeloNorm === q) return 3;
-  if (app.textoNorm === q) return 2;
-  if (
-    app.modeloNorm.includes(q) ||
-    q.includes(app.modeloNorm) ||
-    app.textoNorm.includes(q) ||
-    q.includes(app.textoNorm)
-  ) {
-    return 1;
-  }
-  return null;
-}
-
 /**
  * Adaptador del catálogo estructurado (willardApplications + willardReferences).
  * Filtra revisionPendiente en carga. No implementa la API legado de sonido/año.
@@ -150,14 +131,27 @@ export class CatalogFileWillardBatteryKnowledge implements WillardBatteryKnowled
     const requireVersion = query.requireVersion === true;
     const limit = query.limit ?? DEFAULT_LIMIT;
 
+    const queryModelo = query.modelo?.trim() ?? '';
+    const hasModelo = queryModelo.length > 0;
+
     type Ranked = { app: IndexedApplication; modelScore: number; versionBoost: number };
     const ranked: Ranked[] = [];
 
     for (const app of this.applications) {
       if (app.marcaNorm !== marcaNorm) continue;
 
-      const modelScore = modelMatchScore(query.modelo, app);
-      if (modelScore === null) continue;
+      let modelScore: number;
+      if (!hasModelo) {
+        modelScore = 0;
+      } else {
+        const scored = scoreWillardModelMatch(
+          queryModelo,
+          app.hit.modelo,
+          app.hit.textoCatalogo,
+        );
+        if (scored === null) continue;
+        modelScore = scored;
+      }
 
       if (requireVersion) {
         const qv = query.version != null ? normalizeWillardText(query.version) : '';
@@ -179,7 +173,14 @@ export class CatalogFileWillardBatteryKnowledge implements WillardBatteryKnowled
       return a.app.hit.textoCatalogo.localeCompare(b.app.hit.textoCatalogo, 'es');
     });
 
-    return ranked.slice(0, limit).map((r) => r.app.hit);
+    // Con modelo: conservar solo el tier de mayor score, luego aplicar limit.
+    let filtered = ranked;
+    if (hasModelo && ranked.length > 0) {
+      const maxScore = ranked[0]!.modelScore;
+      filtered = ranked.filter((r) => r.modelScore === maxScore);
+    }
+
+    return filtered.slice(0, limit).map((r) => r.app.hit);
   }
 
   findApplicationsByReference(reference: string): WillardApplicationHit[] {
