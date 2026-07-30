@@ -1,12 +1,13 @@
 import { ConversationEngine } from '../../application/services/ConversationEngine';
 import { LeadService } from '../../application/services/LeadService';
 import { NotificationService } from '../../application/services/NotificationService';
+import { RecommendationService } from '../../application/services/RecommendationService';
 import { HandleIncomingMessage } from '../../application/use-cases/HandleIncomingMessage';
 import type { AIProvider } from '../../domain/ports/AIProvider';
 import type { MessagingProvider } from '../../domain/ports/MessagingProvider';
 import { OpenAIProviderStub } from '../ai/OpenAIProviderStub';
 import { RuleBasedAIProvider } from '../ai/RuleBasedAIProvider';
-import { FileWillardBatteryKnowledge } from '../catalog/FileWillardBatteryKnowledge';
+import { CatalogFileWillardBatteryKnowledge } from '../catalog/CatalogFileWillardBatteryKnowledge';
 import { env } from '../config/env';
 import { ConsoleMessagingProvider } from '../messaging/ConsoleMessagingProvider';
 import { WhatsAppCloudProvider } from '../messaging/WhatsAppCloudProvider';
@@ -20,7 +21,10 @@ export function buildContainer() {
   const customers = new InMemoryCustomerRepository();
   const conversations = new InMemoryConversationRepository();
   const products = new InMemoryProductRepository();
-  const willardKnowledge = new FileWillardBatteryKnowledge();
+
+  /** Único conocimiento Willard del flujo de baterías / WhatsApp. */
+  const willardCatalogKnowledge = new CatalogFileWillardBatteryKnowledge();
+  const recommendationService = new RecommendationService(willardCatalogKnowledge);
   const logs = new FileLogRepository(env.logDir);
 
   // CRM: memoria ahora → mañana SqliteLeadRepository (mismo puerto).
@@ -43,7 +47,7 @@ export function buildContainer() {
       })
     : new ConsoleMessagingProvider();
 
-  const engine = new ConversationEngine(products, willardKnowledge, {
+  const engine = new ConversationEngine(products, recommendationService, {
     appName: env.appName,
     companyName: env.companyName,
   });
@@ -62,7 +66,8 @@ export function buildContainer() {
     customers,
     conversations,
     products,
-    willardKnowledge,
+    willardCatalogKnowledge,
+    recommendationService,
     leadRepository,
     leadService,
     notificationService,

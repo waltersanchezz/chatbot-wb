@@ -1,0 +1,131 @@
+{
+  "version": "1.0-test",
+  "marca": "Willard",
+  "descripcion": "Fixture mínima para tests del adaptador de catálogo",
+  "reglaDeConsumo": "test",
+  "cobertura": {},
+  "totales": { "registros": 6, "marcas": 4, "pendientesRevision": 1 },
+  "marcas": ["BMW", "CHANA", "CHEVROLET", "ALFA ROMEO"],
+  "aplicaciones": [
+    {
+      "marca": "BMW",
+      "categoria": "Autos y camionetas",
+      "modelo": "320i",
+      "version": null,
+      "textoCatalogo": "320i",
+      "referencias": {
+        "willardAgmEfb": ["W-L5-95AH"],
+        "increibleTitanio": [],
+        "willard": ["49-1200"],
+        "extrema": []
+      },
+      "fuente": { "lote": 1, "imagen": "lote1-img-05.jpeg", "fila": 8 },
+      "revisionPendiente": false
+    },
+    {
+      "marca": "BMW",
+      "categoria": "Autos y camionetas",
+      "modelo": "318i",
+      "version": null,
+      "textoCatalogo": "318i",
+      "referencias": {
+        "willardAgmEfb": ["W-L5-95AH"],
+        "increibleTitanio": [],
+        "willard": ["49-1200"],
+        "extrema": []
+      },
+      "fuente": { "lote": 1, "imagen": "lote1-img-05.jpeg", "fila": 7 },
+      "revisionPendiente": true
+    },
+    {
+      "marca": "CHANA",
+      "categoria": "Autos y camionetas",
+      "modelo": "Benni",
+      "version": null,
+      "textoCatalogo": "Benni",
+      "referencias": {
+        "willardAgmEfb": [],
+        "increibleTitanio": [],
+        "willard": [],
+        "extrema": ["NS40D PD 670"]
+      },
+      "fuente": { "lote": 1, "imagen": "lote1-img-06.jpeg", "fila": 1 },
+      "revisionPendiente": false
+    },
+    {
+      "marca": "CHEVROLET",
+      "categoria": "Autos y camionetas",
+      "modelo": "Alto",
+      "version": null,
+      "textoCatalogo": "Alto",
+      "referencias": {
+        "willardAgmEfb": [],
+        "increibleTitanio": [],
+        "willard": [],
+        "extrema": ["NS40D PD 670"]
+      },
+      "fuente": { "lote": 1, "imagen": "lote1-img-06.jpeg", "fila": 13 },
+      "revisionPendiente": false
+    },
+    {
+      "marca": "CHEVROLET",
+      "categoria": "Buses y camiones",
+      "modelo": "NPR Reward 5.2",
+      "version": null,
+      "textoCatalogo": "NPR Reward 5.2",
+      "referencias": {
+        "willardAgmEfb": ["55DD-800 (2)"],
+        "increibleTitanio": [],
+        "willard": [],
+        "extrema": []
+      },
+      "fuente": { "lote": 1, "imagen": "lote1-img-23.jpeg", "fila": 13 },
+      "revisionPendiente": false
+    },
+    {
+      "marca": "ALFA ROMEO",
+      "categoria": "Autos y camionetas",
+      "modelo": "159",
+      "version": "2.2",
+      "textoCatalogo": "159 2.2",
+      "referencias": {
+        "willardAgmEfb": [],
+        "increibleTitanio": ["24BD-900"],
+        "willard": ["24BD-850"],
+        "extrema": []
+      },
+      "fuente": { "lote": 1, "imagen": "lote1-img-04.jpeg", "fila": 1 },
+      "revisionPendiente": false
+    },
+    {
+      "marca": "ALFA ROMEO",
+      "categoria": "Autos y camionetas",
+      "modelo": "159",
+      "version": "3.2",
+      "textoCatalogo": "159 3.2",
+      "referencias": {
+        "willardAgmEfb": ["W-L3-70AH", "48D-70 EFB"],
+        "increibleTitanio": ["48D-1000", "48-1100"],
+        "willard": ["48D-900"],
+        "extrema": []
+      },
+      "fuente": { "lote": 1, "imagen": "lote1-img-04.jpeg", "fila": 2 },
+      "revisionPendiente": false
+    },
+    {
+      "marca": "HINO",
+      "categoria": "Buses y camiones",
+      "modelo": "Dutro",
+      "version": null,
+      "textoCatalogo": "Dutro",
+      "referencias": {
+        "willardAgmEfb": [],
+        "increibleTitanio": [],
+        "willard": ["55DD-800"],
+        "extrema": []
+      },
+      "fuente": { "lote": 1, "imagen": "lote1-img-25.jpeg", "fila": 2 },
+      "revisionPendiente": false
+    }
+  ]
+}

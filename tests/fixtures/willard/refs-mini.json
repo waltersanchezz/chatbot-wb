@@ -1,0 +1,53 @@
+{
+  "version": "1.0-test",
+  "marca": "Willard",
+  "descripcion": "Fixture mínima de especificaciones para tests",
+  "generadoDesde": { "lote": 1, "carpetaImagenes": "data/catalogo-willard/lote1", "imagenes": [] },
+  "referencias": [
+    {
+      "referencia": "W-L5-95AH",
+      "linea": "Willard AGM",
+      "polaridad": "(- +)",
+      "dimensionesMm": { "largo": 353, "ancho": 175, "alto": 190 },
+      "terminal": "ESTANDAR",
+      "voltaje": 12,
+      "c20Ah": 95,
+      "cca18C": 850,
+      "ca22C": null,
+      "crMin": null,
+      "notas": null,
+      "fuente": { "lote": 1, "imagen": "lote1-img-01.jpeg", "tabla": "WILLARD AGM", "fila": 5 },
+      "revisionPendiente": false
+    },
+    {
+      "referencia": "NS40D PD 670",
+      "linea": "Extrema Titanio",
+      "polaridad": "(- +)",
+      "dimensionesMm": { "largo": 197, "ancho": 129, "alto": 227 },
+      "terminal": "DELGADO",
+      "voltaje": 12,
+      "c20Ah": 35,
+      "cca18C": null,
+      "ca22C": null,
+      "crMin": null,
+      "notas": null,
+      "fuente": { "lote": 1, "imagen": "lote1-img-03.jpeg", "tabla": "EXTREMA", "fila": 1 },
+      "revisionPendiente": false
+    },
+    {
+      "referencia": "ghost-pending",
+      "linea": "Willard",
+      "polaridad": null,
+      "dimensionesMm": null,
+      "terminal": null,
+      "voltaje": 12,
+      "c20Ah": null,
+      "cca18C": null,
+      "ca22C": null,
+      "crMin": null,
+      "notas": "pending fixture",
+      "fuente": { "lote": 1, "imagen": "lote1-img-01.jpeg", "fila": 99 },
+      "revisionPendiente": true
+    }
+  ]
+}

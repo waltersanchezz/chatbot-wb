@@ -1,9 +1,11 @@
 import { readFileSync } from 'fs';
 import path from 'path';
 import type {
+  WillardApplicationHit,
   WillardBatteryKnowledge,
   WillardBatteryMatch,
   WillardLookupQuery,
+  WillardReferenceSpec,
 } from '../../domain/ports/WillardBatteryKnowledge';
 import { logger } from '../logging/logger';
 
@@ -38,6 +40,11 @@ function normalize(value: string): string {
     .trim();
 }
 
+/**
+ * Adaptador del JSON legado `willard-batteries.json`.
+ * Ya no se inyecta en el flujo de baterías / WhatsApp (usa CatalogFileWillardBatteryKnowledge).
+ * Se conserva solo por compatibilidad histórica; no formar parte del runtime.
+ */
 export class FileWillardBatteryKnowledge implements WillardBatteryKnowledge {
   private readonly vehicles: KnowledgeVehicle[];
 
@@ -87,6 +94,22 @@ export class FileWillardBatteryKnowledge implements WillardBatteryKnowledge {
     }
 
     return matches;
+  }
+
+  /**
+   * Stubs del catálogo estructurado: este adaptador solo sirve el JSON legado.
+   * La implementación real está en CatalogFileWillardBatteryKnowledge.
+   */
+  findApplicationsByVehicle(): WillardApplicationHit[] {
+    return [];
+  }
+
+  findApplicationsByReference(): WillardApplicationHit[] {
+    return [];
+  }
+
+  findReferenceSpec(): WillardReferenceSpec | null {
+    return null;
   }
 
   private matchesVehicle(
