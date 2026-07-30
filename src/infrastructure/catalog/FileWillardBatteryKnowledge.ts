@@ -40,6 +40,11 @@ function normalize(value: string): string {
     .trim();
 }
 
+/**
+ * Adaptador del JSON legado `willard-batteries.json`.
+ * Ya no se inyecta en el flujo de baterías / WhatsApp (usa CatalogFileWillardBatteryKnowledge).
+ * Se conserva solo por compatibilidad histórica; no formar parte del runtime.
+ */
 export class FileWillardBatteryKnowledge implements WillardBatteryKnowledge {
   private readonly vehicles: KnowledgeVehicle[];
 

@@ -1,25 +1,26 @@
 import { describe, expect, it } from 'vitest';
 import { RecommendationService } from '../../src/application/services/RecommendationService';
 import { CatalogFileWillardBatteryKnowledge } from '../../src/infrastructure/catalog/CatalogFileWillardBatteryKnowledge';
-import { FileWillardBatteryKnowledge } from '../../src/infrastructure/catalog/FileWillardBatteryKnowledge';
 import { buildContainer } from '../../src/infrastructure/di/container';
 
-describe('buildContainer Willard DI (PR1)', () => {
-  it('injects RecommendationService over the catalog adapter and wires it into ConversationEngine', () => {
+describe('buildContainer Willard DI', () => {
+  it('wires WhatsApp battery flow exclusively through RecommendationService + catalog', () => {
     const container = buildContainer();
 
-    expect(container.willardKnowledge).toBeInstanceOf(FileWillardBatteryKnowledge);
     expect(container.willardCatalogKnowledge).toBeInstanceOf(
       CatalogFileWillardBatteryKnowledge,
     );
     expect(container.recommendationService).toBeInstanceOf(RecommendationService);
+    expect(container).not.toHaveProperty('willardKnowledge');
 
-    // Smoke: service is wired to real catalog data (BMW 320i usable in lote 1).
-    const result = container.recommendationService.recommendByVehicle({
-      marca: 'BMW',
-      modelo: '320i',
+    const mazda = container.recommendationService.recommendByVehicle({
+      marca: 'MAZDA',
+      modelo: 'Mazda 3',
     });
-    expect(result.outcome).toBe('matched');
-    expect(result.options.length).toBeGreaterThan(0);
+    expect(mazda.outcome).toBe('matched');
+    expect(mazda.options.length).toBeGreaterThan(0);
+    expect(
+      mazda.applications.some((a) => /mazda 3/i.test(a.textoCatalogo)),
+    ).toBe(true);
   });
 });

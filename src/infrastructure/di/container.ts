@@ -8,7 +8,6 @@ import type { MessagingProvider } from '../../domain/ports/MessagingProvider';
 import { OpenAIProviderStub } from '../ai/OpenAIProviderStub';
 import { RuleBasedAIProvider } from '../ai/RuleBasedAIProvider';
 import { CatalogFileWillardBatteryKnowledge } from '../catalog/CatalogFileWillardBatteryKnowledge';
-import { FileWillardBatteryKnowledge } from '../catalog/FileWillardBatteryKnowledge';
 import { env } from '../config/env';
 import { ConsoleMessagingProvider } from '../messaging/ConsoleMessagingProvider';
 import { WhatsAppCloudProvider } from '../messaging/WhatsAppCloudProvider';
@@ -22,9 +21,8 @@ export function buildContainer() {
   const customers = new InMemoryCustomerRepository();
   const conversations = new InMemoryConversationRepository();
   const products = new InMemoryProductRepository();
-  /** Legado: sigue alimentando ConversationEngine hasta el PR de wiring del flow. */
-  const willardKnowledge = new FileWillardBatteryKnowledge();
-  /** Catálogo estructurado: puerto para RecommendationService (aún no cableado al chatbot). */
+
+  /** Único conocimiento Willard del flujo de baterías / WhatsApp. */
   const willardCatalogKnowledge = new CatalogFileWillardBatteryKnowledge();
   const recommendationService = new RecommendationService(willardCatalogKnowledge);
   const logs = new FileLogRepository(env.logDir);
@@ -68,7 +66,6 @@ export function buildContainer() {
     customers,
     conversations,
     products,
-    willardKnowledge,
     willardCatalogKnowledge,
     recommendationService,
     leadRepository,

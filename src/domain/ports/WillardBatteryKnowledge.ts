@@ -40,12 +40,12 @@ export interface WillardLookupQuery {
 }
 
 /**
- * Base de conocimiento Willard.
- * Métodos legacy (`findRecommendations`) sirven al chatbot actual.
- * Métodos de catálogo estructurado alimentan RecommendationService (tests / futuro wiring).
+ * Base de conocimiento Willard (catálogo estructurado).
+ * El flujo de baterías / WhatsApp consume RecommendationService sobre este puerto.
+ * `findRecommendations` se conserva solo por compatibilidad de interfaz (no lo usa el chatbot).
  */
 export interface WillardBatteryKnowledge {
-  /** API legado — willard-batteries.json / ConversationEngine. */
+  /** Compatibilidad legada — no usado por ConversationEngine. */
   findRecommendations(query: WillardLookupQuery): WillardBatteryMatch[];
 
   /** Catálogo estructurado — solo aplicaciones utilizables. */
