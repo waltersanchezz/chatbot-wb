@@ -4,6 +4,9 @@ export interface OutboundMessage {
   to: string;
   body: string;
   channel: Channel;
+  /** Correlación auditoría WhatsApp (wamid inbound). */
+  inboundWamid?: string;
+  conversationId?: string;
 }
 
 export interface MessagingProvider {

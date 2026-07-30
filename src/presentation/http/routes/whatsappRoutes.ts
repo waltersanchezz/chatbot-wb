@@ -2,6 +2,7 @@ import { Router } from 'express';
 import type { HandleIncomingMessage } from '../../../application/use-cases/HandleIncomingMessage';
 import type { WhatsAppIdempotencyGate } from '../../../infrastructure/messaging/WhatsAppMessageIdempotency';
 import { MemoryWhatsAppMessageIdempotency } from '../../../infrastructure/messaging/WhatsAppMessageIdempotency';
+import { whatsappDeliveryAudit } from '../../../infrastructure/messaging/WhatsAppDeliveryAudit';
 import { logger } from '../../../infrastructure/logging/logger';
 
 interface WhatsAppTextMessage {
@@ -88,32 +89,57 @@ export function createWhatsAppRouter(
   });
 
   router.post('/', async (req, res) => {
-    console.log('[WEBHOOK] POST recibido');
+    const requestId = whatsappDeliveryAudit.newRequestId();
+    const items = extractWhatsAppTextMessages(req.body);
+    const wamids = items.map((i) => i.message.id);
+
+    whatsappDeliveryAudit.recordPost({
+      requestId,
+      wamids,
+      path: req.originalUrl || '/webhook/whatsapp',
+    });
+
+    console.log('[WEBHOOK] POST recibido', {
+      requestId,
+      wamids,
+      textMessageCount: items.length,
+      time: new Date().toISOString(),
+    });
     console.log(JSON.stringify(req.body, null, 2));
 
     // ACK inmediato — evita que Meta reintente por timeout mientras procesamos.
     res.sendStatus(200);
 
     try {
-      const items = extractWhatsAppTextMessages(req.body);
       if (items.length === 0) {
-        console.log('[WhatsApp Webhook] Evento ignorado (sin mensajes de texto)');
+        console.log('[WhatsApp Webhook] Evento ignorado (sin mensajes de texto)', {
+          requestId,
+        });
         return;
       }
 
       for (const { message, contactName } of items) {
-        // Claim síncrono + persistido ANTES de cualquier await.
-        if (!idempotency.claim(message.id)) {
+        const claimed = idempotency.claim(message.id);
+        whatsappDeliveryAudit.recordClaim({
+          requestId,
+          wamid: message.id,
+          result: claimed ? 'claim_ok' : 'duplicate_skipped',
+        });
+
+        if (!claimed) {
           console.log('[WhatsApp Webhook] Duplicado ignorado', {
+            requestId,
             messageId: message.id,
           });
           logger.info('WhatsApp webhook duplicate skipped', {
+            requestId,
             messageId: message.id,
           });
           continue;
         }
 
-        console.log('[WhatsApp Webhook] Mensaje de texto', {
+        console.log('[WhatsApp Webhook] claim OK — procesando', {
+          requestId,
           from: message.from,
           messageId: message.id,
           preview: message.text!.body.slice(0, 80),
@@ -126,13 +152,15 @@ export function createWhatsAppRouter(
           externalConversationId: `whatsapp:${message.from}`,
           customerName: contactName,
           sendReply: true,
+          inboundWamid: message.id,
         });
         console.log('[WhatsApp Webhook] HandleIncomingMessage finalizó', {
+          requestId,
           messageId: message.id,
         });
       }
     } catch (err) {
-      console.error('[WhatsApp Webhook] Error procesando mensaje:');
+      console.error('[WhatsApp Webhook] Error procesando mensaje:', { requestId });
       if (err instanceof Error) {
         console.error(err.message);
         console.error(err.stack);
@@ -140,6 +168,7 @@ export function createWhatsAppRouter(
         console.error(err);
       }
       logger.error('WhatsApp webhook processing failed', {
+        requestId,
         error: err instanceof Error ? err.message : 'unknown',
       });
     }

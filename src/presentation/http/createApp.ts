@@ -20,6 +20,7 @@ import { createHealthRouter } from './routes/healthRoutes';
 import { createLeadRouter } from './routes/leadRoutes';
 import { createLogsRouter } from './routes/logsRoutes';
 import { createProductRouter } from './routes/productRoutes';
+import { createWhatsAppAuditRouter } from './routes/whatsappAuditRoutes';
 import { createWhatsAppRouter } from './routes/whatsappRoutes';
 
 export interface AppDeps {
@@ -89,6 +90,7 @@ export function createApp(deps: AppDeps): Express {
       deps.whatsappIdempotency,
     ),
   );
+  app.use('/api/debug', createWhatsAppAuditRouter(env.whatsapp.verifyToken));
   app.use((err: unknown, _req: express.Request, res: express.Response, _next: express.NextFunction) => {
     logger.error('Unhandled error', {
       error: err instanceof Error ? err.message : 'unknown',

@@ -17,6 +17,8 @@ export interface IncomingMessageInput {
   externalConversationId?: string;
   customerName?: string;
   sendReply?: boolean;
+  /** WhatsApp Cloud API message id (wamid) for idempotency/audit correlation. */
+  inboundWamid?: string;
 }
 
 export interface IncomingMessageResult {
@@ -46,6 +48,7 @@ export class HandleIncomingMessage {
     console.log('[HandleIncomingMessage] Mensaje recibido', {
       channel: input.channel,
       phone: input.phone,
+      inboundWamid: input.inboundWamid,
       textPreview: input.text.slice(0, 80),
     });
 
@@ -104,13 +107,25 @@ export class HandleIncomingMessage {
 
       // 1) WhatsApp PRIMERO — nunca esperar a Telegram/CRM.
       if (input.sendReply !== false) {
-        console.log('[HandleIncomingMessage] Enviando respuesta a WhatsApp...');
+        console.log('[HandleIncomingMessage] Enviando respuesta a WhatsApp...', {
+          inboundWamid: input.inboundWamid,
+          conversationId: conversation.id,
+          // Único call site de envío WhatsApp en el use-case:
+          // HandleIncomingMessage.ts → messaging.sendText
+          callSite: 'HandleIncomingMessage.execute',
+        });
         const sendResult = await this.messaging.sendText({
           to: input.phone,
           body: reply,
           channel: input.channel,
+          inboundWamid: input.inboundWamid,
+          conversationId: conversation.id,
         });
-        console.log('[HandleIncomingMessage] Respuesta WhatsApp enviada', sendResult);
+        console.log('[HandleIncomingMessage] Respuesta WhatsApp enviada', {
+          ...sendResult,
+          inboundWamid: input.inboundWamid,
+          conversationId: conversation.id,
+        });
       } else {
         console.log('[HandleIncomingMessage] sendReply=false → no se envía a WhatsApp');
       }

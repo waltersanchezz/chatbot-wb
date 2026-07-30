@@ -1,5 +1,6 @@
 import type { MessagingProvider, OutboundMessage } from '../../domain/ports/MessagingProvider';
 import { logger } from '../logging/logger';
+import { whatsappDeliveryAudit } from './WhatsAppDeliveryAudit';
 
 export interface WhatsAppCloudConfig {
   accessToken: string;
@@ -15,12 +16,23 @@ export class WhatsAppCloudProvider implements MessagingProvider {
   constructor(private readonly config: WhatsAppCloudConfig) {}
 
   async sendText(message: OutboundMessage): Promise<{ ok: boolean; providerMessageId?: string }> {
+    const stack = new Error('sendText_trace').stack ?? '';
+
     if (!this.config.accessToken || !this.config.phoneNumberId) {
       logger.info('WhatsApp stub send (no credentials)', {
         to: message.to,
         body: message.body,
       });
-      return { ok: true, providerMessageId: `wa-stub-${Date.now()}` };
+      const providerMessageId = `wa-stub-${Date.now()}`;
+      whatsappDeliveryAudit.recordSend({
+        wamid: message.inboundWamid,
+        conversationId: message.conversationId,
+        to: message.to,
+        providerMessageId,
+        ok: true,
+        stack,
+      });
+      return { ok: true, providerMessageId };
     }
 
     const url = `https://graph.facebook.com/${this.config.apiVersion}/${this.config.phoneNumberId}/messages`;
@@ -42,6 +54,13 @@ export class WhatsAppCloudProvider implements MessagingProvider {
     if (!response.ok) {
       const errorBody = await response.text();
       logger.error('WhatsApp send failed', { status: response.status, errorBody });
+      whatsappDeliveryAudit.recordSend({
+        wamid: message.inboundWamid,
+        conversationId: message.conversationId,
+        to: message.to,
+        ok: false,
+        stack,
+      });
       return { ok: false };
     }
 
@@ -49,9 +68,19 @@ export class WhatsAppCloudProvider implements MessagingProvider {
       messages?: Array<{ id: string }>;
     };
 
+    const providerMessageId = data.messages?.[0]?.id;
+    whatsappDeliveryAudit.recordSend({
+      wamid: message.inboundWamid,
+      conversationId: message.conversationId,
+      to: message.to,
+      providerMessageId,
+      ok: true,
+      stack,
+    });
+
     return {
       ok: true,
-      providerMessageId: data.messages?.[0]?.id,
+      providerMessageId,
     };
   }
 }
