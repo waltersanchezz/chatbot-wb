@@ -56,7 +56,7 @@ Detalle: `docs/WILLARD_INTEGRATION_SPEC.md`. Comportamiento conversacional: `doc
 |---|---|---|---|
 | 1 | Base de conocimiento | **En curso (avanzada)** | Catálogo Willard estructurado + motor de recomendación en producción |
 | 2 | Chatbot inteligente | **En curso (operativo)** | WhatsApp live; flujos baterías/rodamientos; motor de reglas |
-| 3 | CRM | **MVP inicial + PR1–PR2** | Spec aprobado; dominio + repos InMemory; sin servicios/API/PG aún |
+| 3 | CRM | **MVP inicial + PR1–PR3** | Spec aprobado; dominio + repos InMemory + servicios/políticas; sin API/WA wiring/PG/dashboard aún |
 | 4 | Panel web | **MVP inicial** | Dashboard estático + API de leads |
 | 5 | Automatizaciones | **Parcial** | Handoff y alertas Telegram; sin workflows avanzados |
 | 6 | Producción | **Operativa / iterativa** | Render + health + logs; endurecimiento continuo |
@@ -137,7 +137,7 @@ Detalle: `docs/WILLARD_INTEGRATION_SPEC.md`. Comportamiento conversacional: `doc
 
 **Diseño (fuente de verdad):** `docs/CRM_SPEC.md` — especificación técnica de arquitectura MVP **aprobada con enmiendas** (CustomerProfile 1→N Lead / VehicleProfile, timeline de interacciones, prioridad Alta|Media|Baja solo CRM, estados, eventos, API, puertos/persistencia, flujo WhatsApp → Dashboard).
 
-**Implementación:** PR1 dominio + **PR2 repos InMemory** hechos. **Aún no es CRM completo** — faltan políticas de aplicación, `CustomerProfilePort`/servicios, API y panel; sin PostgreSQL.
+**Implementación:** PR1 dominio + PR2 repos InMemory + **PR3 servicios/políticas** hechos. **Aún no es CRM completo** — faltan API HTTP nueva, cableado WA/DI de repos CRM, panel y PostgreSQL.
 
 ### Completado
 
@@ -146,17 +146,15 @@ Detalle: `docs/WILLARD_INTEGRATION_SPEC.md`. Comportamiento conversacional: `doc
 - Notificación Telegram de leads nuevos (`NotificationService`)
 - API HTTP de leads (`leadRoutes`)
 - **PR1 — dominio CRM:** `CustomerProfile`, `VehicleProfile`, `Interaction`, `LeadEvent`; `Lead` ampliado (estados, `LeadPriority`, snapshot, assignment/SLA/recontact opcionales); helpers de transición/validación en `src/domain/crm/`; tests `tests/crm/entities.test.ts`
-- **PR2 — puertos + InMemory:** `LeadRepository` extendido (filtros, by customer, events); `VehicleProfileRepository` + `InteractionRepository` nuevos; `CustomerRepository` InMemory endurecido (copias defensivas); tests `tests/crm/repositories.test.ts`. Sin PG / sin servicios CRM nuevos / sin API nueva.
+- **PR2 — puertos + InMemory:** `LeadRepository` extendido (filtros, by customer, events); `VehicleProfileRepository` + `InteractionRepository` nuevos; `CustomerRepository` InMemory endurecido (copias defensivas); tests `tests/crm/repositories.test.ts`
+- **PR3 — application layer:** `priorityPolicy` (R1–R9), `leadStateMachine`, `toInteraction`; `CustomerProfileService`, `InteractionService`; `LeadService` extendido (create/update/changeStatus/assign/claim/recontact/notes + timeline/events) manteniendo `registerFromConversation` compatible con DI actual; tests `tests/crm/*Service*.test.ts` + policy/state machine. Sin API nueva / sin WA wiring / sin PG / sin dashboard.
 
 ### Pendiente
 
-- PR3+: `priorityPolicy` + `leadStateMachine` de aplicación (reglas CRM — sin Willard / `RecommendationService`)
-- `CustomerProfilePort` / service (ensambla Customer + leads + vehicles + timeline)
-- Cablear `LeadService` / futuro `CrmPort`: perfil, vehículos, snapshot boundary, prioridad, interacciones
+- PR4+: cablear repos CRM + servicios en DI; API (`/api/customers/...`, leads extendidos); panel ficha cliente + prioridad
 - Persistencia real (PostgreSQL según `schema.sql` + tablas `leads` / `lead_events` / `vehicle_profiles` / `interactions` del spec)
 - `CrmPort` / handoff enriquecido con `reasonCode`, query, opciones (captura en boundary; sin tocar `RecommendationService`)
-- Estados operativos de lead (asignación, SLA, recontacto — subconjunto MVP del spec)
-- API de ficha de cliente (`/api/customers/...`) para panel
+- Snapshot boundary en `ConversationContext` (sin tocar `RecommendationService`)
 
 ---
 
