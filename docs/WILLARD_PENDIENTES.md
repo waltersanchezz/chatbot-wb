@@ -190,16 +190,15 @@ Las siguientes referencias aparecen en las páginas de aplicaciones pero **no** 
 ### DODGE / FORD — referencia `65-1150`
 - **Campo con duda:** referenciaWillard, columna WILLARD y EXTREMA
 - **Valor leído:** `65-1150`
-- **Motivo:** la lista maestra tiene `65I-1150` con la `I` de polaridad invertida. En estas páginas se lee sin la `I`. Aparece en varias filas, conviene confirmarla una sola vez.
-- **Filas afectadas:** DODGE Dakota (2006-2012), DODGE Ram Diesel, FORD Edge Limited 2.011, FORD Expedition 5.4L, FORD F-150, FORD F-150/F-350 (<88) F-351, FORD Ranger, FORD Ranger 2012, FORD Ranger Raptor
-- **Origen:** `lote1-img-09.jpeg`, `lote1-img-10.jpeg`
+- **Motivo:** la lista maestra tiene `65I-1150` con la `I` de polaridad invertida. En estas páginas se lee sin la `I`. Aparece en varias filas, conviene confirmarla una sola vez. **No inventar** spec en `willardReferences.json`.
+- **Filas afectadas (literal confirmado, huérfana vs maestra):** DODGE Dakota (2006-2012), DODGE Ram Diesel, FORD Edge Limited 2.011, FORD Expedition 5.4L, FORD F-150 Ecoboost, FORD F-150/F-350 (<88) F-351, FORD Fortaleza, FORD Ranger Diesel, FORD Ranger Hi-Rider, FORD Sport Track XLT, FORD Ford Raptor (Willard)
+- **Origen:** `lote1-img-09.jpeg`, `lote1-img-10-retoma-ford.png`
+- **Nota (2026-07-29 retoma p.10):** Ford p.10 confirma literales `65-1150` en varias filas; `49-1200` solo en Ranger 2012 (Willard). Siguen sin spec en lista maestra.
 
-### DODGE / FORD — referencias `48-1000` y `48-900`
-- **Campo con duda:** referenciaWillard, columnas INCREIBLE TITANIO y WILLARD
-- **Valor leído:** `48-1000` y `48-900`
-- **Motivo:** la lista maestra tiene `48D-1000` y `48I-1000` en Titanio, y `48D-900` y `48I-900` en Willard, siempre con la letra de polaridad. Estas filas se leen sin la `D` ni la `I`. Podría ser pérdida de la letra por la resolución, o una referencia genérica del catálogo.
-- **Filas afectadas:** DODGE Ram Todas / Durango, FORD F-150 / Explorer (>88), FORD Laser, FORD Mustang i-90i, FORD Ranger Hi-Rider Diesel Doble Cab 4x4 2.5
-- **Origen:** `lote1-img-09.jpeg`, `lote1-img-10.jpeg`
+### ~~DODGE / FORD — referencias `48-1000` y `48-900`~~ — RESUELTO en Ford p.10 (retoma)
+- **Valor confirmado (Ford p.10):** las filas leídas sin `I` eran mala lectura previa. Retoma nítida: Laser → Tit `24BD-900` / Wil `55DD-800`+`24BD-850`; Mustang (-90) → Tit `48I-1000`/`48-1100`, Wil `48I-900`, Ext `48I-850`; Hi-Rider → AGM `27-80 EFB`, Tit `27AI-1250`, Wil `65-1150`.
+- **Queda abierto solo donde no hay retoma:** DODGE Ram Todas / Durango (p.9) si aún figura sin polaridad.
+- **Origen Ford:** `lote1-img-10-retoma-ford.png`
 
 ### CHEVROLET Epica 2.5 AUT. y Trailblazer — referencia `48I-850`
 - **Campo con duda:** referenciaWillard, columna EXTREMA
@@ -273,10 +272,10 @@ Las siguientes referencias aparecen en las páginas de aplicaciones pero **no** 
 
 ### FORD — filas sin nombre de vehículo al inicio de `lote1-img-10.jpeg`
 - **Campo con duda:** modelo
-- **Valor leído:** dos filas con valor `65-1150` en la columna WILLARD y sin nombre de vehículo visible
-- **Motivo:** son la continuación de la sección FORD que viene de la página anterior y el nombre quedó fuera del recorte de la foto. No se crearon registros para ellas porque inventar el nombre del vehículo sería inaceptable.
+- **Valor leído:** dos filas con valor `65-1150` en la columna WILLARD y sin nombre de vehículo visible (foto original recortada)
+- **Motivo:** continuación de FORD desde p.9; el nombre quedó fuera del recorte. No se crearon registros porque inventar el nombre sería inaceptable.
 - **Origen:** `lote1-img-10.jpeg`, filas 1 y 2
-- **Estado (2026-07-29):** la retoma de Ford p.9 cubre hasta `F-351`; **no** incluye el inicio de p.10. Sigue haciendo falta retoma ancha de `lote1-img-10`.
+- **Estado (2026-07-29 retoma p.10):** la retoma `lote1-img-10-retoma-ford.png` arranca en `Ford Raptor` (fila 3). Las filas 1–2 huérfanas de nombre **siguen sin registro** (no inventar). Cubiertas en p.9 hasta `F-351`.
 
 ### ~~FORD F-150 / F-150 Ecoboost / F-150 Explorer / F-351~~ — RESUELTO con retoma p.9 (2026-07-29)
 - **Valor confirmado:**
@@ -287,12 +286,9 @@ Las siguientes referencias aparecen en las páginas de aplicaciones pero **no** 
 - **No se tocaron** filas Ford ya confirmadas en la misma página (Eco Sport…Focus, etc.).
 - **Origen:** retoma `lote1-img-09-retoma-ford.jpeg` (sección FORD de p.9)
 
-### FORD V-8 Escape sin ninguna referencia
-- **Campo con duda:** las cuatro columnas de referencia
-- **Valor leído:** todas vacías
-- **Motivo:** la fila existe en el catálogo con nombre de vehículo pero no se alcanza a leer ninguna referencia. Puede que el catálogo la traiga vacía, o que los valores estén fuera del recorte.
-- **Origen:** `lote1-img-10.jpeg`, fila 17
-- **Estado:** sigue pendiente; la retoma entregada no cubre p.10.
+### ~~FORD V-8 Escape~~ — RESUELTO con retoma p.10 (2026-07-29)
+- **Valor confirmado:** AGM `W-L3-70AH` / `48D-70 EFB`, Tit `48I-1000`/`48-1100`, Wil `48I-900`, Ext vacío
+- **Origen:** `lote1-img-10-retoma-ford.png`, fila 17
 
 ### `CHERRY` y `CHERY` conviven como dos marcas
 - **Campo con duda:** marca
@@ -557,9 +553,14 @@ Se confirmaron los valores de `Mahindra Scorpio / Pick up`, `Brilliance V5`, `Ba
 `Changan CS15` y `DFSK Glory 580`. La decisión de negocio de desglosar `VARIOS` en marcas
 individuales sigue documentada más arriba; eso no es una duda de lectura.
 
-### `lote1-img-21.jpeg` — CHEVROLET sección Taxis, 5 filas
-- **Campo con duda:** asignación de referencia a fila
-- **Motivo:** es el desplazamiento más claro de todo el lote. `Taxi 7.24` queda con Willard `34D-1100` y Extrema `NS40D PD 670`, dos familias sin relación; `Optra 1.6 Serv. Esp.` queda con Titanio `24BI-900` y Extrema `34D-950`, también sin relación; `Chevrotaxi Swift` queda solo con Extrema. Las cinco filas quedaron marcadas.
+### ~~`lote1-img-21.jpeg` — CHEVROLET sección Taxis, 5 filas~~ — RESUELTO con ampliación (2026-07-29)
+- **Valor confirmado (corrige desplazamiento de ~1 fila):**
+  - `Taxi 7.24` → Extrema `NS40D PD 670`
+  - `Optra 1.6 Serv. Esp.` → Willard `34D-1100`, Extrema `34D-950`
+  - `Chevrotaxi Swift` → Titanio `24BI-900`, Extrema `24BI-750`
+  - `Elite` → Willard `L1-750 / 36D-750`
+  - `Chevytaxi Sail` → Titanio `NS60I-750 PD`, Willard `NS60I-620`
+- **Estado:** 5/5 con `revisionPendiente: false`. Chevrolet queda **85/85** utilizable.
 
 ### `lote1-img-22.jpeg` — referencia `24BDST-750`
 - **Campo con duda:** columna EXTREMA
@@ -568,21 +569,18 @@ individuales sigue documentada más arriba; eso no es una duda de lectura.
 - **Filas afectadas:** GEELY CK 1.3 GL, GEELY CK 1.5 GL, HYUNDAI Accent, KIA Taxi S-5, KIA Ekotaxi II, LIFAN 520 LX Sedán, RENAULT R9, RENAULT Symbol, RENAULT Clio
 - **Origen:** `lote1-img-22.jpeg`
 
-### `lote1-img-22.jpeg` — KIA `Taxi S-5 1.5 RS sedán A.A D.H.` con `27-80 EFB(2)`
-- **Campo con duda:** columna WILLARD AGM / EFB
-- **Valor leído:** `27-80 EFB(2)`
-- **Motivo:** dos baterías `27-80 EFB` en un taxi sedán de 1.5 no tiene sentido técnico; el `(2)` es la notación que el catálogo usa para buses y camiones. Puede ser un valor desplazado desde otra tabla.
-- **Origen:** `lote1-img-22.jpeg`, fila 10
+### ~~`lote1-img-22.jpeg` — KIA taxis (Taxi S-5 / Ekotaxi / Pikanto)~~ — RESUELTO con ampliación (2026-07-29)
+- **Valor confirmado:** literales actuales, incluido `27-80 EFB(2)` en Taxi S-5 (se conserva como texto impreso; no se “corrige” por criterio técnico).
+- **Estado:** 3/3 taxis Kia con `revisionPendiente: false`. Queda pendiente solo `Sorento XM 2.2/3.5` en `lote1-img-13`.
 
-### `lote1-img-22.jpeg` — HYUNDAI sección Taxis, 5 filas
-- **Campo con duda:** asignación de referencia a fila
-- **Motivo:** `i25` queda con AGM `35-65 EFB`, Titanio `24BD-900` y Willard `35-800`, sin Extrema, mientras las demás filas del bloque solo traen Extrema. Las cinco filas quedaron marcadas.
+### ~~`lote1-img-22.jpeg` — HYUNDAI sección Taxis, 5 filas~~ — RESUELTO con ampliación (2026-07-29)
+- **Valor confirmado:** City Taxi / ATOS → Extrema `NS40D PD 670`; Accent → Tit/Wil/Ext `24BD-*` + `24BDST-750`; Grand i10 Taxi → `NS40D-PD 670K`; i25 → AGM `35-65 EFB` / Tit `24BD-900` / Wil `35-800`.
+- **Estado:** 5/5 taxis con `revisionPendiente: false`. Siguen pendientes solo buses Hyundai en `lote1-img-25` (Aero / County / H350).
 
-### `lote1-img-23.jpeg` — CHEVROLET buses, 14 filas y fila sin nombre
-- **Campo con duda:** asignación de referencia a fila; modelo en la primera fila
-- **Valor leído:** la primera fila del bloque muestra `4DT-1500` en WILLARD y `4DT-1400` en EXTREMA sin nombre de vehículo
-- **Motivo:** el nombre quedó fuera del recorte o viene de la página anterior. No se creó registro. Además `FVR Forward 7.8` es la única fila del bloque con familia `4DT` en vez de `27AI`, lo que puede ser consecuencia del desplazamiento. Las 14 filas con nombre quedaron marcadas.
-- **Origen:** `lote1-img-23.jpeg`
+### ~~`lote1-img-23.jpeg` — CHEVROLET buses, 14 filas~~ — RESUELTO con ampliación (2026-07-29)
+- **Corrección:** `CHR 7.2 Turbo` y `LV Bus 150` llevan familia `4DT` (`4DT-1500` / `4DT-1400`; LV con `(2)`). El resto del bloque Chevrolet (FRR…NQR) comparte `27-80 EFB(2)` / `27AI-*(2)`. `FVR Forward 7.8` queda en la familia 27AI (no 4DT).
+- **Nota:** la fila sin nombre al inicio del bloque (posible 4DT suelto) sigue sin registro; no se inventó modelo.
+- **Estado:** 14/14 con nombre → `revisionPendiente: false`.
 
 ### ~~`lote1-img-24.jpeg` — DONG FENG 7 filas~~ — RESUELTO (cotejo 2026-07-29); FOTON sigue pendiente
 - **DONG FENG:** las 7 filas confirmadas con Extrema `31H-1250 P` únicamente; `revisionPendiente: false`. El valor extra a altura de encabezado no se reasignó a ninguna fila.
@@ -767,10 +765,72 @@ Script: `scripts/cotejo-retoma-chevy-ford.mjs`. Imágenes: `lote1-img-07.jpeg` (
 | CHEVROLET autos `lote1-img-07` | **41** | 0 en esa página |
 | CHEVROLET total marca | 60 → **19** | taxis p21 (5) + buses p23 (14) |
 | FORD `lote1-img-09` (F-150…F-351) | **4** | 0 pendientes en p.9 |
-| FORD total marca | 15 → **11** | todo el bloque `lote1-img-10` (Raptor…V-8 Escape) |
+| FORD total marca | 15 → **11** | (histórico de esa noche) bloque `lote1-img-10` aún pendiente entonces |
 | EXTREMA TAXI specs | **4** (`NS40DST-670 PD`, `NS40IST-670 PD`, `NS40DST-670 PG`, `48IST-850`) | — |
 
 **Observación (no modificado):** `24BDST-750`, `35DST-800` y `48DST-850` ya tenían
 `revisionPendiente: false`, pero la retoma de EXTREMA TAXI muestra CCA/CA distintos (parece
 desfase previo de filas en specs). Por regla de no tocar confirmados, **no se alteraron**;
 convienen un cotejo deliberado aparte.
+
+---
+
+## Cotejo alta rotación restante — ampliación lote existente (2026-07-29 noche+)
+
+Script: `scripts/cotejo-fase1-alta-rotacion.mjs`. Sin retoma nueva: ampliación de
+`lote1-img-21/22/23` con `ampliar-pagina.ps1`.
+
+| Ámbito | Cerrados | Notas |
+|---|---|---|
+| CHEVROLET taxis p.21 | **5** | Corrección de desplazamiento |
+| CHEVROLET buses p.23 | **14** | CHR/LV → 4DT; FVR Forward 7.8 → 27AI(2) |
+| HYUNDAI taxis p.22 | **5** | Literales confirmados |
+| KIA taxis p.22 | **3** | Literales confirmados (incl. `27-80 EFB(2)`) |
+| FORD p.10 | **0** | Ampliaciones contradictorias entre sí y vs filas ya confirmadas (Mustang GT / Ranger XL / Sport Track). **Requiere retoma nítida** como la de p.9 |
+
+**Totales tras este cotejo:** utilizables **609/744 (81.9 %)**, pendientes **135**.  
+Chevrolet **85/85**. Kia taxis cerrados (queda Sorento XM). Hyundai taxis cerrados (quedan 3 buses p.25).  
+Ford alta rotación pendiente: 11 filas en `lote1-img-10`.
+
+---
+
+## Sprint Final FASE 1 — alta rotación (2026-07-29)
+
+**Principio:** no inferir. Sin foto nítida nueva, no se modifica `willardApplications.json`.
+
+### ~~Lote A — Ford `lote1-img-10`~~ — CERRADO (retoma nítida 2026-07-29)
+
+Evidencia oficial: `data/catalogo-willard/lote1/lote1-img-10-retoma-ford.png` (reemplaza ampliaciones previas).  
+Ford marca: **32/32** utilizables. `fuente.imagen` del bloque Raptor→V-8 Escape apunta a la retoma.
+
+| # | textoCatalogo | fila | Literales confirmados (AGM / Tit / Wil / Ext) |
+|---|---|---|---|
+| 1 | Ford Raptor | 3 | — / — / `65-1150` / — |
+| 2 | Fortaleza | 4 | `27-80 EFB` / `27AI-1250` / `65-1150` / — |
+| 3 | Fusión V6 3.0 Aut | 5 | — / `42D-900` / — / — |
+| 4 | Laser | 6 | — / `24BD-900` / `55DD-800`+`24BD-850` / — |
+| 5 | Mustang (-90) *(antes “i-90i”)* | 7 | — / `48I-1000`+`48-1100` / `48I-900` / `48I-850` |
+| 6 | Ranger | 10 | `27-80 EFB` / `27AI-1250` / `27AI-1150` / `27AI-1000` |
+| 7 | Ranger Diesel | 11 | `27-80 EFB` / `27AI-1250` / `65-1150` / — |
+| 8 | Ranger 2012 | 12 | — / — / `49-1200` / — |
+| 9 | Ranger Hi-Rider Diesel Dob Cab 4x4 2.5 | 13 | `27-80 EFB` / `27AI-1250` / `65-1150` / — |
+| 10 | Ranger Raptor | 15 | `W-L4-80AH` / — / — / — |
+| 11 | V-8 Escape | 17 | `W-L3-70AH`+`48D-70 EFB` / `48I-1000`+`48-1100` / `48I-900` / — |
+
+**También corregidas** (estaban `revisionPendiente: false` pero literales erróneos vs retoma): Mustang GT, Ranger XL 4X2, Sport Track XLT. Nuevo Ranger 2.6 D CAB ya coincidía.
+
+**Huérfanas vs maestra (no inventar specs):** `65-1150`, `49-1200`.
+
+### Lote B — Kia Sorento XM (`lote1-img-13` fila 28)
+
+Pendiente de polaridad/familias mezcladas; requiere zoom inequívoco. No bloquear WhatsApp de Picanto/Sportage/Rio (ya usables).
+
+### Lote C — Hyundai buses (`lote1-img-25` filas 14–16)
+
+`Aero City Bus Intermunicipal`, `Bus County`, `H350/Furgon/Estacas /Cabinas 4 Toneladas` — nombres partidos / Extrema=Willard. Flota, no calle; cerrar solo con evidencia.
+
+### Definición de “FASE 1 terminada” (alta rotación crítica)
+
+Se declara solo cuando Lotes A+B+C estén cerrados (o C reclasificado por decisión de negocio) **y** el checklist BMW/Chevrolet/Ford/Kia(calle)/Hyundai(taxis) quede sin pendientes críticos. Los ~120 pendientes de otras marcas no impiden ese cierre parcial documentado.
+
+**Ahora:** Lote A cerrado. Próximo bloqueante: **Lote B (Kia Sorento XM)**.

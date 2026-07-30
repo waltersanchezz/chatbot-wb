@@ -23,14 +23,14 @@ Todas las páginas del lote fueron transcritas.
 | Marcas | 66 |
 | Modelos distintos (marca + modelo) | 632 |
 | Aplicaciones (filas de vehículo del catálogo) | 744 |
-| Menciones de referencia (celdas con dato) | 2.045 |
-| Referencias únicas citadas en aplicaciones | 89 |
+| Menciones de referencia (celdas con dato) | 2.047 |
+| Referencias únicas citadas en aplicaciones | 88 |
 | Referencias con especificación técnica | 90 |
-| Registros pendientes de revisión | 162 (21.8 %) |
+| Registros pendientes de revisión | 124 (16.7 %) |
 
 Una aplicación es una fila de vehículo del catálogo. Una mención es una referencia dentro de una
 columna de esa fila, así que un vehículo con referencia en las cuatro líneas suma una aplicación y
-cuatro menciones. Confundir ambas métricas infla el total unas 2.7 veces.
+cuatro menciones. Confundir ambas métricas infla el total unas 2.8 veces.
 
 ## Aplicaciones por sección del catálogo
 
@@ -47,7 +47,7 @@ cuatro menciones. Confundir ambas métricas infla el total unas 2.7 veces.
 |---|---|---|---|---|
 | Willard AGM / EFB | 15 | 356 | 278 | 37.4 % |
 | Increible Titanio | 17 | 604 | 490 | 65.9 % |
-| Willard | 29 | 617 | 574 | 77.2 % |
+| Willard | 28 | 619 | 576 | 77.4 % |
 | Extrema | 37 | 468 | 466 | 62.6 % |
 
 ## Cobertura utilizable en producción
@@ -59,15 +59,15 @@ marcados siguen en el archivo: no se borran, se filtran en el momento de consult
 
 | Métrica | Utilizable | Total | % |
 |---|---|---|---|
-| Aplicaciones | 582 | 744 | 78.2 % |
+| Aplicaciones | 620 | 744 | 83.3 % |
 | Marcas | 66 | 66 | 100.0 % |
-| Modelos distintos | 522 | 632 | 82.6 % |
+| Modelos distintos | 555 | 632 | 87.8 % |
 
 | Sección | Utilizable | Total | % |
 |---|---|---|---|
-| Autos y camionetas | 490 | 590 | 83.1 % |
-| Buses y camiones | 73 | 120 | 60.8 % |
-| Taxis | 9 | 24 | 37.5 % |
+| Autos y camionetas | 501 | 590 | 84.9 % |
+| Buses y camiones | 87 | 120 | 72.5 % |
+| Taxis | 22 | 24 | 91.7 % |
 | Maquinaria agricola | 10 | 10 | 100.0 % |
 
 ### Marcas que hoy quedarían sin ninguna recomendación
@@ -77,7 +77,7 @@ Todas las marcas tienen al menos una aplicación utilizable.
 ## Pendientes de revisión por página
 
 Vista para planear el cotejo contra el impreso: cuántas filas de cada página quedaron marcadas.
-4 de las 26 páginas de aplicaciones están limpias.
+8 de las 27 páginas de aplicaciones están limpias.
 
 | Página | Aplicaciones | Marcadas | % marcado |
 |---|---|---|---|
@@ -87,7 +87,8 @@ Vista para planear el cotejo contra el impreso: cuántas filas de cada página q
 | `lote1-img-07.jpeg` | 41 | 0 | 0.0 % |
 | `lote1-img-08.jpeg` | 39 | 25 | 64.1 % |
 | `lote1-img-09.jpeg` | 38 | 4 | 10.5 % |
-| `lote1-img-10.jpeg` | 24 | 11 | 45.8 % |
+| `lote1-img-10-retoma-ford.png` | 15 | 0 | 0.0 % |
+| `lote1-img-10.jpeg` | 9 | 0 | 0.0 % |
 | `lote1-img-11.jpeg` | 40 | 4 | 10.0 % |
 | `lote1-img-12.jpeg` | 31 | 6 | 19.4 % |
 | `lote1-img-13.jpeg` | 44 | 1 | 2.3 % |
@@ -98,9 +99,9 @@ Vista para planear el cotejo contra el impreso: cuántas filas de cada página q
 | `lote1-img-18.jpeg` | 31 | 2 | 6.5 % |
 | `lote1-img-19.jpeg` | 43 | 6 | 14.0 % |
 | `lote1-img-20.jpeg` | 28 | 5 | 17.9 % |
-| `lote1-img-21.jpeg` | 8 | 5 | 62.5 % |
-| `lote1-img-22.jpeg` | 16 | 10 | 62.5 % |
-| `lote1-img-23.jpeg` | 15 | 14 | 93.3 % |
+| `lote1-img-21.jpeg` | 8 | 0 | 0.0 % |
+| `lote1-img-22.jpeg` | 16 | 2 | 12.5 % |
+| `lote1-img-23.jpeg` | 15 | 0 | 0.0 % |
 | `lote1-img-24.jpeg` | 23 | 16 | 69.6 % |
 | `lote1-img-25.jpeg` | 33 | 4 | 12.1 % |
 | `lote1-img-26.jpeg` | 27 | 5 | 18.5 % |
@@ -190,19 +191,19 @@ descartó, no para corregir nada.
 | Marcas | 66 | 42 | El reporte externo tiene menos marcas pese a declarar más registros |
 | Modelos | 632 | 1.385 | No reconciliable sin el detalle fila por fila |
 | Aplicaciones | 744 | 2.764 | Métricas distintas: ver nota 1 |
-| Menciones de referencia | 2.045 | 2.764 | Métrica comparable con su total de aplicaciones |
-| Referencias únicas | 89 | 96 | Órdenes de magnitud compatibles |
+| Menciones de referencia | 2.047 | 2.764 | Métrica comparable con su total de aplicaciones |
+| Referencias únicas | 88 | 96 | Órdenes de magnitud compatibles |
 | Willard AGM / EFB | 356 | 138 | Ver nota 2 |
 | Increible Titanio | 604 | 482 | Ver nota 2 |
-| Willard | 617 | 1.420 | Ver nota 2 |
+| Willard | 619 | 1.420 | Ver nota 2 |
 | Extrema | 468 | 724 | Ver nota 2 |
-| Pendientes de revisión | 162 | 17 | Ver nota 3 |
+| Pendientes de revisión | 124 | 17 | Ver nota 3 |
 | Páginas verificadas | 29 | 29 | Ver nota 4 |
 
 **Nota 1.** En el reporte externo las cuatro líneas suman exactamente su total de aplicaciones
 (138 + 482 + 1420 + 724 = 2.764). Eso indica que su
 "aplicaciones" cuenta celdas de referencia, no filas de vehículo. La métrica comparable de esta base
-es 2.045 menciones.
+es 2.047 menciones.
 
 **Nota 2.** El reparto entre líneas del reporte externo asigna
 51.4 % de todas sus menciones a la columna Willard y solo
@@ -211,8 +212,8 @@ es 2.045 menciones.
 términos absolutos es compatible con que valores de la columna AGM/EFB hayan quedado cargados en la
 columna Willard, que es el desplazamiento documentado en `docs/WILLARD_PENDIENTES.md`.
 
-**Nota 3.** 162 de 744 registros quedaron marcados porque en la mayoría de las páginas los
+**Nota 3.** 124 de 744 registros quedaron marcados porque en la mayoría de las páginas los
 valores están impresos desfasados respecto a la línea del vehículo. Reportar 17 dudas sobre las
 mismas páginas implica haber resuelto ese desfase sin evidencia.
 
-**Nota 4.** Este informe declara 29 de 29 páginas leídas. Coincide con el reporte externo, pero "leída" aquí significa transcrita fila por fila con su origen registrado en cada registro, no revisada: 162 filas siguen marcadas para cotejo.
+**Nota 4.** Este informe declara 29 de 29 páginas leídas. Coincide con el reporte externo, pero "leída" aquí significa transcrita fila por fila con su origen registrado en cada registro, no revisada: 124 filas siguen marcadas para cotejo.

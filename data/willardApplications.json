@@ -2,7 +2,7 @@
   "version": "1.0",
   "marca": "Willard",
   "descripcion": "Aplicaciones por vehiculo, transcritas del catalogo oficial Willard. Las referencias se agrupan por linea de producto tal como aparecen en las columnas del catalogo (Willard AGM/EFB, Increible Titanio, Willard, Extrema). Celda vacia en el catalogo = arreglo vacio. Campo no presente en el catalogo = null. Este archivo NO contiene especificaciones tecnicas: amperaje, dimensiones, polaridad y terminal viven en willardReferences.json y se combinan por el campo referencia.",
-  "reglaDeConsumo": "El motor de recomendacion DEBE ignorar las aplicaciones con revisionPendiente true al responder a un cliente: son datos leidos del catalogo pero sin cotejar contra el impreso, y recomendar sobre ellos puede dar una bateria que no encaja. Los registros marcados NO se borran del archivo: se conservan como registro oficial del catalogo y se filtran en el momento de consultar. Cuando una fila se coteje, se corrige si hace falta y se pone revisionPendiente en false, con lo que entra a produccion sin necesidad de reprocesar nada mas. Hoy esta regla deja 537 de 744 aplicaciones utilizables y 0 marcas sin ninguna recomendacion posible; el detalle esta en docs/WILLARD_COBERTURA.md.",
+  "reglaDeConsumo": "El motor de recomendacion DEBE ignorar las aplicaciones con revisionPendiente true al responder a un cliente: son datos leidos del catalogo pero sin cotejar contra el impreso, y recomendar sobre ellos puede dar una bateria que no encaja. Los registros marcados NO se borran del archivo: se conservan como registro oficial del catalogo y se filtran en el momento de consultar. Cuando una fila se coteje, se corrige si hace falta y se pone revisionPendiente en false, con lo que entra a produccion sin necesidad de reprocesar nada mas. Hoy esta regla deja 620 de 744 aplicaciones utilizables y 0 marcas sin ninguna recomendacion posible; el detalle esta en docs/WILLARD_COBERTURA.md.",
   "cobertura": {
     "lote": 1,
     "carpetaImagenes": "data/catalogo-willard/lote1",
@@ -46,7 +46,7 @@
   "totales": {
     "registros": 744,
     "marcas": 66,
-    "pendientesRevision": 162
+    "pendientesRevision": 124
   },
   "marcas": [
     "AGRALE",
@@ -2211,7 +2211,9 @@
       "textoCatalogo": "Chevrotaxi Swift",
       "referencias": {
         "willardAgmEfb": [],
-        "increibleTitanio": [],
+        "increibleTitanio": [
+          "24BI-900"
+        ],
         "willard": [],
         "extrema": [
           "24BI-750"
@@ -2222,7 +2224,7 @@
         "imagen": "lote1-img-21.jpeg",
         "fila": 4
       },
-      "revisionPendiente": true
+      "revisionPendiente": false
     },
     {
       "marca": "CHEVROLET",
@@ -2268,7 +2270,7 @@
         "imagen": "lote1-img-21.jpeg",
         "fila": 6
       },
-      "revisionPendiente": true
+      "revisionPendiente": false
     },
     {
       "marca": "CHEVROLET",
@@ -2302,17 +2304,13 @@
       "version": "7.2 Turbo",
       "textoCatalogo": "CHR 7.2 Turbo",
       "referencias": {
-        "willardAgmEfb": [
-          "27-80 EFB(2)"
-        ],
-        "increibleTitanio": [
-          "27AI-1250 (2)"
-        ],
+        "willardAgmEfb": [],
+        "increibleTitanio": [],
         "willard": [
-          "27AI-1150 (2)"
+          "4DT-1500"
         ],
         "extrema": [
-          "27AI-1000 (2)"
+          "4DT-1400"
         ]
       },
       "fuente": {
@@ -2320,7 +2318,7 @@
         "imagen": "lote1-img-23.jpeg",
         "fila": 2
       },
-      "revisionPendiente": true
+      "revisionPendiente": false
     },
     {
       "marca": "CHEVROLET",
@@ -2408,7 +2406,7 @@
         "imagen": "lote1-img-21.jpeg",
         "fila": 5
       },
-      "revisionPendiente": true
+      "revisionPendiente": false
     },
     {
       "marca": "CHEVROLET",
@@ -2505,7 +2503,7 @@
         "imagen": "lote1-img-23.jpeg",
         "fila": 3
       },
-      "revisionPendiente": true
+      "revisionPendiente": false
     },
     {
       "marca": "CHEVROLET",
@@ -2532,7 +2530,7 @@
         "imagen": "lote1-img-23.jpeg",
         "fila": 4
       },
-      "revisionPendiente": true
+      "revisionPendiente": false
     },
     {
       "marca": "CHEVROLET",
@@ -2559,7 +2557,7 @@
         "imagen": "lote1-img-23.jpeg",
         "fila": 5
       },
-      "revisionPendiente": true
+      "revisionPendiente": false
     },
     {
       "marca": "CHEVROLET",
@@ -2586,7 +2584,7 @@
         "imagen": "lote1-img-23.jpeg",
         "fila": 6
       },
-      "revisionPendiente": true
+      "revisionPendiente": false
     },
     {
       "marca": "CHEVROLET",
@@ -2595,13 +2593,17 @@
       "version": "7.8",
       "textoCatalogo": "FVR Forward 7.8",
       "referencias": {
-        "willardAgmEfb": [],
-        "increibleTitanio": [],
+        "willardAgmEfb": [
+          "27-80 EFB(2)"
+        ],
+        "increibleTitanio": [
+          "27AI-1250 (2)"
+        ],
         "willard": [
-          "4DT-1500 (2)"
+          "27AI-1150 (2)"
         ],
         "extrema": [
-          "4DT-1400 (2)"
+          "27AI-1000 (2)"
         ]
       },
       "fuente": {
@@ -2609,7 +2611,7 @@
         "imagen": "lote1-img-23.jpeg",
         "fila": 7
       },
-      "revisionPendiente": true
+      "revisionPendiente": false
     },
     {
       "marca": "CHEVROLET",
@@ -2847,17 +2849,13 @@
       "version": "150",
       "textoCatalogo": "LV Bus 150",
       "referencias": {
-        "willardAgmEfb": [
-          "27-80 EFB(2)"
-        ],
-        "increibleTitanio": [
-          "27AI-1250 (2)"
-        ],
+        "willardAgmEfb": [],
+        "increibleTitanio": [],
         "willard": [
-          "27AI-1150 (2)"
+          "4DT-1500 (2)"
         ],
         "extrema": [
-          "27AI-1000 (2)"
+          "4DT-1400 (2)"
         ]
       },
       "fuente": {
@@ -2865,7 +2863,7 @@
         "imagen": "lote1-img-23.jpeg",
         "fila": 8
       },
-      "revisionPendiente": true
+      "revisionPendiente": false
     },
     {
       "marca": "CHEVROLET",
@@ -3013,7 +3011,7 @@
         "imagen": "lote1-img-23.jpeg",
         "fila": 9
       },
-      "revisionPendiente": true
+      "revisionPendiente": false
     },
     {
       "marca": "CHEVROLET",
@@ -3040,7 +3038,7 @@
         "imagen": "lote1-img-23.jpeg",
         "fila": 10
       },
-      "revisionPendiente": true
+      "revisionPendiente": false
     },
     {
       "marca": "CHEVROLET",
@@ -3067,7 +3065,7 @@
         "imagen": "lote1-img-23.jpeg",
         "fila": 11
       },
-      "revisionPendiente": true
+      "revisionPendiente": false
     },
     {
       "marca": "CHEVROLET",
@@ -3094,7 +3092,7 @@
         "imagen": "lote1-img-23.jpeg",
         "fila": 12
       },
-      "revisionPendiente": true
+      "revisionPendiente": false
     },
     {
       "marca": "CHEVROLET",
@@ -3121,7 +3119,7 @@
         "imagen": "lote1-img-23.jpeg",
         "fila": 13
       },
-      "revisionPendiente": true
+      "revisionPendiente": false
     },
     {
       "marca": "CHEVROLET",
@@ -3148,7 +3146,7 @@
         "imagen": "lote1-img-23.jpeg",
         "fila": 14
       },
-      "revisionPendiente": true
+      "revisionPendiente": false
     },
     {
       "marca": "CHEVROLET",
@@ -3175,7 +3173,7 @@
         "imagen": "lote1-img-23.jpeg",
         "fila": 15
       },
-      "revisionPendiente": true
+      "revisionPendiente": false
     },
     {
       "marca": "CHEVROLET",
@@ -3229,10 +3227,10 @@
       "textoCatalogo": "Optra 1.6 Serv. Esp.",
       "referencias": {
         "willardAgmEfb": [],
-        "increibleTitanio": [
-          "24BI-900"
+        "increibleTitanio": [],
+        "willard": [
+          "34D-1100"
         ],
-        "willard": [],
         "extrema": [
           "34D-950"
         ]
@@ -3242,7 +3240,7 @@
         "imagen": "lote1-img-21.jpeg",
         "fila": 3
       },
-      "revisionPendiente": true
+      "revisionPendiente": false
     },
     {
       "marca": "CHEVROLET",
@@ -3576,9 +3574,7 @@
       "referencias": {
         "willardAgmEfb": [],
         "increibleTitanio": [],
-        "willard": [
-          "34D-1100"
-        ],
+        "willard": [],
         "extrema": [
           "NS40D PD 670"
         ]
@@ -3588,7 +3584,7 @@
         "imagen": "lote1-img-21.jpeg",
         "fila": 2
       },
-      "revisionPendiente": true
+      "revisionPendiente": false
     },
     {
       "marca": "CHEVROLET",
@@ -5944,21 +5940,19 @@
       "version": null,
       "textoCatalogo": "Ford Raptor",
       "referencias": {
-        "willardAgmEfb": [
-          "27-80 EFB"
+        "willardAgmEfb": [],
+        "increibleTitanio": [],
+        "willard": [
+          "65-1150"
         ],
-        "increibleTitanio": [
-          "27AI-1250"
-        ],
-        "willard": [],
         "extrema": []
       },
       "fuente": {
         "lote": 1,
-        "imagen": "lote1-img-10.jpeg",
+        "imagen": "lote1-img-10-retoma-ford.png",
         "fila": 3
       },
-      "revisionPendiente": true
+      "revisionPendiente": false
     },
     {
       "marca": "FORD",
@@ -5966,6 +5960,31 @@
       "modelo": "Fortaleza",
       "version": null,
       "textoCatalogo": "Fortaleza",
+      "referencias": {
+        "willardAgmEfb": [
+          "27-80 EFB"
+        ],
+        "increibleTitanio": [
+          "27AI-1250"
+        ],
+        "willard": [
+          "65-1150"
+        ],
+        "extrema": []
+      },
+      "fuente": {
+        "lote": 1,
+        "imagen": "lote1-img-10-retoma-ford.png",
+        "fila": 4
+      },
+      "revisionPendiente": false
+    },
+    {
+      "marca": "FORD",
+      "categoria": "Autos y camionetas",
+      "modelo": "Fusion",
+      "version": "V6 3.0 Aut",
+      "textoCatalogo": "Fusión V6 3.0 Aut",
       "referencias": {
         "willardAgmEfb": [],
         "increibleTitanio": [
@@ -5976,36 +5995,10 @@
       },
       "fuente": {
         "lote": 1,
-        "imagen": "lote1-img-10.jpeg",
-        "fila": 4
-      },
-      "revisionPendiente": true
-    },
-    {
-      "marca": "FORD",
-      "categoria": "Autos y camionetas",
-      "modelo": "Fusion",
-      "version": "V6 3.0 Aut",
-      "textoCatalogo": "Fusion V6 3.0 Aut",
-      "referencias": {
-        "willardAgmEfb": [],
-        "increibleTitanio": [
-          "24BD-900"
-        ],
-        "willard": [
-          "55DD-800",
-          "24BD-850"
-        ],
-        "extrema": [
-          "48-850"
-        ]
-      },
-      "fuente": {
-        "lote": 1,
-        "imagen": "lote1-img-10.jpeg",
+        "imagen": "lote1-img-10-retoma-ford.png",
         "fila": 5
       },
-      "revisionPendiente": true
+      "revisionPendiente": false
     },
     {
       "marca": "FORD",
@@ -6016,44 +6009,46 @@
       "referencias": {
         "willardAgmEfb": [],
         "increibleTitanio": [
-          "48-1000",
-          "48-1100"
+          "24BD-900"
         ],
         "willard": [
-          "48-900"
+          "55DD-800",
+          "24BD-850"
         ],
         "extrema": []
       },
       "fuente": {
         "lote": 1,
-        "imagen": "lote1-img-10.jpeg",
+        "imagen": "lote1-img-10-retoma-ford.png",
         "fila": 6
       },
-      "revisionPendiente": true
+      "revisionPendiente": false
     },
     {
       "marca": "FORD",
       "categoria": "Autos y camionetas",
       "modelo": "Mustang",
-      "version": "i-90i",
-      "textoCatalogo": "Mustang i-90i",
+      "version": "(-90)",
+      "textoCatalogo": "Mustang (-90)",
       "referencias": {
         "willardAgmEfb": [],
         "increibleTitanio": [
-          "48-1000",
+          "48I-1000",
           "48-1100"
         ],
         "willard": [
-          "48-900"
+          "48I-900"
         ],
-        "extrema": []
+        "extrema": [
+          "48I-850"
+        ]
       },
       "fuente": {
         "lote": 1,
-        "imagen": "lote1-img-10.jpeg",
+        "imagen": "lote1-img-10-retoma-ford.png",
         "fila": 7
       },
-      "revisionPendiente": true
+      "revisionPendiente": false
     },
     {
       "marca": "FORD",
@@ -6067,18 +6062,17 @@
           "48D-70 EFB"
         ],
         "increibleTitanio": [
-          "27AI-1250"
+          "48I-1000",
+          "48-1100"
         ],
         "willard": [
-          "27AI-1150"
+          "48I-900"
         ],
-        "extrema": [
-          "27AI-1000"
-        ]
+        "extrema": []
       },
       "fuente": {
         "lote": 1,
-        "imagen": "lote1-img-10.jpeg",
+        "imagen": "lote1-img-10-retoma-ford.png",
         "fila": 8
       },
       "revisionPendiente": false
@@ -6105,7 +6099,7 @@
       },
       "fuente": {
         "lote": 1,
-        "imagen": "lote1-img-10.jpeg",
+        "imagen": "lote1-img-10-retoma-ford.png",
         "fila": 9
       },
       "revisionPendiente": false
@@ -6124,16 +6118,18 @@
           "27AI-1250"
         ],
         "willard": [
-          "65-1150"
+          "27AI-1150"
         ],
-        "extrema": []
+        "extrema": [
+          "27AI-1000"
+        ]
       },
       "fuente": {
         "lote": 1,
-        "imagen": "lote1-img-10.jpeg",
+        "imagen": "lote1-img-10-retoma-ford.png",
         "fila": 10
       },
-      "revisionPendiente": true
+      "revisionPendiente": false
     },
     {
       "marca": "FORD",
@@ -6141,6 +6137,27 @@
       "modelo": "Ranger",
       "version": "2012",
       "textoCatalogo": "Ranger 2012",
+      "referencias": {
+        "willardAgmEfb": [],
+        "increibleTitanio": [],
+        "willard": [
+          "49-1200"
+        ],
+        "extrema": []
+      },
+      "fuente": {
+        "lote": 1,
+        "imagen": "lote1-img-10-retoma-ford.png",
+        "fila": 12
+      },
+      "revisionPendiente": false
+    },
+    {
+      "marca": "FORD",
+      "categoria": "Autos y camionetas",
+      "modelo": "Ranger",
+      "version": "Diesel",
+      "textoCatalogo": "Ranger Diesel",
       "referencias": {
         "willardAgmEfb": [
           "27-80 EFB"
@@ -6155,31 +6172,10 @@
       },
       "fuente": {
         "lote": 1,
-        "imagen": "lote1-img-10.jpeg",
-        "fila": 12
-      },
-      "revisionPendiente": true
-    },
-    {
-      "marca": "FORD",
-      "categoria": "Autos y camionetas",
-      "modelo": "Ranger",
-      "version": "Diesel",
-      "textoCatalogo": "Ranger  Diesel",
-      "referencias": {
-        "willardAgmEfb": [],
-        "increibleTitanio": [],
-        "willard": [
-          "49-1200"
-        ],
-        "extrema": []
-      },
-      "fuente": {
-        "lote": 1,
-        "imagen": "lote1-img-10.jpeg",
+        "imagen": "lote1-img-10-retoma-ford.png",
         "fila": 11
       },
-      "revisionPendiente": true
+      "revisionPendiente": false
     },
     {
       "marca": "FORD",
@@ -6188,34 +6184,12 @@
       "version": "Diesel Doble Cab 4x4 2.5",
       "textoCatalogo": "Ranger Hi-Rider Diesel Dob Cab 4x4 2.5",
       "referencias": {
-        "willardAgmEfb": [],
-        "increibleTitanio": [
-          "48-1000",
-          "48-1100"
-        ],
-        "willard": [
-          "48I-900"
-        ],
-        "extrema": []
-      },
-      "fuente": {
-        "lote": 1,
-        "imagen": "lote1-img-10.jpeg",
-        "fila": 13
-      },
-      "revisionPendiente": true
-    },
-    {
-      "marca": "FORD",
-      "categoria": "Autos y camionetas",
-      "modelo": "Ranger Raptor",
-      "version": null,
-      "textoCatalogo": "Ranger Raptor",
-      "referencias": {
         "willardAgmEfb": [
           "27-80 EFB"
         ],
-        "increibleTitanio": [],
+        "increibleTitanio": [
+          "27AI-1250"
+        ],
         "willard": [
           "65-1150"
         ],
@@ -6223,17 +6197,17 @@
       },
       "fuente": {
         "lote": 1,
-        "imagen": "lote1-img-10.jpeg",
-        "fila": 15
+        "imagen": "lote1-img-10-retoma-ford.png",
+        "fila": 13
       },
-      "revisionPendiente": true
+      "revisionPendiente": false
     },
     {
       "marca": "FORD",
       "categoria": "Autos y camionetas",
-      "modelo": "Ranger XL",
-      "version": "4X2",
-      "textoCatalogo": "Ranger XL 4X2",
+      "modelo": "Ranger Raptor",
+      "version": null,
+      "textoCatalogo": "Ranger Raptor",
       "referencias": {
         "willardAgmEfb": [
           "W-L4-80AH"
@@ -6244,7 +6218,31 @@
       },
       "fuente": {
         "lote": 1,
-        "imagen": "lote1-img-10.jpeg",
+        "imagen": "lote1-img-10-retoma-ford.png",
+        "fila": 15
+      },
+      "revisionPendiente": false
+    },
+    {
+      "marca": "FORD",
+      "categoria": "Autos y camionetas",
+      "modelo": "Ranger XL",
+      "version": "4X2",
+      "textoCatalogo": "Ranger XL 4X2",
+      "referencias": {
+        "willardAgmEfb": [],
+        "increibleTitanio": [
+          "48I-1000",
+          "48-1100"
+        ],
+        "willard": [
+          "48I-900"
+        ],
+        "extrema": []
+      },
+      "fuente": {
+        "lote": 1,
+        "imagen": "lote1-img-10-retoma-ford.png",
         "fila": 14
       },
       "revisionPendiente": false
@@ -6255,6 +6253,31 @@
       "modelo": "Sport Track",
       "version": "XLT",
       "textoCatalogo": "Sport Track XLT",
+      "referencias": {
+        "willardAgmEfb": [
+          "27-80 EFB"
+        ],
+        "increibleTitanio": [
+          "27AI-1250"
+        ],
+        "willard": [
+          "65-1150"
+        ],
+        "extrema": []
+      },
+      "fuente": {
+        "lote": 1,
+        "imagen": "lote1-img-10-retoma-ford.png",
+        "fila": 16
+      },
+      "revisionPendiente": false
+    },
+    {
+      "marca": "FORD",
+      "categoria": "Autos y camionetas",
+      "modelo": "V-8 Escape",
+      "version": null,
+      "textoCatalogo": "V-8 Escape",
       "referencias": {
         "willardAgmEfb": [
           "W-L3-70AH",
@@ -6271,29 +6294,10 @@
       },
       "fuente": {
         "lote": 1,
-        "imagen": "lote1-img-10.jpeg",
-        "fila": 16
-      },
-      "revisionPendiente": false
-    },
-    {
-      "marca": "FORD",
-      "categoria": "Autos y camionetas",
-      "modelo": "V-8 Escape",
-      "version": null,
-      "textoCatalogo": "V-8 Escape",
-      "referencias": {
-        "willardAgmEfb": [],
-        "increibleTitanio": [],
-        "willard": [],
-        "extrema": []
-      },
-      "fuente": {
-        "lote": 1,
-        "imagen": "lote1-img-10.jpeg",
+        "imagen": "lote1-img-10-retoma-ford.png",
         "fila": 17
       },
-      "revisionPendiente": true
+      "revisionPendiente": false
     },
     {
       "marca": "FORD NEW HOLLAND",
@@ -7596,7 +7600,7 @@
         "imagen": "lote1-img-22.jpeg",
         "fila": 5
       },
-      "revisionPendiente": true
+      "revisionPendiente": false
     },
     {
       "marca": "HYUNDAI",
@@ -7688,7 +7692,7 @@
         "imagen": "lote1-img-22.jpeg",
         "fila": 4
       },
-      "revisionPendiente": true
+      "revisionPendiente": false
     },
     {
       "marca": "HYUNDAI",
@@ -7734,7 +7738,7 @@
         "imagen": "lote1-img-22.jpeg",
         "fila": 3
       },
-      "revisionPendiente": true
+      "revisionPendiente": false
     },
     {
       "marca": "HYUNDAI",
@@ -7965,7 +7969,7 @@
         "imagen": "lote1-img-22.jpeg",
         "fila": 6
       },
-      "revisionPendiente": true
+      "revisionPendiente": false
     },
     {
       "marca": "HYUNDAI",
@@ -8297,7 +8301,7 @@
         "imagen": "lote1-img-22.jpeg",
         "fila": 7
       },
-      "revisionPendiente": true
+      "revisionPendiente": false
     },
     {
       "marca": "HYUNDAI",
@@ -10638,7 +10642,7 @@
         "imagen": "lote1-img-22.jpeg",
         "fila": 11
       },
-      "revisionPendiente": true
+      "revisionPendiente": false
     },
     {
       "marca": "KIA",
@@ -10974,7 +10978,7 @@
         "imagen": "lote1-img-22.jpeg",
         "fila": 12
       },
-      "revisionPendiente": true
+      "revisionPendiente": false
     },
     {
       "marca": "KIA",
@@ -11361,7 +11365,7 @@
         "imagen": "lote1-img-22.jpeg",
         "fila": 10
       },
-      "revisionPendiente": true
+      "revisionPendiente": false
     },
     {
       "marca": "KUBOTA",
