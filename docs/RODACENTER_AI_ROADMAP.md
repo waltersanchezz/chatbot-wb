@@ -56,8 +56,8 @@ Detalle: `docs/WILLARD_INTEGRATION_SPEC.md`. Comportamiento conversacional: `doc
 |---|---|---|---|
 | 1 | Base de conocimiento | **En curso (avanzada)** | Catálogo Willard estructurado + motor de recomendación en producción |
 | 2 | Chatbot inteligente | **En curso (operativo)** | WhatsApp live; flujos baterías/rodamientos; motor de reglas |
-| 3 | CRM | **MVP inicial + PR1–PR4** | Spec aprobado; dominio + repos + servicios + **API HTTP**; sin WA snapshot wiring / PG / dashboard CRM nuevo |
-| 4 | Panel web | **MVP inicial** | Dashboard estático + API de leads |
+| 3 | CRM | **MVP inicial + PR1–PR5** | Spec aprobado; dominio + repos + servicios + API HTTP + **dashboard CRM MVP**; sin WA snapshot wiring / PG |
+| 4 | Panel web | **MVP CRM (PR5)** | Dashboard `/dashboard` consume API leads (lista, detalle, acciones) |
 | 5 | Automatizaciones | **Parcial** | Handoff y alertas Telegram; sin workflows avanzados |
 | 6 | Producción | **Operativa / iterativa** | Render + health + logs; endurecimiento continuo |
 
@@ -137,7 +137,7 @@ Detalle: `docs/WILLARD_INTEGRATION_SPEC.md`. Comportamiento conversacional: `doc
 
 **Diseño (fuente de verdad):** `docs/CRM_SPEC.md` — especificación técnica de arquitectura MVP **aprobada con enmiendas** (CustomerProfile 1→N Lead / VehicleProfile, timeline de interacciones, prioridad Alta|Media|Baja solo CRM, estados, eventos, API, puertos/persistencia, flujo WhatsApp → Dashboard).
 
-**Implementación:** PR1 dominio + PR2 repos InMemory + PR3 servicios/políticas + **PR4 API HTTP** hechos. **Aún no es CRM completo** — faltan cableado WA/snapshot boundary, panel CRM enriquecido y PostgreSQL.
+**Implementación:** PR1 dominio + PR2 repos InMemory + PR3 servicios/políticas + PR4 API HTTP + **PR5 dashboard CRM MVP** hechos. **Aún no es CRM completo** — faltan cableado WA/snapshot boundary, ficha cliente enriquecida y PostgreSQL.
 
 ### Completado
 
@@ -149,10 +149,11 @@ Detalle: `docs/WILLARD_INTEGRATION_SPEC.md`. Comportamiento conversacional: `doc
 - **PR2 — puertos + InMemory:** `LeadRepository` extendido (filtros, by customer, events); `VehicleProfileRepository` + `InteractionRepository` nuevos; `CustomerRepository` InMemory endurecido (copias defensivas); tests `tests/crm/repositories.test.ts`
 - **PR3 — application layer:** `priorityPolicy` (R1–R9), `leadStateMachine`, `toInteraction`; `CustomerProfileService`, `InteractionService`; `LeadService` extendido (create/update/changeStatus/assign/claim/recontact/notes + timeline/events) manteniendo `registerFromConversation` compatible con DI actual; tests `tests/crm/*Service*.test.ts` + policy/state machine.
 - **PR4 — HTTP API:** `leadRoutes` extendidos (lista filtrada, detalle, events, status vía `changeStatus`→409, assign/claim/recontact/notes) + `customerRoutes` (`/api/customers/:id`, by-phone, leads/vehicles/interactions); DI cablea `InteractionRepository` + `VehicleProfileRepository` + `CustomerProfileService` + `InteractionService`; tests `tests/crm/leadRoutes.test.ts` + `customerRoutes.test.ts`. Sin dashboard nuevo / sin WA snapshot wiring / sin PG.
+- **PR5 — Dashboard Web MVP:** panel `/dashboard` consume exclusivamente `GET/PATCH/POST /api/leads*`; tabla + detalle + badges prioridad/estado; Abrir WhatsApp (`wa.me`); acciones status / claim / notas / recontacto; responsive; sin auth; helpers + tests `tests/crm/dashboardHelpers.test.ts`.
 
 ### Pendiente
 
-- PR5+: panel ficha cliente + prioridad; cablear snapshot/handoff en boundary WA (sin tocar `RecommendationService`)
+- PR6+: ficha cliente (`/api/customers`) + timeline unificada; cablear snapshot/handoff en boundary WA (sin tocar `RecommendationService`)
 - Persistencia real (PostgreSQL según `schema.sql` + tablas `leads` / `lead_events` / `vehicle_profiles` / `interactions` del spec)
 - `CrmPort` / handoff enriquecido con `reasonCode`, query, opciones (captura en boundary; sin tocar `RecommendationService`)
 - Snapshot boundary en `ConversationContext` (sin tocar `RecommendationService`)
@@ -167,14 +168,15 @@ Detalle: `docs/WILLARD_INTEGRATION_SPEC.md`. Comportamiento conversacional: `doc
 
 - UI estática en `/dashboard` (`dashboard/` + `dashboardRoutes`)
 - API de productos y leads para consulta
+- **PR5 — CRM Dashboard MVP:** lista de leads (tabla desktop / cards móvil), detalle con eventos, filtros estado + prioridad (Alta/Media/Baja), badges, Abrir WhatsApp, cambio de estado, tomar lead, notas, recontacto; poll en vivo; sin autenticación
 
 ### Pendiente
 
 - Panel autenticado (roles asesor / admin)
-- Vista de conversaciones, handoffs y motivo (`needsHumanHandoff` / `handoffReason`)
+- Ficha cliente completa vía `/api/customers` (historial multi-lead + interacciones)
+- Vista de conversaciones dedicada; handoffs más visibles
 - Filtros por fecha, producto, outcome Willard (`matched` / `empty`)
-- Acciones: tomar lead, marcar cerrado, añadir notas
-- Métricas básicas (volumen, tasa de handoff, marcas más consultadas)
+- Métricas avanzadas (volumen, tasa de handoff, marcas más consultadas)
 
 ---
 

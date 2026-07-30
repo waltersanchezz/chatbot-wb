@@ -21,9 +21,19 @@
         <div class="brand-block">
           <p class="brand-eyebrow">CRM · WhatsApp</p>
           <h1 class="brand">RODACENTER</h1>
-          <p class="brand-sub">Panel de clientes · Rodacenter AI</p>
+          <p class="brand-sub">Panel de leads · Manizales</p>
         </div>
         <div class="topbar-meta">
+          <label class="advisor-field">
+            <span>Asesor</span>
+            <input
+              id="advisor-name"
+              type="text"
+              maxlength="40"
+              placeholder="Tu nombre"
+              autocomplete="nickname"
+            />
+          </label>
           <span class="pill" id="today-label">Hoy</span>
           <span class="pill pill-muted" id="live-pill">En vivo</span>
         </div>
@@ -31,39 +41,85 @@
 
       <section class="stats" aria-label="Estadísticas">
         <article class="stat-card" data-stat="today">
-          <span class="stat-label">Clientes de hoy</span>
+          <span class="stat-label">Hoy</span>
           <strong class="stat-value" id="stat-today">0</strong>
         </article>
-        <article class="stat-card" data-stat="pending">
-          <span class="stat-label">Nuevos</span>
-          <strong class="stat-value" id="stat-pending">0</strong>
+        <article class="stat-card" data-stat="open">
+          <span class="stat-label">Abiertos</span>
+          <strong class="stat-value" id="stat-open">0</strong>
+        </article>
+        <article class="stat-card" data-stat="alta">
+          <span class="stat-label">Prioridad alta</span>
+          <strong class="stat-value" id="stat-alta">0</strong>
         </article>
         <article class="stat-card" data-stat="sold">
           <span class="stat-label">Vendidos</span>
           <strong class="stat-value" id="stat-sold">0</strong>
         </article>
-        <article class="stat-card" data-stat="lost">
-          <span class="stat-label">Perdidos</span>
-          <strong class="stat-value" id="stat-lost">0</strong>
-        </article>
       </section>
 
-      <section class="clients-section">
+      <section class="leads-section">
         <div class="section-head">
-          <h2>Clientes</h2>
-          <div class="filters" role="tablist" aria-label="Filtrar por estado">
-            <button class="filter-btn is-active" data-filter="all" type="button">Todos</button>
-            <button class="filter-btn" data-filter="nuevo" type="button">Nuevos</button>
-            <button class="filter-btn" data-filter="cotizado" type="button">Cotizados</button>
-            <button class="filter-btn" data-filter="vendido" type="button">Vendidos</button>
-            <button class="filter-btn" data-filter="perdido" type="button">Perdidos</button>
+          <h2>Leads</h2>
+          <div class="filter-groups">
+            <div class="filters" role="tablist" aria-label="Filtrar por estado">
+              <button class="filter-btn is-active" data-filter-status="all" type="button">Todos</button>
+              <button class="filter-btn" data-filter-status="nuevo" type="button">Nuevos</button>
+              <button class="filter-btn" data-filter-status="en_gestion" type="button">En gestión</button>
+              <button class="filter-btn" data-filter-status="cotizado" type="button">Cotizados</button>
+              <button class="filter-btn" data-filter-status="recontacto" type="button">Recontacto</button>
+              <button class="filter-btn" data-filter-status="vendido" type="button">Vendidos</button>
+              <button class="filter-btn" data-filter-status="perdido" type="button">Perdidos</button>
+            </div>
+            <div class="filters" role="tablist" aria-label="Filtrar por prioridad">
+              <button class="filter-btn is-active" data-filter-priority="all" type="button">Prioridad</button>
+              <button class="filter-btn" data-filter-priority="Alta" type="button">Alta</button>
+              <button class="filter-btn" data-filter-priority="Media" type="button">Media</button>
+              <button class="filter-btn" data-filter-priority="Baja" type="button">Baja</button>
+            </div>
           </div>
         </div>
-        <div class="clients-grid" id="clients-grid"></div>
-        <p class="empty-state" id="empty-state" hidden>No hay clientes en este filtro.</p>
+
+        <div class="workspace">
+          <div class="table-panel">
+            <div class="table-wrap">
+              <table class="leads-table" aria-label="Lista de leads">
+                <thead>
+                  <tr>
+                    <th>Prioridad</th>
+                    <th>Cliente</th>
+                    <th>Producto</th>
+                    <th>Vehículo</th>
+                    <th>Estado</th>
+                    <th>Hora</th>
+                    <th></th>
+                  </tr>
+                </thead>
+                <tbody id="leads-tbody"></tbody>
+              </table>
+            </div>
+            <div class="leads-cards" id="leads-cards" aria-label="Lista de leads móvil"></div>
+            <p class="empty-state" id="empty-state" hidden>No hay leads en este filtro.</p>
+          </div>
+
+          <aside class="detail-panel" id="detail-panel" hidden>
+            <div class="detail-head">
+              <button type="button" class="btn btn-ghost detail-close" id="detail-close" aria-label="Cerrar detalle">
+                ← Volver
+              </button>
+              <div class="detail-badges" id="detail-badges"></div>
+            </div>
+            <div class="detail-body" id="detail-body">
+              <p class="detail-placeholder">Selecciona un lead para ver el detalle.</p>
+            </div>
+          </aside>
+        </div>
       </section>
     </div>
 
+    <div class="toast" id="toast" hidden role="status" aria-live="polite"></div>
+
+    <script src="/dashboard/helpers.js"></script>
     <script src="/dashboard/app.js"></script>
   </body>
 </html>
