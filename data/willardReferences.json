@@ -5,14 +5,22 @@
   "generadoDesde": {
     "lote": 1,
     "carpetaImagenes": "data/catalogo-willard/lote1",
-    "imagenes": ["lote1-img-01.jpeg", "lote1-img-02.jpeg", "lote1-img-03.jpeg"]
+    "imagenes": [
+      "lote1-img-01.jpeg",
+      "lote1-img-02.jpeg",
+      "lote1-img-03.jpeg"
+    ]
   },
   "referencias": [
     {
       "referencia": "W-L2-60AH",
       "linea": "Willard AGM",
       "polaridad": "(- +)",
-      "dimensionesMm": { "largo": 242, "ancho": 175, "alto": 190 },
+      "dimensionesMm": {
+        "largo": 242,
+        "ancho": 175,
+        "alto": 190
+      },
       "terminal": "ESTANDAR",
       "voltaje": 12,
       "c20Ah": 60,
@@ -20,14 +28,23 @@
       "ca22C": null,
       "crMin": null,
       "notas": null,
-      "fuente": { "lote": 1, "imagen": "lote1-img-01.jpeg", "tabla": "WILLARD AGM", "fila": 1 },
+      "fuente": {
+        "lote": 1,
+        "imagen": "lote1-img-01.jpeg",
+        "tabla": "WILLARD AGM",
+        "fila": 1
+      },
       "revisionPendiente": false
     },
     {
       "referencia": "W-L3-70AH",
       "linea": "Willard AGM",
       "polaridad": "(- +)",
-      "dimensionesMm": { "largo": 278, "ancho": 175, "alto": 190 },
+      "dimensionesMm": {
+        "largo": 278,
+        "ancho": 175,
+        "alto": 190
+      },
       "terminal": "ESTANDAR",
       "voltaje": 12,
       "c20Ah": 70,
@@ -35,14 +52,23 @@
       "ca22C": null,
       "crMin": null,
       "notas": null,
-      "fuente": { "lote": 1, "imagen": "lote1-img-01.jpeg", "tabla": "WILLARD AGM", "fila": 2 },
+      "fuente": {
+        "lote": 1,
+        "imagen": "lote1-img-01.jpeg",
+        "tabla": "WILLARD AGM",
+        "fila": 2
+      },
       "revisionPendiente": false
     },
     {
       "referencia": "W-L4-80AH",
       "linea": "Willard AGM",
       "polaridad": "(- +)",
-      "dimensionesMm": { "largo": 315, "ancho": 175, "alto": 190 },
+      "dimensionesMm": {
+        "largo": 315,
+        "ancho": 175,
+        "alto": 190
+      },
       "terminal": "ESTANDAR",
       "voltaje": 12,
       "c20Ah": 80,
@@ -50,14 +76,23 @@
       "ca22C": null,
       "crMin": null,
       "notas": null,
-      "fuente": { "lote": 1, "imagen": "lote1-img-01.jpeg", "tabla": "WILLARD AGM", "fila": 3 },
+      "fuente": {
+        "lote": 1,
+        "imagen": "lote1-img-01.jpeg",
+        "tabla": "WILLARD AGM",
+        "fila": 3
+      },
       "revisionPendiente": false
     },
     {
       "referencia": "W-L5-95AH",
       "linea": "Willard AGM",
       "polaridad": "(- +)",
-      "dimensionesMm": { "largo": 353, "ancho": 175, "alto": 190 },
+      "dimensionesMm": {
+        "largo": 353,
+        "ancho": 175,
+        "alto": 190
+      },
       "terminal": "ESTANDAR",
       "voltaje": 12,
       "c20Ah": 95,
@@ -65,14 +100,23 @@
       "ca22C": null,
       "crMin": null,
       "notas": null,
-      "fuente": { "lote": 1, "imagen": "lote1-img-01.jpeg", "tabla": "WILLARD AGM", "fila": 4 },
+      "fuente": {
+        "lote": 1,
+        "imagen": "lote1-img-01.jpeg",
+        "tabla": "WILLARD AGM",
+        "fila": 4
+      },
       "revisionPendiente": false
     },
     {
       "referencia": "W-L6-105AH",
       "linea": "Willard AGM",
       "polaridad": "(- +)",
-      "dimensionesMm": { "largo": 392, "ancho": 175, "alto": 190 },
+      "dimensionesMm": {
+        "largo": 392,
+        "ancho": 175,
+        "alto": 190
+      },
       "terminal": "ESTANDAR",
       "voltaje": 12,
       "c20Ah": 105,
@@ -80,15 +124,23 @@
       "ca22C": null,
       "crMin": null,
       "notas": null,
-      "fuente": { "lote": 1, "imagen": "lote1-img-01.jpeg", "tabla": "WILLARD AGM", "fila": 5 },
+      "fuente": {
+        "lote": 1,
+        "imagen": "lote1-img-01.jpeg",
+        "tabla": "WILLARD AGM",
+        "fila": 5
+      },
       "revisionPendiente": false
     },
-
     {
       "referencia": "47-60 EFB",
       "linea": "Willard EFB",
       "polaridad": "(- +)",
-      "dimensionesMm": { "largo": 237, "ancho": 173, "alto": 188 },
+      "dimensionesMm": {
+        "largo": 237,
+        "ancho": 173,
+        "alto": 188
+      },
       "terminal": "ESTANDAR",
       "voltaje": 12,
       "c20Ah": 60,
@@ -96,14 +148,23 @@
       "ca22C": null,
       "crMin": 90,
       "notas": null,
-      "fuente": { "lote": 1, "imagen": "lote1-img-01.jpeg", "tabla": "WILLARD EFB", "fila": 1 },
+      "fuente": {
+        "lote": 1,
+        "imagen": "lote1-img-01.jpeg",
+        "tabla": "WILLARD EFB",
+        "fila": 1
+      },
       "revisionPendiente": false
     },
     {
       "referencia": "48D-70 EFB",
       "linea": "Willard EFB",
       "polaridad": "(- +)",
-      "dimensionesMm": { "largo": 268, "ancho": 173, "alto": 188 },
+      "dimensionesMm": {
+        "largo": 268,
+        "ancho": 173,
+        "alto": 188
+      },
       "terminal": "ESTANDAR",
       "voltaje": 12,
       "c20Ah": 70,
@@ -111,14 +172,23 @@
       "ca22C": null,
       "crMin": 132,
       "notas": null,
-      "fuente": { "lote": 1, "imagen": "lote1-img-01.jpeg", "tabla": "WILLARD EFB", "fila": 2 },
+      "fuente": {
+        "lote": 1,
+        "imagen": "lote1-img-01.jpeg",
+        "tabla": "WILLARD EFB",
+        "fila": 2
+      },
       "revisionPendiente": false
     },
     {
       "referencia": "35-65 EFB",
       "linea": "Willard EFB",
       "polaridad": "(- +)",
-      "dimensionesMm": { "largo": 230, "ancho": 176, "alto": 218 },
+      "dimensionesMm": {
+        "largo": 230,
+        "ancho": 176,
+        "alto": 218
+      },
       "terminal": "ESTANDAR",
       "voltaje": 12,
       "c20Ah": 62,
@@ -126,14 +196,23 @@
       "ca22C": null,
       "crMin": 103,
       "notas": null,
-      "fuente": { "lote": 1, "imagen": "lote1-img-01.jpeg", "tabla": "WILLARD EFB", "fila": 3 },
+      "fuente": {
+        "lote": 1,
+        "imagen": "lote1-img-01.jpeg",
+        "tabla": "WILLARD EFB",
+        "fila": 3
+      },
       "revisionPendiente": false
     },
     {
       "referencia": "25-65 EFB",
       "linea": "Willard EFB",
       "polaridad": "(+ -)",
-      "dimensionesMm": { "largo": 230, "ancho": 176, "alto": 218 },
+      "dimensionesMm": {
+        "largo": 230,
+        "ancho": 176,
+        "alto": 218
+      },
       "terminal": "ESTANDAR",
       "voltaje": 12,
       "c20Ah": 62,
@@ -141,14 +220,23 @@
       "ca22C": null,
       "crMin": 103,
       "notas": null,
-      "fuente": { "lote": 1, "imagen": "lote1-img-01.jpeg", "tabla": "WILLARD EFB", "fila": 4 },
+      "fuente": {
+        "lote": 1,
+        "imagen": "lote1-img-01.jpeg",
+        "tabla": "WILLARD EFB",
+        "fila": 4
+      },
       "revisionPendiente": false
     },
     {
       "referencia": "24AD-75 EFB",
       "linea": "Willard EFB",
       "polaridad": "(- +)",
-      "dimensionesMm": { "largo": 259, "ancho": 171, "alto": 223 },
+      "dimensionesMm": {
+        "largo": 259,
+        "ancho": 171,
+        "alto": 223
+      },
       "terminal": "ESTANDAR",
       "voltaje": 12,
       "c20Ah": 74,
@@ -156,14 +244,23 @@
       "ca22C": null,
       "crMin": 117,
       "notas": null,
-      "fuente": { "lote": 1, "imagen": "lote1-img-01.jpeg", "tabla": "WILLARD EFB", "fila": 5 },
+      "fuente": {
+        "lote": 1,
+        "imagen": "lote1-img-01.jpeg",
+        "tabla": "WILLARD EFB",
+        "fila": 5
+      },
       "revisionPendiente": false
     },
     {
       "referencia": "24-75 EFB",
       "linea": "Willard EFB",
       "polaridad": "(+ -)",
-      "dimensionesMm": { "largo": 259, "ancho": 171, "alto": 223 },
+      "dimensionesMm": {
+        "largo": 259,
+        "ancho": 171,
+        "alto": 223
+      },
       "terminal": "ESTANDAR",
       "voltaje": 12,
       "c20Ah": 74,
@@ -171,14 +268,23 @@
       "ca22C": null,
       "crMin": 117,
       "notas": null,
-      "fuente": { "lote": 1, "imagen": "lote1-img-01.jpeg", "tabla": "WILLARD EFB", "fila": 6 },
+      "fuente": {
+        "lote": 1,
+        "imagen": "lote1-img-01.jpeg",
+        "tabla": "WILLARD EFB",
+        "fila": 6
+      },
       "revisionPendiente": false
     },
     {
       "referencia": "27R-80 EFB",
       "linea": "Willard EFB",
       "polaridad": "(- +)",
-      "dimensionesMm": { "largo": 306, "ancho": 171, "alto": 226 },
+      "dimensionesMm": {
+        "largo": 306,
+        "ancho": 171,
+        "alto": 226
+      },
       "terminal": "ESTANDAR",
       "voltaje": 12,
       "c20Ah": 90,
@@ -186,14 +292,23 @@
       "ca22C": null,
       "crMin": 150,
       "notas": null,
-      "fuente": { "lote": 1, "imagen": "lote1-img-01.jpeg", "tabla": "WILLARD EFB", "fila": 7 },
+      "fuente": {
+        "lote": 1,
+        "imagen": "lote1-img-01.jpeg",
+        "tabla": "WILLARD EFB",
+        "fila": 7
+      },
       "revisionPendiente": false
     },
     {
       "referencia": "27-80 EFB",
       "linea": "Willard EFB",
       "polaridad": "(+ -)",
-      "dimensionesMm": { "largo": 306, "ancho": 171, "alto": 226 },
+      "dimensionesMm": {
+        "largo": 306,
+        "ancho": 171,
+        "alto": 226
+      },
       "terminal": "ESTANDAR",
       "voltaje": 12,
       "c20Ah": 90,
@@ -201,15 +316,23 @@
       "ca22C": null,
       "crMin": 150,
       "notas": null,
-      "fuente": { "lote": 1, "imagen": "lote1-img-01.jpeg", "tabla": "WILLARD EFB", "fila": 8 },
+      "fuente": {
+        "lote": 1,
+        "imagen": "lote1-img-01.jpeg",
+        "tabla": "WILLARD EFB",
+        "fila": 8
+      },
       "revisionPendiente": false
     },
-
     {
       "referencia": "NS60D-750 PD",
       "linea": "Willard Titanio",
       "polaridad": "(- +)",
-      "dimensionesMm": { "largo": 235, "ancho": 126, "alto": 228 },
+      "dimensionesMm": {
+        "largo": 235,
+        "ancho": 126,
+        "alto": 228
+      },
       "terminal": "DELGADO",
       "voltaje": 12,
       "c20Ah": null,
@@ -217,14 +340,23 @@
       "ca22C": 600,
       "crMin": 85,
       "notas": null,
-      "fuente": { "lote": 1, "imagen": "lote1-img-01.jpeg", "tabla": "WILLARD TITANIO", "fila": 1 },
+      "fuente": {
+        "lote": 1,
+        "imagen": "lote1-img-01.jpeg",
+        "tabla": "WILLARD TITANIO",
+        "fila": 1
+      },
       "revisionPendiente": false
     },
     {
       "referencia": "NS60I-750 PD",
       "linea": "Willard Titanio",
       "polaridad": "(+ -)",
-      "dimensionesMm": { "largo": 235, "ancho": 126, "alto": 228 },
+      "dimensionesMm": {
+        "largo": 235,
+        "ancho": 126,
+        "alto": 228
+      },
       "terminal": "DELGADO",
       "voltaje": 12,
       "c20Ah": null,
@@ -232,14 +364,23 @@
       "ca22C": 600,
       "crMin": 85,
       "notas": null,
-      "fuente": { "lote": 1, "imagen": "lote1-img-01.jpeg", "tabla": "WILLARD TITANIO", "fila": 2 },
+      "fuente": {
+        "lote": 1,
+        "imagen": "lote1-img-01.jpeg",
+        "tabla": "WILLARD TITANIO",
+        "fila": 2
+      },
       "revisionPendiente": false
     },
     {
       "referencia": "42D-900",
       "linea": "Willard Titanio",
       "polaridad": "(- +)",
-      "dimensionesMm": { "largo": 237, "ancho": 173, "alto": 169 },
+      "dimensionesMm": {
+        "largo": 237,
+        "ancho": 173,
+        "alto": 169
+      },
       "terminal": "ESTANDAR",
       "voltaje": 12,
       "c20Ah": null,
@@ -247,14 +388,23 @@
       "ca22C": 800,
       "crMin": 95,
       "notas": null,
-      "fuente": { "lote": 1, "imagen": "lote1-img-01.jpeg", "tabla": "WILLARD TITANIO", "fila": 3 },
+      "fuente": {
+        "lote": 1,
+        "imagen": "lote1-img-01.jpeg",
+        "tabla": "WILLARD TITANIO",
+        "fila": 3
+      },
       "revisionPendiente": true
     },
     {
       "referencia": "24BD-900",
       "linea": "Willard Titanio",
       "polaridad": "(- +)",
-      "dimensionesMm": { "largo": 237, "ancho": 173, "alto": 188 },
+      "dimensionesMm": {
+        "largo": 237,
+        "ancho": 173,
+        "alto": 188
+      },
       "terminal": "ESTANDAR",
       "voltaje": 12,
       "c20Ah": null,
@@ -262,14 +412,23 @@
       "ca22C": 800,
       "crMin": 95,
       "notas": null,
-      "fuente": { "lote": 1, "imagen": "lote1-img-01.jpeg", "tabla": "WILLARD TITANIO", "fila": 4 },
+      "fuente": {
+        "lote": 1,
+        "imagen": "lote1-img-01.jpeg",
+        "tabla": "WILLARD TITANIO",
+        "fila": 4
+      },
       "revisionPendiente": false
     },
     {
       "referencia": "24BI-900",
       "linea": "Willard Titanio",
       "polaridad": "(+ -)",
-      "dimensionesMm": { "largo": 237, "ancho": 173, "alto": 188 },
+      "dimensionesMm": {
+        "largo": 237,
+        "ancho": 173,
+        "alto": 188
+      },
       "terminal": "ESTANDAR",
       "voltaje": 12,
       "c20Ah": null,
@@ -277,14 +436,23 @@
       "ca22C": 800,
       "crMin": 95,
       "notas": null,
-      "fuente": { "lote": 1, "imagen": "lote1-img-01.jpeg", "tabla": "WILLARD TITANIO", "fila": 5 },
+      "fuente": {
+        "lote": 1,
+        "imagen": "lote1-img-01.jpeg",
+        "tabla": "WILLARD TITANIO",
+        "fila": 5
+      },
       "revisionPendiente": false
     },
     {
       "referencia": "24AD-1150",
       "linea": "Willard Titanio",
       "polaridad": "(- +)",
-      "dimensionesMm": { "largo": 259, "ancho": 171, "alto": 223 },
+      "dimensionesMm": {
+        "largo": 259,
+        "ancho": 171,
+        "alto": 223
+      },
       "terminal": "ESTANDAR",
       "voltaje": 12,
       "c20Ah": null,
@@ -292,14 +460,23 @@
       "ca22C": 900,
       "crMin": 120,
       "notas": null,
-      "fuente": { "lote": 1, "imagen": "lote1-img-01.jpeg", "tabla": "WILLARD TITANIO", "fila": 6 },
+      "fuente": {
+        "lote": 1,
+        "imagen": "lote1-img-01.jpeg",
+        "tabla": "WILLARD TITANIO",
+        "fila": 6
+      },
       "revisionPendiente": false
     },
     {
       "referencia": "34D-1200",
       "linea": "Willard Titanio",
       "polaridad": "(- +)",
-      "dimensionesMm": { "largo": 259, "ancho": 170, "alto": 203 },
+      "dimensionesMm": {
+        "largo": 259,
+        "ancho": 170,
+        "alto": 203
+      },
       "terminal": "ESTANDAR",
       "voltaje": 12,
       "c20Ah": null,
@@ -307,14 +484,23 @@
       "ca22C": 1000,
       "crMin": 120,
       "notas": null,
-      "fuente": { "lote": 1, "imagen": "lote1-img-01.jpeg", "tabla": "WILLARD TITANIO", "fila": 7 },
+      "fuente": {
+        "lote": 1,
+        "imagen": "lote1-img-01.jpeg",
+        "tabla": "WILLARD TITANIO",
+        "fila": 7
+      },
       "revisionPendiente": false
     },
     {
       "referencia": "34I-1200",
       "linea": "Willard Titanio",
       "polaridad": "(+ -)",
-      "dimensionesMm": { "largo": 259, "ancho": 170, "alto": 203 },
+      "dimensionesMm": {
+        "largo": 259,
+        "ancho": 170,
+        "alto": 203
+      },
       "terminal": "ESTANDAR",
       "voltaje": 12,
       "c20Ah": null,
@@ -322,14 +508,23 @@
       "ca22C": 1000,
       "crMin": 120,
       "notas": null,
-      "fuente": { "lote": 1, "imagen": "lote1-img-01.jpeg", "tabla": "WILLARD TITANIO", "fila": 8 },
+      "fuente": {
+        "lote": 1,
+        "imagen": "lote1-img-01.jpeg",
+        "tabla": "WILLARD TITANIO",
+        "fila": 8
+      },
       "revisionPendiente": false
     },
     {
       "referencia": "48-1100",
       "linea": "Willard Titanio",
       "polaridad": "(+ -) (- +)",
-      "dimensionesMm": { "largo": 268, "ancho": 173, "alto": 188 },
+      "dimensionesMm": {
+        "largo": 268,
+        "ancho": 173,
+        "alto": 188
+      },
       "terminal": "ESTANDAR",
       "voltaje": 12,
       "c20Ah": null,
@@ -337,14 +532,23 @@
       "ca22C": 980,
       "crMin": 110,
       "notas": "La celda de polaridad muestra dos valores en el catalogo",
-      "fuente": { "lote": 1, "imagen": "lote1-img-01.jpeg", "tabla": "WILLARD TITANIO", "fila": 9 },
+      "fuente": {
+        "lote": 1,
+        "imagen": "lote1-img-01.jpeg",
+        "tabla": "WILLARD TITANIO",
+        "fila": 9
+      },
       "revisionPendiente": true
     },
     {
       "referencia": "48D-1000",
       "linea": "Willard Titanio",
       "polaridad": "(- +)",
-      "dimensionesMm": { "largo": 268, "ancho": 173, "alto": 188 },
+      "dimensionesMm": {
+        "largo": 268,
+        "ancho": 173,
+        "alto": 188
+      },
       "terminal": "ESTANDAR",
       "voltaje": 12,
       "c20Ah": null,
@@ -352,14 +556,23 @@
       "ca22C": 900,
       "crMin": 105,
       "notas": null,
-      "fuente": { "lote": 1, "imagen": "lote1-img-01.jpeg", "tabla": "WILLARD TITANIO", "fila": 10 },
+      "fuente": {
+        "lote": 1,
+        "imagen": "lote1-img-01.jpeg",
+        "tabla": "WILLARD TITANIO",
+        "fila": 10
+      },
       "revisionPendiente": false
     },
     {
       "referencia": "48I-1000",
       "linea": "Willard Titanio",
       "polaridad": "(- +)",
-      "dimensionesMm": { "largo": 268, "ancho": 173, "alto": 188 },
+      "dimensionesMm": {
+        "largo": 268,
+        "ancho": 173,
+        "alto": 188
+      },
       "terminal": "ESTANDAR",
       "voltaje": 12,
       "c20Ah": null,
@@ -367,14 +580,23 @@
       "ca22C": 900,
       "crMin": 105,
       "notas": null,
-      "fuente": { "lote": 1, "imagen": "lote1-img-01.jpeg", "tabla": "WILLARD TITANIO", "fila": 11 },
+      "fuente": {
+        "lote": 1,
+        "imagen": "lote1-img-01.jpeg",
+        "tabla": "WILLARD TITANIO",
+        "fila": 11
+      },
       "revisionPendiente": true
     },
     {
       "referencia": "27AD-1250",
       "linea": "Willard Titanio",
       "polaridad": "(- +)",
-      "dimensionesMm": { "largo": 306, "ancho": 171, "alto": 226 },
+      "dimensionesMm": {
+        "largo": 306,
+        "ancho": 171,
+        "alto": 226
+      },
       "terminal": "ESTANDAR",
       "voltaje": 12,
       "c20Ah": null,
@@ -382,14 +604,23 @@
       "ca22C": 1100,
       "crMin": 160,
       "notas": null,
-      "fuente": { "lote": 1, "imagen": "lote1-img-01.jpeg", "tabla": "WILLARD TITANIO", "fila": 12 },
+      "fuente": {
+        "lote": 1,
+        "imagen": "lote1-img-01.jpeg",
+        "tabla": "WILLARD TITANIO",
+        "fila": 12
+      },
       "revisionPendiente": false
     },
     {
       "referencia": "27AI-1250",
       "linea": "Willard Titanio",
       "polaridad": "(+ -)",
-      "dimensionesMm": { "largo": 306, "ancho": 171, "alto": 226 },
+      "dimensionesMm": {
+        "largo": 306,
+        "ancho": 171,
+        "alto": 226
+      },
       "terminal": "ESTANDAR",
       "voltaje": 12,
       "c20Ah": null,
@@ -397,15 +628,23 @@
       "ca22C": 1100,
       "crMin": 160,
       "notas": null,
-      "fuente": { "lote": 1, "imagen": "lote1-img-01.jpeg", "tabla": "WILLARD TITANIO", "fila": 13 },
+      "fuente": {
+        "lote": 1,
+        "imagen": "lote1-img-01.jpeg",
+        "tabla": "WILLARD TITANIO",
+        "fila": 13
+      },
       "revisionPendiente": false
     },
-
     {
       "referencia": "NS60D-620",
       "linea": "Willard",
       "polaridad": "(- +)",
-      "dimensionesMm": { "largo": 235, "ancho": 126, "alto": 228 },
+      "dimensionesMm": {
+        "largo": 235,
+        "ancho": 126,
+        "alto": 228
+      },
       "terminal": "ESTANDAR",
       "voltaje": 12,
       "c20Ah": null,
@@ -413,14 +652,23 @@
       "ca22C": 600,
       "crMin": 80,
       "notas": null,
-      "fuente": { "lote": 1, "imagen": "lote1-img-02.jpeg", "tabla": "WILLARD", "fila": 1 },
+      "fuente": {
+        "lote": 1,
+        "imagen": "lote1-img-02.jpeg",
+        "tabla": "WILLARD",
+        "fila": 1
+      },
       "revisionPendiente": false
     },
     {
       "referencia": "NS60I-620",
       "linea": "Willard",
       "polaridad": "(+ -)",
-      "dimensionesMm": { "largo": 235, "ancho": 126, "alto": 228 },
+      "dimensionesMm": {
+        "largo": 235,
+        "ancho": 126,
+        "alto": 228
+      },
       "terminal": "ESTANDAR",
       "voltaje": 12,
       "c20Ah": null,
@@ -428,14 +676,23 @@
       "ca22C": 600,
       "crMin": 80,
       "notas": null,
-      "fuente": { "lote": 1, "imagen": "lote1-img-02.jpeg", "tabla": "WILLARD", "fila": 2 },
+      "fuente": {
+        "lote": 1,
+        "imagen": "lote1-img-02.jpeg",
+        "tabla": "WILLARD",
+        "fila": 2
+      },
       "revisionPendiente": false
     },
     {
       "referencia": "36D-750",
       "linea": "Willard",
       "polaridad": "(- +)",
-      "dimensionesMm": { "largo": 206, "ancho": 175, "alto": 174 },
+      "dimensionesMm": {
+        "largo": 206,
+        "ancho": 175,
+        "alto": 174
+      },
       "terminal": "ESTANDAR",
       "voltaje": 12,
       "c20Ah": null,
@@ -443,14 +700,23 @@
       "ca22C": 530,
       "crMin": 65,
       "notas": null,
-      "fuente": { "lote": 1, "imagen": "lote1-img-02.jpeg", "tabla": "WILLARD", "fila": 3 },
+      "fuente": {
+        "lote": 1,
+        "imagen": "lote1-img-02.jpeg",
+        "tabla": "WILLARD",
+        "fila": 3
+      },
       "revisionPendiente": false
     },
     {
       "referencia": "L1-750",
       "linea": "Willard",
       "polaridad": "(- +)",
-      "dimensionesMm": { "largo": 206, "ancho": 175, "alto": 189 },
+      "dimensionesMm": {
+        "largo": 206,
+        "ancho": 175,
+        "alto": 189
+      },
       "terminal": "ESTANDAR",
       "voltaje": 12,
       "c20Ah": null,
@@ -458,14 +724,23 @@
       "ca22C": 530,
       "crMin": 65,
       "notas": null,
-      "fuente": { "lote": 1, "imagen": "lote1-img-02.jpeg", "tabla": "WILLARD", "fila": 4 },
+      "fuente": {
+        "lote": 1,
+        "imagen": "lote1-img-02.jpeg",
+        "tabla": "WILLARD",
+        "fila": 4
+      },
       "revisionPendiente": false
     },
     {
       "referencia": "42D-850",
       "linea": "Willard",
       "polaridad": "(- +)",
-      "dimensionesMm": { "largo": 237, "ancho": 173, "alto": 169 },
+      "dimensionesMm": {
+        "largo": 237,
+        "ancho": 173,
+        "alto": 169
+      },
       "terminal": "ESTANDAR",
       "voltaje": 12,
       "c20Ah": null,
@@ -473,14 +748,23 @@
       "ca22C": 750,
       "crMin": 92,
       "notas": null,
-      "fuente": { "lote": 1, "imagen": "lote1-img-02.jpeg", "tabla": "WILLARD", "fila": 5 },
+      "fuente": {
+        "lote": 1,
+        "imagen": "lote1-img-02.jpeg",
+        "tabla": "WILLARD",
+        "fila": 5
+      },
       "revisionPendiente": false
     },
     {
       "referencia": "42I-850",
       "linea": "Willard",
       "polaridad": "(+ -)",
-      "dimensionesMm": { "largo": 237, "ancho": 173, "alto": 169 },
+      "dimensionesMm": {
+        "largo": 237,
+        "ancho": 173,
+        "alto": 169
+      },
       "terminal": "ESTANDAR",
       "voltaje": 12,
       "c20Ah": null,
@@ -488,14 +772,23 @@
       "ca22C": 750,
       "crMin": 92,
       "notas": null,
-      "fuente": { "lote": 1, "imagen": "lote1-img-02.jpeg", "tabla": "WILLARD", "fila": 6 },
+      "fuente": {
+        "lote": 1,
+        "imagen": "lote1-img-02.jpeg",
+        "tabla": "WILLARD",
+        "fila": 6
+      },
       "revisionPendiente": false
     },
     {
       "referencia": "24BD-850",
       "linea": "Willard",
       "polaridad": "(- +)",
-      "dimensionesMm": { "largo": 237, "ancho": 173, "alto": 188 },
+      "dimensionesMm": {
+        "largo": 237,
+        "ancho": 173,
+        "alto": 188
+      },
       "terminal": "ESTANDAR",
       "voltaje": 12,
       "c20Ah": null,
@@ -503,14 +796,23 @@
       "ca22C": 750,
       "crMin": 92,
       "notas": null,
-      "fuente": { "lote": 1, "imagen": "lote1-img-02.jpeg", "tabla": "WILLARD", "fila": 7 },
+      "fuente": {
+        "lote": 1,
+        "imagen": "lote1-img-02.jpeg",
+        "tabla": "WILLARD",
+        "fila": 7
+      },
       "revisionPendiente": false
     },
     {
       "referencia": "24BI-850",
       "linea": "Willard",
       "polaridad": "(+ -)",
-      "dimensionesMm": { "largo": 237, "ancho": 173, "alto": 188 },
+      "dimensionesMm": {
+        "largo": 237,
+        "ancho": 173,
+        "alto": 188
+      },
       "terminal": "ESTANDAR",
       "voltaje": 12,
       "c20Ah": null,
@@ -518,14 +820,23 @@
       "ca22C": 750,
       "crMin": 92,
       "notas": null,
-      "fuente": { "lote": 1, "imagen": "lote1-img-02.jpeg", "tabla": "WILLARD", "fila": 8 },
+      "fuente": {
+        "lote": 1,
+        "imagen": "lote1-img-02.jpeg",
+        "tabla": "WILLARD",
+        "fila": 8
+      },
       "revisionPendiente": false
     },
     {
       "referencia": "48D-900",
       "linea": "Willard",
       "polaridad": "(- +)",
-      "dimensionesMm": { "largo": 268, "ancho": 173, "alto": 188 },
+      "dimensionesMm": {
+        "largo": 268,
+        "ancho": 173,
+        "alto": 188
+      },
       "terminal": "ESTANDAR",
       "voltaje": 12,
       "c20Ah": null,
@@ -533,14 +844,23 @@
       "ca22C": 880,
       "crMin": 105,
       "notas": null,
-      "fuente": { "lote": 1, "imagen": "lote1-img-02.jpeg", "tabla": "WILLARD", "fila": 9 },
+      "fuente": {
+        "lote": 1,
+        "imagen": "lote1-img-02.jpeg",
+        "tabla": "WILLARD",
+        "fila": 9
+      },
       "revisionPendiente": false
     },
     {
       "referencia": "48I-900",
       "linea": "Willard",
       "polaridad": "(+ -)",
-      "dimensionesMm": { "largo": 268, "ancho": 173, "alto": 188 },
+      "dimensionesMm": {
+        "largo": 268,
+        "ancho": 173,
+        "alto": 188
+      },
       "terminal": "ESTANDAR",
       "voltaje": 12,
       "c20Ah": null,
@@ -548,14 +868,23 @@
       "ca22C": 880,
       "crMin": 105,
       "notas": null,
-      "fuente": { "lote": 1, "imagen": "lote1-img-02.jpeg", "tabla": "WILLARD", "fila": 10 },
+      "fuente": {
+        "lote": 1,
+        "imagen": "lote1-img-02.jpeg",
+        "tabla": "WILLARD",
+        "fila": 10
+      },
       "revisionPendiente": false
     },
     {
       "referencia": "48D-950",
       "linea": "Willard",
       "polaridad": "(- +)",
-      "dimensionesMm": { "largo": 268, "ancho": 173, "alto": 188 },
+      "dimensionesMm": {
+        "largo": 268,
+        "ancho": 173,
+        "alto": 188
+      },
       "terminal": "ESTANDAR",
       "voltaje": 12,
       "c20Ah": null,
@@ -563,14 +892,23 @@
       "ca22C": 890,
       "crMin": 105,
       "notas": null,
-      "fuente": { "lote": 1, "imagen": "lote1-img-02.jpeg", "tabla": "WILLARD", "fila": 11 },
+      "fuente": {
+        "lote": 1,
+        "imagen": "lote1-img-02.jpeg",
+        "tabla": "WILLARD",
+        "fila": 11
+      },
       "revisionPendiente": false
     },
     {
       "referencia": "48I-950",
       "linea": "Willard",
       "polaridad": "(+ -)",
-      "dimensionesMm": { "largo": 268, "ancho": 173, "alto": 188 },
+      "dimensionesMm": {
+        "largo": 268,
+        "ancho": 173,
+        "alto": 188
+      },
       "terminal": "ESTANDAR",
       "voltaje": 12,
       "c20Ah": null,
@@ -578,14 +916,23 @@
       "ca22C": 890,
       "crMin": 105,
       "notas": null,
-      "fuente": { "lote": 1, "imagen": "lote1-img-02.jpeg", "tabla": "WILLARD", "fila": 12 },
+      "fuente": {
+        "lote": 1,
+        "imagen": "lote1-img-02.jpeg",
+        "tabla": "WILLARD",
+        "fila": 12
+      },
       "revisionPendiente": false
     },
     {
       "referencia": "LB3-950",
       "linea": "Willard",
       "polaridad": "(- +)",
-      "dimensionesMm": { "largo": 275, "ancho": 174, "alto": 174 },
+      "dimensionesMm": {
+        "largo": 275,
+        "ancho": 174,
+        "alto": 174
+      },
       "terminal": "ESTANDAR",
       "voltaje": 12,
       "c20Ah": null,
@@ -593,14 +940,23 @@
       "ca22C": 890,
       "crMin": 105,
       "notas": null,
-      "fuente": { "lote": 1, "imagen": "lote1-img-02.jpeg", "tabla": "WILLARD", "fila": 13 },
+      "fuente": {
+        "lote": 1,
+        "imagen": "lote1-img-02.jpeg",
+        "tabla": "WILLARD",
+        "fila": 13
+      },
       "revisionPendiente": false
     },
     {
       "referencia": "35-800",
       "linea": "Willard",
       "polaridad": "(- +)",
-      "dimensionesMm": { "largo": 230, "ancho": 176, "alto": 218 },
+      "dimensionesMm": {
+        "largo": 230,
+        "ancho": 176,
+        "alto": 218
+      },
       "terminal": "ESTANDAR",
       "voltaje": 12,
       "c20Ah": null,
@@ -608,14 +964,23 @@
       "ca22C": 786,
       "crMin": 114,
       "notas": null,
-      "fuente": { "lote": 1, "imagen": "lote1-img-02.jpeg", "tabla": "WILLARD", "fila": 14 },
+      "fuente": {
+        "lote": 1,
+        "imagen": "lote1-img-02.jpeg",
+        "tabla": "WILLARD",
+        "fila": 14
+      },
       "revisionPendiente": false
     },
     {
       "referencia": "55DD-800",
       "linea": "Willard",
       "polaridad": "(- +)",
-      "dimensionesMm": { "largo": 230, "ancho": 173, "alto": 218 },
+      "dimensionesMm": {
+        "largo": 230,
+        "ancho": 173,
+        "alto": 218
+      },
       "terminal": "ESTANDAR",
       "voltaje": 12,
       "c20Ah": null,
@@ -623,14 +988,23 @@
       "ca22C": 786,
       "crMin": 114,
       "notas": null,
-      "fuente": { "lote": 1, "imagen": "lote1-img-02.jpeg", "tabla": "WILLARD", "fila": 15 },
+      "fuente": {
+        "lote": 1,
+        "imagen": "lote1-img-02.jpeg",
+        "tabla": "WILLARD",
+        "fila": 15
+      },
       "revisionPendiente": true
     },
     {
       "referencia": "34D-1100",
       "linea": "Willard",
       "polaridad": "(- +)",
-      "dimensionesMm": { "largo": 259, "ancho": 170, "alto": 203 },
+      "dimensionesMm": {
+        "largo": 259,
+        "ancho": 170,
+        "alto": 203
+      },
       "terminal": "ESTANDAR",
       "voltaje": 12,
       "c20Ah": null,
@@ -638,14 +1012,23 @@
       "ca22C": 980,
       "crMin": 114,
       "notas": null,
-      "fuente": { "lote": 1, "imagen": "lote1-img-02.jpeg", "tabla": "WILLARD", "fila": 16 },
+      "fuente": {
+        "lote": 1,
+        "imagen": "lote1-img-02.jpeg",
+        "tabla": "WILLARD",
+        "fila": 16
+      },
       "revisionPendiente": false
     },
     {
       "referencia": "34I-1100",
       "linea": "Willard",
       "polaridad": "(+ -)",
-      "dimensionesMm": { "largo": 259, "ancho": 170, "alto": 203 },
+      "dimensionesMm": {
+        "largo": 259,
+        "ancho": 170,
+        "alto": 203
+      },
       "terminal": "ESTANDAR",
       "voltaje": 12,
       "c20Ah": null,
@@ -653,14 +1036,23 @@
       "ca22C": 980,
       "crMin": 114,
       "notas": null,
-      "fuente": { "lote": 1, "imagen": "lote1-img-02.jpeg", "tabla": "WILLARD", "fila": 17 },
+      "fuente": {
+        "lote": 1,
+        "imagen": "lote1-img-02.jpeg",
+        "tabla": "WILLARD",
+        "fila": 17
+      },
       "revisionPendiente": false
     },
     {
       "referencia": "24AD-900",
       "linea": "Willard",
       "polaridad": "(- +)",
-      "dimensionesMm": { "largo": 259, "ancho": 171, "alto": 223 },
+      "dimensionesMm": {
+        "largo": 259,
+        "ancho": 171,
+        "alto": 223
+      },
       "terminal": "ESTANDAR",
       "voltaje": 12,
       "c20Ah": null,
@@ -668,14 +1060,23 @@
       "ca22C": 786,
       "crMin": 114,
       "notas": null,
-      "fuente": { "lote": 1, "imagen": "lote1-img-02.jpeg", "tabla": "WILLARD", "fila": 18 },
+      "fuente": {
+        "lote": 1,
+        "imagen": "lote1-img-02.jpeg",
+        "tabla": "WILLARD",
+        "fila": 18
+      },
       "revisionPendiente": false
     },
     {
       "referencia": "24AI-900",
       "linea": "Willard",
       "polaridad": "(+ -)",
-      "dimensionesMm": { "largo": 259, "ancho": 171, "alto": 223 },
+      "dimensionesMm": {
+        "largo": 259,
+        "ancho": 171,
+        "alto": 223
+      },
       "terminal": "ESTANDAR",
       "voltaje": 12,
       "c20Ah": null,
@@ -683,14 +1084,23 @@
       "ca22C": 786,
       "crMin": 114,
       "notas": null,
-      "fuente": { "lote": 1, "imagen": "lote1-img-02.jpeg", "tabla": "WILLARD", "fila": 19 },
+      "fuente": {
+        "lote": 1,
+        "imagen": "lote1-img-02.jpeg",
+        "tabla": "WILLARD",
+        "fila": 19
+      },
       "revisionPendiente": false
     },
     {
       "referencia": "27AD-1150",
       "linea": "Willard",
       "polaridad": "(- +)",
-      "dimensionesMm": { "largo": 306, "ancho": 171, "alto": 226 },
+      "dimensionesMm": {
+        "largo": 306,
+        "ancho": 171,
+        "alto": 226
+      },
       "terminal": "ESTANDAR",
       "voltaje": 12,
       "c20Ah": null,
@@ -698,14 +1108,23 @@
       "ca22C": 1050,
       "crMin": 145,
       "notas": null,
-      "fuente": { "lote": 1, "imagen": "lote1-img-02.jpeg", "tabla": "WILLARD", "fila": 20 },
+      "fuente": {
+        "lote": 1,
+        "imagen": "lote1-img-02.jpeg",
+        "tabla": "WILLARD",
+        "fila": 20
+      },
       "revisionPendiente": false
     },
     {
       "referencia": "27AI-1150",
       "linea": "Willard",
       "polaridad": "(+ -)",
-      "dimensionesMm": { "largo": 306, "ancho": 171, "alto": 226 },
+      "dimensionesMm": {
+        "largo": 306,
+        "ancho": 171,
+        "alto": 226
+      },
       "terminal": "ESTANDAR",
       "voltaje": 12,
       "c20Ah": null,
@@ -713,14 +1132,23 @@
       "ca22C": 1050,
       "crMin": 145,
       "notas": null,
-      "fuente": { "lote": 1, "imagen": "lote1-img-02.jpeg", "tabla": "WILLARD", "fila": 21 },
+      "fuente": {
+        "lote": 1,
+        "imagen": "lote1-img-02.jpeg",
+        "tabla": "WILLARD",
+        "fila": 21
+      },
       "revisionPendiente": false
     },
     {
       "referencia": "27AD-1200",
       "linea": "Willard",
       "polaridad": "(- +)",
-      "dimensionesMm": { "largo": 306, "ancho": 171, "alto": 226 },
+      "dimensionesMm": {
+        "largo": 306,
+        "ancho": 171,
+        "alto": 226
+      },
       "terminal": "ESTANDAR",
       "voltaje": 12,
       "c20Ah": null,
@@ -728,14 +1156,23 @@
       "ca22C": 1100,
       "crMin": 155,
       "notas": null,
-      "fuente": { "lote": 1, "imagen": "lote1-img-02.jpeg", "tabla": "WILLARD", "fila": 22 },
+      "fuente": {
+        "lote": 1,
+        "imagen": "lote1-img-02.jpeg",
+        "tabla": "WILLARD",
+        "fila": 22
+      },
       "revisionPendiente": false
     },
     {
       "referencia": "27AI-1200",
       "linea": "Willard",
       "polaridad": "(+ -)",
-      "dimensionesMm": { "largo": 306, "ancho": 171, "alto": 226 },
+      "dimensionesMm": {
+        "largo": 306,
+        "ancho": 171,
+        "alto": 226
+      },
       "terminal": "ESTANDAR",
       "voltaje": 12,
       "c20Ah": null,
@@ -743,14 +1180,23 @@
       "ca22C": 1100,
       "crMin": 155,
       "notas": null,
-      "fuente": { "lote": 1, "imagen": "lote1-img-02.jpeg", "tabla": "WILLARD", "fila": 23 },
+      "fuente": {
+        "lote": 1,
+        "imagen": "lote1-img-02.jpeg",
+        "tabla": "WILLARD",
+        "fila": 23
+      },
       "revisionPendiente": false
     },
     {
       "referencia": "65I-1150",
       "linea": "Willard",
       "polaridad": "(+ -)",
-      "dimensionesMm": { "largo": 287, "ancho": 189, "alto": 186 },
+      "dimensionesMm": {
+        "largo": 287,
+        "ancho": 189,
+        "alto": 186
+      },
       "terminal": "ESTANDAR",
       "voltaje": 12,
       "c20Ah": null,
@@ -758,15 +1204,23 @@
       "ca22C": 980,
       "crMin": 130,
       "notas": null,
-      "fuente": { "lote": 1, "imagen": "lote1-img-02.jpeg", "tabla": "WILLARD", "fila": 24 },
+      "fuente": {
+        "lote": 1,
+        "imagen": "lote1-img-02.jpeg",
+        "tabla": "WILLARD",
+        "fila": 24
+      },
       "revisionPendiente": false
     },
-
     {
       "referencia": "31H-1300 P",
       "linea": "Willard Equipo Pesado",
       "polaridad": "(+ -)",
-      "dimensionesMm": { "largo": 331, "ancho": 173, "alto": 238 },
+      "dimensionesMm": {
+        "largo": 331,
+        "ancho": 173,
+        "alto": 238
+      },
       "terminal": "ESTANDAR",
       "voltaje": 12,
       "c20Ah": null,
@@ -774,14 +1228,23 @@
       "ca22C": 1300,
       "crMin": 190,
       "notas": null,
-      "fuente": { "lote": 1, "imagen": "lote1-img-02.jpeg", "tabla": "WILLARD EQUIPO PESADO", "fila": 1 },
+      "fuente": {
+        "lote": 1,
+        "imagen": "lote1-img-02.jpeg",
+        "tabla": "WILLARD EQUIPO PESADO",
+        "fila": 1
+      },
       "revisionPendiente": false
     },
     {
       "referencia": "31H-1300 T",
       "linea": "Willard Equipo Pesado",
       "polaridad": "(+ -)",
-      "dimensionesMm": { "largo": 331, "ancho": 173, "alto": 238 },
+      "dimensionesMm": {
+        "largo": 331,
+        "ancho": 173,
+        "alto": 238
+      },
       "terminal": "TORNILLO",
       "voltaje": 12,
       "c20Ah": null,
@@ -789,14 +1252,23 @@
       "ca22C": 1300,
       "crMin": 190,
       "notas": null,
-      "fuente": { "lote": 1, "imagen": "lote1-img-02.jpeg", "tabla": "WILLARD EQUIPO PESADO", "fila": 2 },
+      "fuente": {
+        "lote": 1,
+        "imagen": "lote1-img-02.jpeg",
+        "tabla": "WILLARD EQUIPO PESADO",
+        "fila": 2
+      },
       "revisionPendiente": false
     },
     {
       "referencia": "4DBTD-1450",
       "linea": "Willard Equipo Pesado",
       "polaridad": "(- +)",
-      "dimensionesMm": { "largo": 512, "ancho": 219, "alto": 201 },
+      "dimensionesMm": {
+        "largo": 512,
+        "ancho": 219,
+        "alto": 201
+      },
       "terminal": "ESTANDAR",
       "voltaje": 12,
       "c20Ah": null,
@@ -804,14 +1276,23 @@
       "ca22C": 1450,
       "crMin": 190,
       "notas": null,
-      "fuente": { "lote": 1, "imagen": "lote1-img-02.jpeg", "tabla": "WILLARD EQUIPO PESADO", "fila": 3 },
+      "fuente": {
+        "lote": 1,
+        "imagen": "lote1-img-02.jpeg",
+        "tabla": "WILLARD EQUIPO PESADO",
+        "fila": 3
+      },
       "revisionPendiente": false
     },
     {
       "referencia": "4DBTI-1450",
       "linea": "Willard Equipo Pesado",
       "polaridad": "(+ -)",
-      "dimensionesMm": { "largo": 512, "ancho": 219, "alto": 201 },
+      "dimensionesMm": {
+        "largo": 512,
+        "ancho": 219,
+        "alto": 201
+      },
       "terminal": "ESTANDAR",
       "voltaje": 12,
       "c20Ah": null,
@@ -819,14 +1300,23 @@
       "ca22C": 1450,
       "crMin": 190,
       "notas": null,
-      "fuente": { "lote": 1, "imagen": "lote1-img-02.jpeg", "tabla": "WILLARD EQUIPO PESADO", "fila": 4 },
+      "fuente": {
+        "lote": 1,
+        "imagen": "lote1-img-02.jpeg",
+        "tabla": "WILLARD EQUIPO PESADO",
+        "fila": 4
+      },
       "revisionPendiente": false
     },
     {
       "referencia": "4DT-1500",
       "linea": "Willard Equipo Pesado",
       "polaridad": "(+ -)",
-      "dimensionesMm": { "largo": 510, "ancho": 222, "alto": 240 },
+      "dimensionesMm": {
+        "largo": 510,
+        "ancho": 222,
+        "alto": 240
+      },
       "terminal": "ESTANDAR",
       "voltaje": 12,
       "c20Ah": null,
@@ -834,14 +1324,23 @@
       "ca22C": 1500,
       "crMin": 280,
       "notas": null,
-      "fuente": { "lote": 1, "imagen": "lote1-img-02.jpeg", "tabla": "WILLARD EQUIPO PESADO", "fila": 5 },
+      "fuente": {
+        "lote": 1,
+        "imagen": "lote1-img-02.jpeg",
+        "tabla": "WILLARD EQUIPO PESADO",
+        "fila": 5
+      },
       "revisionPendiente": false
     },
     {
       "referencia": "8DT-1800",
       "linea": "Willard Equipo Pesado",
       "polaridad": "(+ -)",
-      "dimensionesMm": { "largo": 524, "ancho": 280, "alto": 247 },
+      "dimensionesMm": {
+        "largo": 524,
+        "ancho": 280,
+        "alto": 247
+      },
       "terminal": "ESTANDAR",
       "voltaje": 12,
       "c20Ah": null,
@@ -849,15 +1348,23 @@
       "ca22C": 1890,
       "crMin": 300,
       "notas": null,
-      "fuente": { "lote": 1, "imagen": "lote1-img-02.jpeg", "tabla": "WILLARD EQUIPO PESADO", "fila": 6 },
+      "fuente": {
+        "lote": 1,
+        "imagen": "lote1-img-02.jpeg",
+        "tabla": "WILLARD EQUIPO PESADO",
+        "fila": 6
+      },
       "revisionPendiente": false
     },
-
     {
       "referencia": "NS40D-560 PD",
       "linea": "Extrema Titanio",
       "polaridad": "(- +)",
-      "dimensionesMm": { "largo": 196, "ancho": 128, "alto": 224 },
+      "dimensionesMm": {
+        "largo": 196,
+        "ancho": 128,
+        "alto": 224
+      },
       "terminal": "DELGADO",
       "voltaje": 12,
       "c20Ah": 310,
@@ -865,14 +1372,23 @@
       "ca22C": null,
       "crMin": 60,
       "notas": null,
-      "fuente": { "lote": 1, "imagen": "lote1-img-03.jpeg", "tabla": "EXTREMA TITANIO", "fila": 1 },
+      "fuente": {
+        "lote": 1,
+        "imagen": "lote1-img-03.jpeg",
+        "tabla": "EXTREMA TITANIO",
+        "fila": 1
+      },
       "revisionPendiente": true
     },
     {
       "referencia": "NS40I-560 PD",
       "linea": "Extrema Titanio",
       "polaridad": "(+ -)",
-      "dimensionesMm": { "largo": 196, "ancho": 128, "alto": 224 },
+      "dimensionesMm": {
+        "largo": 196,
+        "ancho": 128,
+        "alto": 224
+      },
       "terminal": "DELGADO",
       "voltaje": 12,
       "c20Ah": 310,
@@ -880,14 +1396,23 @@
       "ca22C": null,
       "crMin": 60,
       "notas": null,
-      "fuente": { "lote": 1, "imagen": "lote1-img-03.jpeg", "tabla": "EXTREMA TITANIO", "fila": 2 },
+      "fuente": {
+        "lote": 1,
+        "imagen": "lote1-img-03.jpeg",
+        "tabla": "EXTREMA TITANIO",
+        "fila": 2
+      },
       "revisionPendiente": true
     },
     {
       "referencia": "NS40D-PD560 K*",
       "linea": "Extrema Titanio",
       "polaridad": "(+ -)",
-      "dimensionesMm": { "largo": 196, "ancho": 128, "alto": 224 },
+      "dimensionesMm": {
+        "largo": 196,
+        "ancho": 128,
+        "alto": 224
+      },
       "terminal": "DELGADO",
       "voltaje": 12,
       "c20Ah": 310,
@@ -895,14 +1420,23 @@
       "ca22C": null,
       "crMin": 60,
       "notas": "El asterisco corresponde a la nota del catalogo: bateria con pestana (Hold Down)",
-      "fuente": { "lote": 1, "imagen": "lote1-img-03.jpeg", "tabla": "EXTREMA TITANIO", "fila": 3 },
+      "fuente": {
+        "lote": 1,
+        "imagen": "lote1-img-03.jpeg",
+        "tabla": "EXTREMA TITANIO",
+        "fila": 3
+      },
       "revisionPendiente": true
     },
     {
       "referencia": "NS40D-670",
       "linea": "Extrema Titanio",
       "polaridad": "(- +)",
-      "dimensionesMm": { "largo": 196, "ancho": 128, "alto": 224 },
+      "dimensionesMm": {
+        "largo": 196,
+        "ancho": 128,
+        "alto": 224
+      },
       "terminal": "ESTANDAR",
       "voltaje": 12,
       "c20Ah": 375,
@@ -910,14 +1444,23 @@
       "ca22C": null,
       "crMin": 72,
       "notas": null,
-      "fuente": { "lote": 1, "imagen": "lote1-img-03.jpeg", "tabla": "EXTREMA TITANIO", "fila": 4 },
+      "fuente": {
+        "lote": 1,
+        "imagen": "lote1-img-03.jpeg",
+        "tabla": "EXTREMA TITANIO",
+        "fila": 4
+      },
       "revisionPendiente": true
     },
     {
       "referencia": "NS40D PD 670",
       "linea": "Extrema Titanio",
       "polaridad": "(+ -)",
-      "dimensionesMm": { "largo": 196, "ancho": 128, "alto": 224 },
+      "dimensionesMm": {
+        "largo": 196,
+        "ancho": 128,
+        "alto": 224
+      },
       "terminal": "DELGADO",
       "voltaje": 12,
       "c20Ah": 375,
@@ -925,14 +1468,23 @@
       "ca22C": null,
       "crMin": 72,
       "notas": null,
-      "fuente": { "lote": 1, "imagen": "lote1-img-03.jpeg", "tabla": "EXTREMA TITANIO", "fila": 5 },
+      "fuente": {
+        "lote": 1,
+        "imagen": "lote1-img-03.jpeg",
+        "tabla": "EXTREMA TITANIO",
+        "fila": 5
+      },
       "revisionPendiente": true
     },
     {
       "referencia": "NS40D-PD670K*",
       "linea": "Extrema Titanio",
       "polaridad": "(+ -)",
-      "dimensionesMm": { "largo": 196, "ancho": 128, "alto": 224 },
+      "dimensionesMm": {
+        "largo": 196,
+        "ancho": 128,
+        "alto": 224
+      },
       "terminal": "DELGADO",
       "voltaje": 12,
       "c20Ah": 375,
@@ -940,14 +1492,23 @@
       "ca22C": null,
       "crMin": 72,
       "notas": "El asterisco corresponde a la nota del catalogo: bateria con pestana (Hold Down)",
-      "fuente": { "lote": 1, "imagen": "lote1-img-03.jpeg", "tabla": "EXTREMA TITANIO", "fila": 6 },
+      "fuente": {
+        "lote": 1,
+        "imagen": "lote1-img-03.jpeg",
+        "tabla": "EXTREMA TITANIO",
+        "fila": 6
+      },
       "revisionPendiente": true
     },
     {
       "referencia": "36D-600",
       "linea": "Extrema Titanio",
       "polaridad": "(- +)",
-      "dimensionesMm": { "largo": 206, "ancho": 175, "alto": 174 },
+      "dimensionesMm": {
+        "largo": 206,
+        "ancho": 175,
+        "alto": 174
+      },
       "terminal": "ESTANDAR",
       "voltaje": 12,
       "c20Ah": 350,
@@ -955,14 +1516,23 @@
       "ca22C": null,
       "crMin": 58,
       "notas": null,
-      "fuente": { "lote": 1, "imagen": "lote1-img-03.jpeg", "tabla": "EXTREMA TITANIO", "fila": 7 },
+      "fuente": {
+        "lote": 1,
+        "imagen": "lote1-img-03.jpeg",
+        "tabla": "EXTREMA TITANIO",
+        "fila": 7
+      },
       "revisionPendiente": false
     },
     {
       "referencia": "42D-750",
       "linea": "Extrema Titanio",
       "polaridad": "(- +)",
-      "dimensionesMm": { "largo": 237, "ancho": 173, "alto": 169 },
+      "dimensionesMm": {
+        "largo": 237,
+        "ancho": 173,
+        "alto": 169
+      },
       "terminal": "ESTANDAR",
       "voltaje": 12,
       "c20Ah": 500,
@@ -970,14 +1540,23 @@
       "ca22C": null,
       "crMin": 90,
       "notas": null,
-      "fuente": { "lote": 1, "imagen": "lote1-img-03.jpeg", "tabla": "EXTREMA TITANIO", "fila": 8 },
+      "fuente": {
+        "lote": 1,
+        "imagen": "lote1-img-03.jpeg",
+        "tabla": "EXTREMA TITANIO",
+        "fila": 8
+      },
       "revisionPendiente": false
     },
     {
       "referencia": "42I-750",
       "linea": "Extrema Titanio",
       "polaridad": "(+ -)",
-      "dimensionesMm": { "largo": 237, "ancho": 173, "alto": 169 },
+      "dimensionesMm": {
+        "largo": 237,
+        "ancho": 173,
+        "alto": 169
+      },
       "terminal": "ESTANDAR",
       "voltaje": 12,
       "c20Ah": 500,
@@ -985,14 +1564,23 @@
       "ca22C": null,
       "crMin": 90,
       "notas": null,
-      "fuente": { "lote": 1, "imagen": "lote1-img-03.jpeg", "tabla": "EXTREMA TITANIO", "fila": 9 },
+      "fuente": {
+        "lote": 1,
+        "imagen": "lote1-img-03.jpeg",
+        "tabla": "EXTREMA TITANIO",
+        "fila": 9
+      },
       "revisionPendiente": false
     },
     {
       "referencia": "24BD-750",
       "linea": "Extrema Titanio",
       "polaridad": "(- +)",
-      "dimensionesMm": { "largo": 237, "ancho": 173, "alto": 188 },
+      "dimensionesMm": {
+        "largo": 237,
+        "ancho": 173,
+        "alto": 188
+      },
       "terminal": "ESTANDAR",
       "voltaje": 12,
       "c20Ah": 500,
@@ -1000,14 +1588,23 @@
       "ca22C": null,
       "crMin": 90,
       "notas": null,
-      "fuente": { "lote": 1, "imagen": "lote1-img-03.jpeg", "tabla": "EXTREMA TITANIO", "fila": 10 },
+      "fuente": {
+        "lote": 1,
+        "imagen": "lote1-img-03.jpeg",
+        "tabla": "EXTREMA TITANIO",
+        "fila": 10
+      },
       "revisionPendiente": false
     },
     {
       "referencia": "24BI-750",
       "linea": "Extrema Titanio",
       "polaridad": "(+ -)",
-      "dimensionesMm": { "largo": 237, "ancho": 173, "alto": 188 },
+      "dimensionesMm": {
+        "largo": 237,
+        "ancho": 173,
+        "alto": 188
+      },
       "terminal": "ESTANDAR",
       "voltaje": 12,
       "c20Ah": 500,
@@ -1015,14 +1612,23 @@
       "ca22C": null,
       "crMin": 90,
       "notas": null,
-      "fuente": { "lote": 1, "imagen": "lote1-img-03.jpeg", "tabla": "EXTREMA TITANIO", "fila": 11 },
+      "fuente": {
+        "lote": 1,
+        "imagen": "lote1-img-03.jpeg",
+        "tabla": "EXTREMA TITANIO",
+        "fila": 11
+      },
       "revisionPendiente": false
     },
     {
       "referencia": "48D-850",
       "linea": "Extrema Titanio",
       "polaridad": "(- +)",
-      "dimensionesMm": { "largo": 268, "ancho": 173, "alto": 188 },
+      "dimensionesMm": {
+        "largo": 268,
+        "ancho": 173,
+        "alto": 188
+      },
       "terminal": "ESTANDAR",
       "voltaje": 12,
       "c20Ah": 550,
@@ -1030,14 +1636,23 @@
       "ca22C": null,
       "crMin": 100,
       "notas": null,
-      "fuente": { "lote": 1, "imagen": "lote1-img-03.jpeg", "tabla": "EXTREMA TITANIO", "fila": 12 },
+      "fuente": {
+        "lote": 1,
+        "imagen": "lote1-img-03.jpeg",
+        "tabla": "EXTREMA TITANIO",
+        "fila": 12
+      },
       "revisionPendiente": false
     },
     {
       "referencia": "48-850",
       "linea": "Extrema Titanio",
       "polaridad": "(+ -)",
-      "dimensionesMm": { "largo": 268, "ancho": 173, "alto": 188 },
+      "dimensionesMm": {
+        "largo": 268,
+        "ancho": 173,
+        "alto": 188
+      },
       "terminal": "ESTANDAR",
       "voltaje": 12,
       "c20Ah": 550,
@@ -1045,14 +1660,23 @@
       "ca22C": null,
       "crMin": 100,
       "notas": null,
-      "fuente": { "lote": 1, "imagen": "lote1-img-03.jpeg", "tabla": "EXTREMA TITANIO", "fila": 13 },
+      "fuente": {
+        "lote": 1,
+        "imagen": "lote1-img-03.jpeg",
+        "tabla": "EXTREMA TITANIO",
+        "fila": 13
+      },
       "revisionPendiente": true
     },
     {
       "referencia": "34D-850",
       "linea": "Extrema Titanio",
       "polaridad": "(- +)",
-      "dimensionesMm": { "largo": 259, "ancho": 170, "alto": 203 },
+      "dimensionesMm": {
+        "largo": 259,
+        "ancho": 170,
+        "alto": 203
+      },
       "terminal": "ESTANDAR",
       "voltaje": 12,
       "c20Ah": 550,
@@ -1060,14 +1684,23 @@
       "ca22C": null,
       "crMin": 96,
       "notas": null,
-      "fuente": { "lote": 1, "imagen": "lote1-img-03.jpeg", "tabla": "EXTREMA TITANIO", "fila": 14 },
+      "fuente": {
+        "lote": 1,
+        "imagen": "lote1-img-03.jpeg",
+        "tabla": "EXTREMA TITANIO",
+        "fila": 14
+      },
       "revisionPendiente": false
     },
     {
       "referencia": "34I-850",
       "linea": "Extrema Titanio",
       "polaridad": "(+ -)",
-      "dimensionesMm": { "largo": 259, "ancho": 170, "alto": 203 },
+      "dimensionesMm": {
+        "largo": 259,
+        "ancho": 170,
+        "alto": 203
+      },
       "terminal": "ESTANDAR",
       "voltaje": 12,
       "c20Ah": 550,
@@ -1075,14 +1708,23 @@
       "ca22C": null,
       "crMin": 96,
       "notas": null,
-      "fuente": { "lote": 1, "imagen": "lote1-img-03.jpeg", "tabla": "EXTREMA TITANIO", "fila": 15 },
+      "fuente": {
+        "lote": 1,
+        "imagen": "lote1-img-03.jpeg",
+        "tabla": "EXTREMA TITANIO",
+        "fila": 15
+      },
       "revisionPendiente": false
     },
     {
       "referencia": "34D-950",
       "linea": "Extrema Titanio",
       "polaridad": "(- +)",
-      "dimensionesMm": { "largo": 259, "ancho": 170, "alto": 203 },
+      "dimensionesMm": {
+        "largo": 259,
+        "ancho": 170,
+        "alto": 203
+      },
       "terminal": "ESTANDAR",
       "voltaje": 12,
       "c20Ah": 640,
@@ -1090,14 +1732,23 @@
       "ca22C": null,
       "crMin": 120,
       "notas": null,
-      "fuente": { "lote": 1, "imagen": "lote1-img-03.jpeg", "tabla": "EXTREMA TITANIO", "fila": 16 },
+      "fuente": {
+        "lote": 1,
+        "imagen": "lote1-img-03.jpeg",
+        "tabla": "EXTREMA TITANIO",
+        "fila": 16
+      },
       "revisionPendiente": false
     },
     {
       "referencia": "34I-950",
       "linea": "Extrema Titanio",
       "polaridad": "(+ -)",
-      "dimensionesMm": { "largo": 259, "ancho": 170, "alto": 203 },
+      "dimensionesMm": {
+        "largo": 259,
+        "ancho": 170,
+        "alto": 203
+      },
       "terminal": "ESTANDAR",
       "voltaje": 12,
       "c20Ah": 640,
@@ -1105,14 +1756,23 @@
       "ca22C": null,
       "crMin": 120,
       "notas": null,
-      "fuente": { "lote": 1, "imagen": "lote1-img-03.jpeg", "tabla": "EXTREMA TITANIO", "fila": 17 },
+      "fuente": {
+        "lote": 1,
+        "imagen": "lote1-img-03.jpeg",
+        "tabla": "EXTREMA TITANIO",
+        "fila": 17
+      },
       "revisionPendiente": false
     },
     {
       "referencia": "27AD-1000",
       "linea": "Extrema Titanio",
       "polaridad": "(- +)",
-      "dimensionesMm": { "largo": 306, "ancho": 171, "alto": 226 },
+      "dimensionesMm": {
+        "largo": 306,
+        "ancho": 171,
+        "alto": 226
+      },
       "terminal": "ESTANDAR",
       "voltaje": 12,
       "c20Ah": 670,
@@ -1120,14 +1780,23 @@
       "ca22C": null,
       "crMin": 140,
       "notas": null,
-      "fuente": { "lote": 1, "imagen": "lote1-img-03.jpeg", "tabla": "EXTREMA TITANIO", "fila": 18 },
+      "fuente": {
+        "lote": 1,
+        "imagen": "lote1-img-03.jpeg",
+        "tabla": "EXTREMA TITANIO",
+        "fila": 18
+      },
       "revisionPendiente": false
     },
     {
       "referencia": "27AI-1000",
       "linea": "Extrema Titanio",
       "polaridad": "(+ -)",
-      "dimensionesMm": { "largo": 306, "ancho": 171, "alto": 226 },
+      "dimensionesMm": {
+        "largo": 306,
+        "ancho": 171,
+        "alto": 226
+      },
       "terminal": "ESTANDAR",
       "voltaje": 12,
       "c20Ah": 670,
@@ -1135,15 +1804,23 @@
       "ca22C": null,
       "crMin": 140,
       "notas": null,
-      "fuente": { "lote": 1, "imagen": "lote1-img-03.jpeg", "tabla": "EXTREMA TITANIO", "fila": 19 },
+      "fuente": {
+        "lote": 1,
+        "imagen": "lote1-img-03.jpeg",
+        "tabla": "EXTREMA TITANIO",
+        "fila": 19
+      },
       "revisionPendiente": false
     },
-
     {
       "referencia": "31H-1150 P",
       "linea": "Extrema Equipo Pesado",
       "polaridad": "(+ -)",
-      "dimensionesMm": { "largo": 331, "ancho": 173, "alto": 238 },
+      "dimensionesMm": {
+        "largo": 331,
+        "ancho": 173,
+        "alto": 238
+      },
       "terminal": "ESTANDAR",
       "voltaje": 12,
       "c20Ah": 700,
@@ -1151,14 +1828,23 @@
       "ca22C": null,
       "crMin": 170,
       "notas": null,
-      "fuente": { "lote": 1, "imagen": "lote1-img-03.jpeg", "tabla": "EXTREMA EQUIPO PESADO", "fila": 1 },
+      "fuente": {
+        "lote": 1,
+        "imagen": "lote1-img-03.jpeg",
+        "tabla": "EXTREMA EQUIPO PESADO",
+        "fila": 1
+      },
       "revisionPendiente": false
     },
     {
       "referencia": "31H-1150 T",
       "linea": "Extrema Equipo Pesado",
       "polaridad": "(+ -)",
-      "dimensionesMm": { "largo": 331, "ancho": 173, "alto": 238 },
+      "dimensionesMm": {
+        "largo": 331,
+        "ancho": 173,
+        "alto": 238
+      },
       "terminal": "TORNILLO",
       "voltaje": 12,
       "c20Ah": 700,
@@ -1166,14 +1852,23 @@
       "ca22C": null,
       "crMin": 170,
       "notas": null,
-      "fuente": { "lote": 1, "imagen": "lote1-img-03.jpeg", "tabla": "EXTREMA EQUIPO PESADO", "fila": 2 },
+      "fuente": {
+        "lote": 1,
+        "imagen": "lote1-img-03.jpeg",
+        "tabla": "EXTREMA EQUIPO PESADO",
+        "fila": 2
+      },
       "revisionPendiente": false
     },
     {
       "referencia": "31H-1250 P",
       "linea": "Extrema Equipo Pesado",
       "polaridad": "(+ -)",
-      "dimensionesMm": { "largo": 331, "ancho": 173, "alto": 238 },
+      "dimensionesMm": {
+        "largo": 331,
+        "ancho": 173,
+        "alto": 238
+      },
       "terminal": "ESTANDAR",
       "voltaje": 12,
       "c20Ah": 870,
@@ -1181,14 +1876,23 @@
       "ca22C": null,
       "crMin": 180,
       "notas": null,
-      "fuente": { "lote": 1, "imagen": "lote1-img-03.jpeg", "tabla": "EXTREMA EQUIPO PESADO", "fila": 3 },
+      "fuente": {
+        "lote": 1,
+        "imagen": "lote1-img-03.jpeg",
+        "tabla": "EXTREMA EQUIPO PESADO",
+        "fila": 3
+      },
       "revisionPendiente": false
     },
     {
       "referencia": "31H-1250 T",
       "linea": "Extrema Equipo Pesado",
       "polaridad": "(+ -)",
-      "dimensionesMm": { "largo": 331, "ancho": 173, "alto": 238 },
+      "dimensionesMm": {
+        "largo": 331,
+        "ancho": 173,
+        "alto": 238
+      },
       "terminal": "TORNILLO",
       "voltaje": 12,
       "c20Ah": 870,
@@ -1196,14 +1900,23 @@
       "ca22C": null,
       "crMin": 180,
       "notas": null,
-      "fuente": { "lote": 1, "imagen": "lote1-img-03.jpeg", "tabla": "EXTREMA EQUIPO PESADO", "fila": 4 },
+      "fuente": {
+        "lote": 1,
+        "imagen": "lote1-img-03.jpeg",
+        "tabla": "EXTREMA EQUIPO PESADO",
+        "fila": 4
+      },
       "revisionPendiente": false
     },
     {
       "referencia": "4DBTI-1350",
       "linea": "Extrema Equipo Pesado",
       "polaridad": "(- +)",
-      "dimensionesMm": { "largo": 512, "ancho": 219, "alto": 201 },
+      "dimensionesMm": {
+        "largo": 512,
+        "ancho": 219,
+        "alto": 201
+      },
       "terminal": "ESTANDAR",
       "voltaje": 12,
       "c20Ah": 910,
@@ -1211,14 +1924,23 @@
       "ca22C": null,
       "crMin": 190,
       "notas": null,
-      "fuente": { "lote": 1, "imagen": "lote1-img-03.jpeg", "tabla": "EXTREMA EQUIPO PESADO", "fila": 5 },
+      "fuente": {
+        "lote": 1,
+        "imagen": "lote1-img-03.jpeg",
+        "tabla": "EXTREMA EQUIPO PESADO",
+        "fila": 5
+      },
       "revisionPendiente": true
     },
     {
       "referencia": "4DT-1350",
       "linea": "Extrema Equipo Pesado",
       "polaridad": "(+ -)",
-      "dimensionesMm": { "largo": 510, "ancho": 222, "alto": 240 },
+      "dimensionesMm": {
+        "largo": 510,
+        "ancho": 222,
+        "alto": 240
+      },
       "terminal": "ESTANDAR",
       "voltaje": 12,
       "c20Ah": 921,
@@ -1226,14 +1948,23 @@
       "ca22C": null,
       "crMin": 220,
       "notas": null,
-      "fuente": { "lote": 1, "imagen": "lote1-img-03.jpeg", "tabla": "EXTREMA EQUIPO PESADO", "fila": 6 },
+      "fuente": {
+        "lote": 1,
+        "imagen": "lote1-img-03.jpeg",
+        "tabla": "EXTREMA EQUIPO PESADO",
+        "fila": 6
+      },
       "revisionPendiente": false
     },
     {
       "referencia": "4DT-1400",
       "linea": "Extrema Equipo Pesado",
       "polaridad": "(+ -)",
-      "dimensionesMm": { "largo": 510, "ancho": 222, "alto": 240 },
+      "dimensionesMm": {
+        "largo": 510,
+        "ancho": 222,
+        "alto": 240
+      },
       "terminal": "ESTANDAR",
       "voltaje": 12,
       "c20Ah": 925,
@@ -1241,14 +1972,23 @@
       "ca22C": null,
       "crMin": 220,
       "notas": null,
-      "fuente": { "lote": 1, "imagen": "lote1-img-03.jpeg", "tabla": "EXTREMA EQUIPO PESADO", "fila": 7 },
+      "fuente": {
+        "lote": 1,
+        "imagen": "lote1-img-03.jpeg",
+        "tabla": "EXTREMA EQUIPO PESADO",
+        "fila": 7
+      },
       "revisionPendiente": false
     },
     {
       "referencia": "8DT-1500",
       "linea": "Extrema Equipo Pesado",
       "polaridad": "(+ -)",
-      "dimensionesMm": { "largo": 524, "ancho": 280, "alto": 247 },
+      "dimensionesMm": {
+        "largo": 524,
+        "ancho": 280,
+        "alto": 247
+      },
       "terminal": "ESTANDAR",
       "voltaje": null,
       "c20Ah": 1140,
@@ -1256,15 +1996,23 @@
       "ca22C": null,
       "crMin": 280,
       "notas": null,
-      "fuente": { "lote": 1, "imagen": "lote1-img-03.jpeg", "tabla": "EXTREMA EQUIPO PESADO", "fila": 8 },
+      "fuente": {
+        "lote": 1,
+        "imagen": "lote1-img-03.jpeg",
+        "tabla": "EXTREMA EQUIPO PESADO",
+        "fila": 8
+      },
       "revisionPendiente": true
     },
-
     {
       "referencia": "NS40DST-670 PD",
       "linea": "Extrema Taxi",
       "polaridad": "(- +)",
-      "dimensionesMm": { "largo": 196, "ancho": 128, "alto": 224 },
+      "dimensionesMm": {
+        "largo": 196,
+        "ancho": 128,
+        "alto": 224
+      },
       "terminal": "DELGADO",
       "voltaje": 12,
       "c20Ah": null,
@@ -1272,14 +2020,23 @@
       "ca22C": 570,
       "crMin": 72,
       "notas": null,
-      "fuente": { "lote": 1, "imagen": "lote1-img-03.jpeg", "tabla": "EXTREMA TAXI", "fila": 1 },
-      "revisionPendiente": true
+      "fuente": {
+        "lote": 1,
+        "imagen": "lote1-img-03.jpeg",
+        "tabla": "EXTREMA TAXI",
+        "fila": 1
+      },
+      "revisionPendiente": false
     },
     {
       "referencia": "NS40IST-670 PD",
       "linea": "Extrema Taxi",
       "polaridad": "(+ -)",
-      "dimensionesMm": { "largo": 196, "ancho": 128, "alto": 224 },
+      "dimensionesMm": {
+        "largo": 196,
+        "ancho": 128,
+        "alto": 224
+      },
       "terminal": "DELGADO",
       "voltaje": 12,
       "c20Ah": null,
@@ -1287,14 +2044,23 @@
       "ca22C": 570,
       "crMin": 72,
       "notas": null,
-      "fuente": { "lote": 1, "imagen": "lote1-img-03.jpeg", "tabla": "EXTREMA TAXI", "fila": 2 },
-      "revisionPendiente": true
+      "fuente": {
+        "lote": 1,
+        "imagen": "lote1-img-03.jpeg",
+        "tabla": "EXTREMA TAXI",
+        "fila": 2
+      },
+      "revisionPendiente": false
     },
     {
       "referencia": "NS40DST-670 PG",
       "linea": "Extrema Taxi",
       "polaridad": "(- +)",
-      "dimensionesMm": { "largo": 196, "ancho": 128, "alto": 224 },
+      "dimensionesMm": {
+        "largo": 196,
+        "ancho": 128,
+        "alto": 224
+      },
       "terminal": "ESTANDAR",
       "voltaje": 12,
       "c20Ah": null,
@@ -1302,14 +2068,23 @@
       "ca22C": 570,
       "crMin": 72,
       "notas": null,
-      "fuente": { "lote": 1, "imagen": "lote1-img-03.jpeg", "tabla": "EXTREMA TAXI", "fila": 3 },
-      "revisionPendiente": true
+      "fuente": {
+        "lote": 1,
+        "imagen": "lote1-img-03.jpeg",
+        "tabla": "EXTREMA TAXI",
+        "fila": 3
+      },
+      "revisionPendiente": false
     },
     {
       "referencia": "24BDST-750",
       "linea": "Extrema Taxi",
       "polaridad": "(- +)",
-      "dimensionesMm": { "largo": 237, "ancho": 173, "alto": 188 },
+      "dimensionesMm": {
+        "largo": 237,
+        "ancho": 173,
+        "alto": 188
+      },
       "terminal": "ESTANDAR",
       "voltaje": 12,
       "c20Ah": null,
@@ -1317,14 +2092,23 @@
       "ca22C": 710,
       "crMin": 90,
       "notas": null,
-      "fuente": { "lote": 1, "imagen": "lote1-img-03.jpeg", "tabla": "EXTREMA TAXI", "fila": 4 },
+      "fuente": {
+        "lote": 1,
+        "imagen": "lote1-img-03.jpeg",
+        "tabla": "EXTREMA TAXI",
+        "fila": 4
+      },
       "revisionPendiente": false
     },
     {
       "referencia": "35DST-800",
       "linea": "Extrema Taxi",
       "polaridad": "(- +)",
-      "dimensionesMm": { "largo": 230, "ancho": 176, "alto": 218 },
+      "dimensionesMm": {
+        "largo": 230,
+        "ancho": 176,
+        "alto": 218
+      },
       "terminal": "ESTANDAR",
       "voltaje": 12,
       "c20Ah": null,
@@ -1332,14 +2116,23 @@
       "ca22C": 690,
       "crMin": 90,
       "notas": null,
-      "fuente": { "lote": 1, "imagen": "lote1-img-03.jpeg", "tabla": "EXTREMA TAXI", "fila": 5 },
+      "fuente": {
+        "lote": 1,
+        "imagen": "lote1-img-03.jpeg",
+        "tabla": "EXTREMA TAXI",
+        "fila": 5
+      },
       "revisionPendiente": false
     },
     {
       "referencia": "48DST-850",
       "linea": "Extrema Taxi",
       "polaridad": "(- +)",
-      "dimensionesMm": { "largo": 268, "ancho": 173, "alto": 188 },
+      "dimensionesMm": {
+        "largo": 268,
+        "ancho": 173,
+        "alto": 188
+      },
       "terminal": "ESTANDAR",
       "voltaje": 12,
       "c20Ah": null,
@@ -1347,14 +2140,23 @@
       "ca22C": 786,
       "crMin": 114,
       "notas": null,
-      "fuente": { "lote": 1, "imagen": "lote1-img-03.jpeg", "tabla": "EXTREMA TAXI", "fila": 6 },
+      "fuente": {
+        "lote": 1,
+        "imagen": "lote1-img-03.jpeg",
+        "tabla": "EXTREMA TAXI",
+        "fila": 6
+      },
       "revisionPendiente": false
     },
     {
       "referencia": "48IST-850",
       "linea": "Extrema Taxi",
       "polaridad": "(+ -)",
-      "dimensionesMm": { "largo": 268, "ancho": 173, "alto": 188 },
+      "dimensionesMm": {
+        "largo": 268,
+        "ancho": 173,
+        "alto": 188
+      },
       "terminal": "ESTANDAR",
       "voltaje": 12,
       "c20Ah": null,
@@ -1362,8 +2164,13 @@
       "ca22C": 810,
       "crMin": 100,
       "notas": null,
-      "fuente": { "lote": 1, "imagen": "lote1-img-03.jpeg", "tabla": "EXTREMA TAXI", "fila": 7 },
-      "revisionPendiente": true
+      "fuente": {
+        "lote": 1,
+        "imagen": "lote1-img-03.jpeg",
+        "tabla": "EXTREMA TAXI",
+        "fila": 7
+      },
+      "revisionPendiente": false
     }
   ]
 }
