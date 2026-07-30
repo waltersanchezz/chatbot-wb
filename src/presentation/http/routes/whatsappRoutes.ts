@@ -1,5 +1,7 @@
 import { Router } from 'express';
 import type { HandleIncomingMessage } from '../../../application/use-cases/HandleIncomingMessage';
+import type { WhatsAppIdempotencyGate } from '../../../infrastructure/messaging/WhatsAppMessageIdempotency';
+import { MemoryWhatsAppMessageIdempotency } from '../../../infrastructure/messaging/WhatsAppMessageIdempotency';
 import { logger } from '../../../infrastructure/logging/logger';
 
 interface WhatsAppTextMessage {
@@ -17,13 +19,55 @@ interface WhatsAppChangeValue {
   messages?: WhatsAppTextMessage[];
 }
 
+interface WhatsAppChange {
+  field?: string;
+  value?: WhatsAppChangeValue;
+}
+
+interface WhatsAppEntry {
+  id?: string;
+  changes?: WhatsAppChange[];
+}
+
+/**
+ * Extrae todos los mensajes de texto del payload Meta (todos los entry/changes).
+ */
+export function extractWhatsAppTextMessages(body: unknown): Array<{
+  message: WhatsAppTextMessage;
+  contactName?: string;
+}> {
+  const root = body as { entry?: WhatsAppEntry[] } | null;
+  const entries = Array.isArray(root?.entry) ? root.entry : [];
+  const out: Array<{ message: WhatsAppTextMessage; contactName?: string }> = [];
+
+  for (const entry of entries) {
+    const changes = Array.isArray(entry?.changes) ? entry.changes : [];
+    for (const change of changes) {
+      if (change.field && change.field !== 'messages') continue;
+      const value = change.value;
+      const messages = Array.isArray(value?.messages) ? value.messages : [];
+      const contactName = value?.contacts?.[0]?.profile?.name;
+      for (const message of messages) {
+        if (!message || message.type !== 'text' || !message.text?.body?.trim()) {
+          continue;
+        }
+        out.push({ message, contactName });
+      }
+    }
+  }
+  return out;
+}
+
 /**
  * Webhook WhatsApp Cloud API (verificación + recepción).
+ * Idempotencia por wamid: Meta reenvía el mismo evento (at-least-once).
  */
 export function createWhatsAppRouter(
   useCase: HandleIncomingMessage,
   verifyToken: string,
+  idempotencyGate?: WhatsAppIdempotencyGate,
 ): Router {
+  const idempotency = idempotencyGate ?? new MemoryWhatsAppMessageIdempotency();
   const router = Router();
 
   router.get('/', (req, res) => {
@@ -47,38 +91,45 @@ export function createWhatsAppRouter(
     console.log('[WEBHOOK] POST recibido');
     console.log(JSON.stringify(req.body, null, 2));
 
-    // Responder rápido a Meta
+    // ACK inmediato — evita que Meta reintente por timeout mientras procesamos.
     res.sendStatus(200);
 
     try {
-      const entry = req.body?.entry as Array<{
-        changes?: Array<{ value?: WhatsAppChangeValue }>;
-      }> | undefined;
+      const items = extractWhatsAppTextMessages(req.body);
+      if (items.length === 0) {
+        console.log('[WhatsApp Webhook] Evento ignorado (sin mensajes de texto)');
+        return;
+      }
 
-      const changes = entry?.[0]?.changes ?? [];
-      for (const change of changes) {
-        const value = change.value;
-        const message = value?.messages?.[0];
-        if (!message || message.type !== 'text' || !message.text?.body) {
-          console.log('[WhatsApp Webhook] Evento ignorado (no es texto)');
+      for (const { message, contactName } of items) {
+        // Claim síncrono + persistido ANTES de cualquier await.
+        if (!idempotency.claim(message.id)) {
+          console.log('[WhatsApp Webhook] Duplicado ignorado', {
+            messageId: message.id,
+          });
+          logger.info('WhatsApp webhook duplicate skipped', {
+            messageId: message.id,
+          });
           continue;
         }
 
         console.log('[WhatsApp Webhook] Mensaje de texto', {
           from: message.from,
-          preview: message.text.body.slice(0, 80),
+          messageId: message.id,
+          preview: message.text!.body.slice(0, 80),
         });
 
-        const name = value?.contacts?.[0]?.profile?.name;
         await useCase.execute({
           phone: message.from,
-          text: message.text.body,
+          text: message.text!.body,
           channel: 'whatsapp',
           externalConversationId: `whatsapp:${message.from}`,
-          customerName: name,
+          customerName: contactName,
           sendReply: true,
         });
-        console.log('[WhatsApp Webhook] HandleIncomingMessage finalizó');
+        console.log('[WhatsApp Webhook] HandleIncomingMessage finalizó', {
+          messageId: message.id,
+        });
       }
     } catch (err) {
       console.error('[WhatsApp Webhook] Error procesando mensaje:');

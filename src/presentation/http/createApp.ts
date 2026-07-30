@@ -8,6 +8,7 @@ import type { HandleIncomingMessage } from '../../application/use-cases/HandleIn
 import type { LogRepository } from '../../domain/ports/LogRepository';
 import type { ProductRepository } from '../../domain/ports/ProductRepository';
 import { env } from '../../infrastructure/config/env';
+import type { WhatsAppIdempotencyGate } from '../../infrastructure/messaging/WhatsAppMessageIdempotency';
 import { logger } from '../../infrastructure/logging/logger';
 import { createChatRouter } from './routes/chatRoutes';
 import { createCustomerRouter } from './routes/customerRoutes';
@@ -28,6 +29,7 @@ export interface AppDeps {
   leadService: LeadService;
   customerProfileService: CustomerProfileService;
   interactionService: InteractionService;
+  whatsappIdempotency?: WhatsAppIdempotencyGate;
 }
 
 export function createApp(deps: AppDeps): Express {
@@ -79,8 +81,14 @@ export function createApp(deps: AppDeps): Express {
   app.use('/api/chat', createChatRouter(deps.handleIncomingMessage));
   app.use('/api/products', createProductRouter(deps.products));
   app.use('/api/logs', createLogsRouter(deps.logs));
-  app.use('/webhook/whatsapp', createWhatsAppRouter(deps.handleIncomingMessage, env.whatsapp.verifyToken));
-
+  app.use(
+    '/webhook/whatsapp',
+    createWhatsAppRouter(
+      deps.handleIncomingMessage,
+      env.whatsapp.verifyToken,
+      deps.whatsappIdempotency,
+    ),
+  );
   app.use((err: unknown, _req: express.Request, res: express.Response, _next: express.NextFunction) => {
     logger.error('Unhandled error', {
       error: err instanceof Error ? err.message : 'unknown',
