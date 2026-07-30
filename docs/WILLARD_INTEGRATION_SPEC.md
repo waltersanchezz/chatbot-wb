@@ -392,19 +392,30 @@ entrada: marca, modelo?, version?
   → normalizar
   → candidatas = apps utilizables donde normalize(marca) == normalize(app.marca)
   → si modelo:
-        filtrar por normalize(modelo) ⊆ normalize(app.modelo)
-        OR normalize(modelo) ⊆ normalize(app.textoCatalogo)
-        OR normalize(app.modelo) ⊆ normalize(modelo)   // substring bidireccional controlado
+        score = scoreWillardModelMatch(query.modelo, app.modelo, app.textoCatalogo)
+          4 = igualdad normalize/compact en modelo
+          3 = igualdad normalize/compact en textoCatalogo
+          2 = todos los tokens de query ⊆ tokens de modelo (enteros;
+              variante glued letras+dígitos: mazda3 → [mazda, 3])
+          1 = todos los tokens de query ⊆ tokens de texto solamente
+          null = sin match
+        reglas:
+          - nunca includes de caracteres ("3" dentro de "cx3")
+          - query numérica corta (/^\d{1,2}$/) exige score ≥ 2
+        filtrar score != null
   → si version y requireVersion:
         exigir igualdad normalizada con app.version (si app.version es null → no match)
   → si version y !requireVersion:
         preferir (rank) las que coinciden versión; no descartar el resto
-  → ordenar: match exacto modelo > substring > resto; luego textoCatalogo A-Z
+  → ordenar: score modelo desc > versionBoost > textoCatalogo A-Z
+  → si modelo presente: conservar solo el tier con score máximo (top-tier)
   → aplicar limit
   → devolver WillardApplicationHit[]
 ```
 
 **Regla:** sin `marca` → error de validación en el service (no búsqueda abierta de todo el catálogo).
+
+**Ambigüedad (service):** si la query trae `modelo` y hay ≥2 `modelo` distintos con firmas de referencias no equivalentes → `outcome=partial`, `reasonCode=AMBIGUOUS_MODEL` (pedir aclaración; no listar baterías). Si todas las firmas son idénticas → `matched` como hoy. Consultas solo-marca sin cambio.
 
 ### 5.4 Búsqueda por referencia
 
