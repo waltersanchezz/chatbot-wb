@@ -56,7 +56,7 @@ Detalle: `docs/WILLARD_INTEGRATION_SPEC.md`. Comportamiento conversacional: `doc
 |---|---|---|---|
 | 1 | Base de conocimiento | **En curso (avanzada)** | Catálogo Willard estructurado + motor de recomendación en producción |
 | 2 | Chatbot inteligente | **En curso (operativo)** | WhatsApp live; flujos baterías/rodamientos; motor de reglas |
-| 3 | CRM | **MVP inicial + PR1 dominio** | Spec aprobado; entidades CRM en dominio; sin CRM completo aún |
+| 3 | CRM | **MVP inicial + PR1–PR2** | Spec aprobado; dominio + repos InMemory; sin servicios/API/PG aún |
 | 4 | Panel web | **MVP inicial** | Dashboard estático + API de leads |
 | 5 | Automatizaciones | **Parcial** | Handoff y alertas Telegram; sin workflows avanzados |
 | 6 | Producción | **Operativa / iterativa** | Render + health + logs; endurecimiento continuo |
@@ -137,7 +137,7 @@ Detalle: `docs/WILLARD_INTEGRATION_SPEC.md`. Comportamiento conversacional: `doc
 
 **Diseño (fuente de verdad):** `docs/CRM_SPEC.md` — especificación técnica de arquitectura MVP **aprobada con enmiendas** (CustomerProfile 1→N Lead / VehicleProfile, timeline de interacciones, prioridad Alta|Media|Baja solo CRM, estados, eventos, API, puertos/persistencia, flujo WhatsApp → Dashboard).
 
-**Implementación:** PR1 dominio hecho (entidades + validaciones puras). **Aún no es CRM completo** — faltan políticas, repos, servicios, API y panel.
+**Implementación:** PR1 dominio + **PR2 repos InMemory** hechos. **Aún no es CRM completo** — faltan políticas de aplicación, `CustomerProfilePort`/servicios, API y panel; sin PostgreSQL.
 
 ### Completado
 
@@ -146,11 +146,12 @@ Detalle: `docs/WILLARD_INTEGRATION_SPEC.md`. Comportamiento conversacional: `doc
 - Notificación Telegram de leads nuevos (`NotificationService`)
 - API HTTP de leads (`leadRoutes`)
 - **PR1 — dominio CRM:** `CustomerProfile`, `VehicleProfile`, `Interaction`, `LeadEvent`; `Lead` ampliado (estados, `LeadPriority`, snapshot, assignment/SLA/recontact opcionales); helpers de transición/validación en `src/domain/crm/`; tests `tests/crm/entities.test.ts`
+- **PR2 — puertos + InMemory:** `LeadRepository` extendido (filtros, by customer, events); `VehicleProfileRepository` + `InteractionRepository` nuevos; `CustomerRepository` InMemory endurecido (copias defensivas); tests `tests/crm/repositories.test.ts`. Sin PG / sin servicios CRM nuevos / sin API nueva.
 
 ### Pendiente
 
-- PR2+: `priorityPolicy` + `leadStateMachine` de aplicación (reglas CRM — sin Willard / `RecommendationService`)
-- Extender repos / puertos (`LeadRepository`, `InteractionRepository`, `CustomerProfilePort`) + adaptadores memoria
+- PR3+: `priorityPolicy` + `leadStateMachine` de aplicación (reglas CRM — sin Willard / `RecommendationService`)
+- `CustomerProfilePort` / service (ensambla Customer + leads + vehicles + timeline)
 - Cablear `LeadService` / futuro `CrmPort`: perfil, vehículos, snapshot boundary, prioridad, interacciones
 - Persistencia real (PostgreSQL según `schema.sql` + tablas `leads` / `lead_events` / `vehicle_profiles` / `interactions` del spec)
 - `CrmPort` / handoff enriquecido con `reasonCode`, query, opciones (captura en boundary; sin tocar `RecommendationService`)
@@ -251,7 +252,7 @@ Pendientes de marcas de baja rotación / refs huérfanas **no** bloquean el cier
 |---|---|
 | `docs/SYSTEM_PROMPT.md` | Comportamiento y voz del asesor |
 | `docs/WILLARD_INTEGRATION_SPEC.md` | Contrato técnico Willard + P1–P8 |
-| `docs/CRM_SPEC.md` | Diseño técnico Fase 3 CRM (SoT; aprobado; PR1 dominio implementado — CRM aún incompleto) |
+| `docs/CRM_SPEC.md` | Diseño técnico Fase 3 CRM (SoT; aprobado; PR1 dominio + PR2 repos InMemory — CRM aún incompleto) |
 | `docs/WILLARD_PENDIENTES.md` | Dudas y cotejos abiertos del catálogo |
 | `docs/WILLARD_COBERTURA.md` | Métricas generadas (no editar a mano) |
 | `README.md` | Arranque local y endpoints |
