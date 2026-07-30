@@ -36,6 +36,16 @@ export class RecommendationService {
       return this.emptyVehicle(query, 'NO_USABLE_MATCH');
     }
 
+    if (this.isAmbiguousModel(query.modelo, apps)) {
+      return {
+        outcome: 'partial',
+        query,
+        options: [],
+        applications: apps,
+        reasonCode: 'AMBIGUOUS_MODEL',
+      };
+    }
+
     const options = this.buildOptionsFromApplications(apps);
     if (options.length === 0) {
       return {
@@ -148,6 +158,43 @@ export class RecommendationService {
       }
     }
     return options;
+  }
+
+  /**
+   * Con modelo en query: ≥2 modelos distintos con firmas de refs no equivalentes
+   * → ambigüedad (pedir aclaración). Firmas idénticas → no es ambigüedad comercial.
+   */
+  private isAmbiguousModel(
+    modelo: string | undefined,
+    apps: WillardApplicationHit[],
+  ): boolean {
+    if (!modelo?.trim()) return false;
+
+    const distinctModelos = new Set(apps.map((app) => app.modelo));
+    if (distinctModelos.size < 2) return false;
+
+    for (let i = 0; i < apps.length; i += 1) {
+      for (let j = i + 1; j < apps.length; j += 1) {
+        const a = apps[i]!;
+        const b = apps[j]!;
+        if (a.modelo === b.modelo) continue;
+        if (this.refSignature(a) !== this.refSignature(b)) {
+          return true;
+        }
+      }
+    }
+    return false;
+  }
+
+  private refSignature(app: WillardApplicationHit): string {
+    const refs = new Set<string>();
+    for (const line of app.lines) {
+      for (const reference of line.references) {
+        const lit = normalizeReferenceLiteral(reference);
+        if (lit) refs.add(lit);
+      }
+    }
+    return [...refs].sort().join('|');
   }
 
   /** Defensa en profundidad: el puerto ya filtra, pero no exponemos pendientes. */
