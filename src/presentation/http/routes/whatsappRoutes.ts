@@ -155,6 +155,7 @@ export function createWhatsAppRouter(
           customerName: contactName,
           sendReply: true,
           inboundWamid: message.id,
+          auditRequestId: requestId,
         });
         console.log('[WhatsApp Webhook] HandleIncomingMessage finalizó', {
           requestId,

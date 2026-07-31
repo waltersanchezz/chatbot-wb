@@ -6,6 +6,8 @@ export interface OutboundMessage {
   channel: Channel;
   /** Correlación auditoría WhatsApp (wamid inbound). */
   inboundWamid?: string;
+  /** Correlación auditoría: requestId del POST webhook (solo traza). */
+  auditRequestId?: string;
   conversationId?: string;
 }
 

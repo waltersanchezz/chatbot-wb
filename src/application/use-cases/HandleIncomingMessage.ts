@@ -9,6 +9,7 @@ import type { MessagingProvider } from '../../domain/ports/MessagingProvider';
 import type { Channel } from '../../shared/types';
 import type { ConversationEngine } from '../services/ConversationEngine';
 import type { LeadService } from '../services/LeadService';
+import { whatsappDeliveryAudit } from '../../infrastructure/messaging/WhatsAppDeliveryAudit';
 
 export interface IncomingMessageInput {
   phone: string;
@@ -19,6 +20,8 @@ export interface IncomingMessageInput {
   sendReply?: boolean;
   /** WhatsApp Cloud API message id (wamid) for idempotency/audit correlation. */
   inboundWamid?: string;
+  /** Correlación auditoría: requestId del POST webhook (solo traza). */
+  auditRequestId?: string;
 }
 
 export interface IncomingMessageResult {
@@ -44,6 +47,14 @@ export class HandleIncomingMessage {
     const started = Date.now();
     let reply = '';
     let conversation: Conversation | null = null;
+
+    // Instrumentación temporal: entrada HandleIncomingMessage (no cambia flujo).
+    if (input.inboundWamid && input.auditRequestId) {
+      whatsappDeliveryAudit.recordHandleEnter({
+        wamid: input.inboundWamid,
+        requestId: input.auditRequestId,
+      });
+    }
 
     console.log('[HandleIncomingMessage] Mensaje recibido', {
       channel: input.channel,
@@ -119,6 +130,7 @@ export class HandleIncomingMessage {
           body: reply,
           channel: input.channel,
           inboundWamid: input.inboundWamid,
+          auditRequestId: input.auditRequestId,
           conversationId: conversation.id,
         });
         console.log('[HandleIncomingMessage] Respuesta WhatsApp enviada', {
@@ -151,6 +163,15 @@ export class HandleIncomingMessage {
 
       console.log('[HandleIncomingMessage] Flujo completado', { durationMs });
 
+      if (input.inboundWamid && input.auditRequestId) {
+        whatsappDeliveryAudit.recordHandleExit({
+          wamid: input.inboundWamid,
+          requestId: input.auditRequestId,
+          durationMs,
+          ok: true,
+        });
+      }
+
       return {
         conversationId: conversation.id,
         customerId: customer.id,
@@ -166,6 +187,16 @@ export class HandleIncomingMessage {
         console.error(err.stack);
       } else {
         console.error(err);
+      }
+
+      if (input.inboundWamid && input.auditRequestId) {
+        whatsappDeliveryAudit.recordHandleExit({
+          wamid: input.inboundWamid,
+          requestId: input.auditRequestId,
+          durationMs,
+          ok: false,
+          error: err instanceof Error ? err.message : 'unknown',
+        });
       }
 
       await this.logs.append({

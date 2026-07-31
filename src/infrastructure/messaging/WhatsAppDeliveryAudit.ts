@@ -1,17 +1,61 @@
 import { randomUUID } from 'crypto';
 
 /**
- * Auditoría temporal de entrega WhatsApp para validar idempotencia.
+ * Auditoría temporal de entrega WhatsApp — trazabilidad por wamid.
  *
- * CICLO DE VIDA (evidencia de diseño):
- * - Vive en el heap del proceso Node: export singleton `whatsappDeliveryAudit`.
- * - Se inicializa UNA vez al cargar este módulo (import/require).
- * - Se destruye cuando el proceso Node termina o reinicia (cold start Render,
- *   deploy, crash, scale-down). Un proceso nuevo crea OTRO singleton con
- *   arrays vacíos y un AUDIT_INSTANCE distinto.
- * - reset() vacía arrays pero NO recrea el singleton ni cambia AUDIT_INSTANCE.
+ * CICLO DE VIDA:
+ * - Vive en el heap del proceso Node: singleton `whatsappDeliveryAudit`.
+ * - Se inicializa UNA vez al cargar este módulo.
+ * - Se destruye con el proceso (cold start / deploy / crash).
+ * - reset() vacía eventos pero NO cambia AUDIT_INSTANCE.
+ *
+ * API principal: timeline cronológica por wamid (no contadores agregados).
  */
 
+export type WaTraceEventName =
+  | 'POST_RECEIVED'
+  | 'CLAIM'
+  | 'STOPPED_DUPLICATE'
+  | 'HANDLE_ENTER'
+  | 'HANDLE_EXIT'
+  | 'HANDLE_ERROR'
+  | 'SEND_TEXT';
+
+/** Un evento en la línea de tiempo de un wamid. */
+export interface WaTraceEvent {
+  seq: number;
+  timestamp: string;
+  event: WaTraceEventName;
+  wamid: string;
+  requestId: string;
+  pid: number;
+  auditInstance: string;
+  /** POSTs vistos para este wamid hasta este evento (inclusive). */
+  postCountForWamid?: number;
+  claimResult?: 'claim_ok' | 'duplicate_skipped';
+  ok?: boolean;
+  providerMessageId?: string;
+  metaHttpStatus?: number;
+  metaHttpBody?: string;
+  callSite?: string;
+  stack?: string;
+  conversationId?: string;
+  to?: string;
+  durationMs?: number;
+  error?: string;
+  path?: string;
+}
+
+export interface WaWamidTrace {
+  wamid: string;
+  auditInstance: string;
+  pid: number;
+  createdAt: string;
+  postCount: number;
+  timeline: WaTraceEvent[];
+}
+
+/** @deprecated Prefer WaWamidTrace; se mantiene para compat de tests previos. */
 export interface WhatsAppPostEvent {
   requestId: string;
   timestamp: string;
@@ -19,6 +63,7 @@ export interface WhatsAppPostEvent {
   path: string;
 }
 
+/** @deprecated Prefer WaWamidTrace */
 export interface WhatsAppClaimEvent {
   requestId: string;
   timestamp: string;
@@ -26,6 +71,7 @@ export interface WhatsAppClaimEvent {
   result: 'claim_ok' | 'duplicate_skipped';
 }
 
+/** @deprecated Prefer WaWamidTrace */
 export interface WhatsAppSendEvent {
   timestamp: string;
   wamid?: string;
@@ -37,8 +83,8 @@ export interface WhatsAppSendEvent {
   stack: string;
 }
 
+/** @deprecated Prefer getTrace(wamid) */
 export interface WhatsAppDeliverySnapshot {
-  /** UUID del singleton en ESTE proceso Node (no cambia con reset()). */
   auditInstance: string;
   createdAt: string;
   pid: number;
@@ -54,12 +100,16 @@ export interface WhatsAppDeliverySnapshot {
 }
 
 class WhatsAppDeliveryAuditStore {
-  /** Identidad del store en memoria de este proceso. */
   readonly auditInstance: string;
   readonly createdAt: string;
   readonly pid: number;
   private resetCount = 0;
+  private seq = 0;
 
+  /** Línea de tiempo global (orden de llegada). */
+  private timeline: WaTraceEvent[] = [];
+
+  // Vistas derivadas (compat snapshot).
   private posts: WhatsAppPostEvent[] = [];
   private claims: WhatsAppClaimEvent[] = [];
   private sends: WhatsAppSendEvent[] = [];
@@ -68,7 +118,6 @@ class WhatsAppDeliveryAuditStore {
     this.auditInstance = randomUUID();
     this.createdAt = new Date().toISOString();
     this.pid = process.pid;
-    // Instrumentación temporal: traza de creación del singleton.
     console.log(`AUDIT_INSTANCE=${this.auditInstance}`);
     console.log(
       '[WA_AUDIT][INIT]',
@@ -80,12 +129,10 @@ class WhatsAppDeliveryAuditStore {
     );
   }
 
-  /**
-   * Único reset automático/manual del contenido (no destruye el singleton).
-   * Callers: POST /api/debug/whatsapp-delivery/reset
-   */
   reset(): void {
     this.resetCount += 1;
+    this.seq = 0;
+    this.timeline = [];
     this.posts = [];
     this.claims = [];
     this.sends = [];
@@ -100,18 +147,64 @@ class WhatsAppDeliveryAuditStore {
     );
   }
 
+  newRequestId(): string {
+    return randomUUID();
+  }
+
+  /** Cuenta POSTs que incluyen este wamid. */
+  postCountFor(wamid: string): number {
+    return this.timeline.filter(
+      (e) => e.event === 'POST_RECEIVED' && e.wamid === wamid,
+    ).length;
+  }
+
+  /**
+   * Traza completa de un wamid, en orden cronológico (seq).
+   * Esto es la evidencia E2E — no un snapshot de contadores.
+   */
+  getTrace(wamid: string): WaWamidTrace {
+    const timeline = this.timeline.filter((e) => e.wamid === wamid);
+    return {
+      wamid,
+      auditInstance: this.auditInstance,
+      pid: this.pid,
+      createdAt: this.createdAt,
+      postCount: this.postCountFor(wamid),
+      timeline,
+    };
+  }
+
   recordPost(partial: Omit<WhatsAppPostEvent, 'timestamp'> & { timestamp?: string }): WhatsAppPostEvent {
     const event: WhatsAppPostEvent = {
       ...partial,
       timestamp: partial.timestamp ?? new Date().toISOString(),
     };
     this.posts.push(event);
-    console.log(`AUDIT_INSTANCE=${this.auditInstance}`);
-    console.log('[WA_AUDIT][POST]', JSON.stringify({
-      auditInstance: this.auditInstance,
-      ...event,
-      postsReceived: this.posts.length,
-    }));
+
+    const uniqueWamids = [...new Set(partial.wamids)];
+    if (uniqueWamids.length === 0) {
+      this.appendTrace({
+        event: 'POST_RECEIVED',
+        wamid: '(none)',
+        requestId: partial.requestId,
+        path: partial.path,
+        postCountForWamid: 0,
+        timestamp: event.timestamp,
+      });
+    } else {
+      for (const wamid of uniqueWamids) {
+        // Contar este POST antes de append (postCount incluye el actual).
+        const prior = this.postCountFor(wamid);
+        this.appendTrace({
+          event: 'POST_RECEIVED',
+          wamid,
+          requestId: partial.requestId,
+          path: partial.path,
+          postCountForWamid: prior + 1,
+          timestamp: event.timestamp,
+        });
+      }
+    }
     return event;
   }
 
@@ -121,17 +214,75 @@ class WhatsAppDeliveryAuditStore {
       timestamp: event.timestamp ?? new Date().toISOString(),
     };
     this.claims.push(full);
-    console.log(`AUDIT_INSTANCE=${this.auditInstance}`);
-    console.log('[WA_AUDIT][CLAIM]', JSON.stringify({
-      auditInstance: this.auditInstance,
-      ...full,
-    }));
+
+    this.appendTrace({
+      event: 'CLAIM',
+      wamid: event.wamid,
+      requestId: event.requestId,
+      claimResult: event.result,
+      postCountForWamid: this.postCountFor(event.wamid),
+      timestamp: full.timestamp,
+    });
+
+    if (event.result === 'duplicate_skipped') {
+      this.appendTrace({
+        event: 'STOPPED_DUPLICATE',
+        wamid: event.wamid,
+        requestId: event.requestId,
+        claimResult: 'duplicate_skipped',
+        postCountForWamid: this.postCountFor(event.wamid),
+        timestamp: full.timestamp,
+      });
+    }
   }
 
-  recordSend(event: Omit<WhatsAppSendEvent, 'timestamp' | 'stack' | 'callSite'> & {
-    timestamp?: string;
-    stack?: string;
+  recordHandleEnter(params: { wamid: string; requestId: string }): void {
+    this.appendTrace({
+      event: 'HANDLE_ENTER',
+      wamid: params.wamid,
+      requestId: params.requestId,
+      postCountForWamid: this.postCountFor(params.wamid),
+    });
+  }
+
+  recordHandleExit(params: {
+    wamid: string;
+    requestId: string;
+    durationMs: number;
+    ok: boolean;
+    error?: string;
   }): void {
+    if (params.ok) {
+      this.appendTrace({
+        event: 'HANDLE_EXIT',
+        wamid: params.wamid,
+        requestId: params.requestId,
+        durationMs: params.durationMs,
+        ok: true,
+        postCountForWamid: this.postCountFor(params.wamid),
+      });
+    } else {
+      this.appendTrace({
+        event: 'HANDLE_ERROR',
+        wamid: params.wamid,
+        requestId: params.requestId,
+        durationMs: params.durationMs,
+        ok: false,
+        error: params.error,
+        postCountForWamid: this.postCountFor(params.wamid),
+      });
+    }
+  }
+
+  recordSend(
+    event: Omit<WhatsAppSendEvent, 'timestamp' | 'stack' | 'callSite'> & {
+      timestamp?: string;
+      stack?: string;
+      requestId?: string;
+      metaHttpStatus?: number;
+      metaHttpBody?: string;
+    },
+  ): void {
     const stack = event.stack ?? new Error().stack ?? '';
     const callSite = extractCallSite(stack);
     const full: WhatsAppSendEvent = {
@@ -145,18 +296,23 @@ class WhatsAppDeliveryAuditStore {
       stack: stack.split('\n').slice(0, 12).join('\n'),
     };
     this.sends.push(full);
-    console.log(`AUDIT_INSTANCE=${this.auditInstance}`);
-    console.log('[WA_AUDIT][SEND_TEXT]', JSON.stringify({
-      auditInstance: this.auditInstance,
+
+    const wamid = event.wamid ?? '(unknown)';
+    this.appendTrace({
+      event: 'SEND_TEXT',
+      wamid,
+      requestId: event.requestId ?? '(none)',
+      ok: event.ok,
+      providerMessageId: event.providerMessageId,
+      metaHttpStatus: event.metaHttpStatus,
+      metaHttpBody: event.metaHttpBody,
+      callSite,
+      stack: full.stack,
+      conversationId: event.conversationId,
+      to: event.to,
+      postCountForWamid: event.wamid ? this.postCountFor(event.wamid) : undefined,
       timestamp: full.timestamp,
-      wamid: full.wamid,
-      conversationId: full.conversationId,
-      to: full.to,
-      ok: full.ok,
-      providerMessageId: full.providerMessageId,
-      callSite: full.callSite,
-      sendTextCalls: this.sends.length,
-    }));
+    });
   }
 
   snapshot(): WhatsAppDeliverySnapshot {
@@ -168,8 +324,7 @@ class WhatsAppDeliveryAuditStore {
         createdAt: this.createdAt,
         pid: this.pid,
         resetCount: this.resetCount,
-        postsReceived: this.posts.length,
-        sendTextCalls: this.sends.length,
+        timelineEvents: this.timeline.length,
       }),
     );
     return {
@@ -188,8 +343,38 @@ class WhatsAppDeliveryAuditStore {
     };
   }
 
-  newRequestId(): string {
-    return randomUUID();
+  private appendTrace(
+    partial: Omit<WaTraceEvent, 'seq' | 'timestamp' | 'pid' | 'auditInstance'> & {
+      timestamp?: string;
+    },
+  ): WaTraceEvent {
+    this.seq += 1;
+    const full: WaTraceEvent = {
+      seq: this.seq,
+      timestamp: partial.timestamp ?? new Date().toISOString(),
+      event: partial.event,
+      wamid: partial.wamid,
+      requestId: partial.requestId,
+      pid: this.pid,
+      auditInstance: this.auditInstance,
+      postCountForWamid: partial.postCountForWamid,
+      claimResult: partial.claimResult,
+      ok: partial.ok,
+      providerMessageId: partial.providerMessageId,
+      metaHttpStatus: partial.metaHttpStatus,
+      metaHttpBody: partial.metaHttpBody,
+      callSite: partial.callSite,
+      stack: partial.stack,
+      conversationId: partial.conversationId,
+      to: partial.to,
+      durationMs: partial.durationMs,
+      error: partial.error,
+      path: partial.path,
+    };
+    this.timeline.push(full);
+    console.log(`AUDIT_INSTANCE=${this.auditInstance}`);
+    console.log('[WA_TRACE]', JSON.stringify(full));
+    return full;
   }
 }
 

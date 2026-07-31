@@ -14,10 +14,13 @@ export class ConsoleMessagingProvider implements MessagingProvider {
     const providerMessageId = `local-${Date.now()}`;
     whatsappDeliveryAudit.recordSend({
       wamid: message.inboundWamid,
+      requestId: message.auditRequestId,
       conversationId: message.conversationId,
       to: message.to,
       providerMessageId,
       ok: true,
+      metaHttpStatus: 200,
+      metaHttpBody: JSON.stringify({ messages: [{ id: providerMessageId }] }),
       stack,
     });
     return { ok: true, providerMessageId };

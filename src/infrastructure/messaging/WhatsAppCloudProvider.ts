@@ -26,10 +26,13 @@ export class WhatsAppCloudProvider implements MessagingProvider {
       const providerMessageId = `wa-stub-${Date.now()}`;
       whatsappDeliveryAudit.recordSend({
         wamid: message.inboundWamid,
+        requestId: message.auditRequestId,
         conversationId: message.conversationId,
         to: message.to,
         providerMessageId,
         ok: true,
+        metaHttpStatus: 0,
+        metaHttpBody: 'stub:no-credentials',
         stack,
       });
       return { ok: true, providerMessageId };
@@ -51,30 +54,44 @@ export class WhatsAppCloudProvider implements MessagingProvider {
       }),
     });
 
+    const rawBody = await response.text();
+    const truncatedBody = rawBody.length > 2000 ? `${rawBody.slice(0, 2000)}…` : rawBody;
+
     if (!response.ok) {
-      const errorBody = await response.text();
-      logger.error('WhatsApp send failed', { status: response.status, errorBody });
+      logger.error('WhatsApp send failed', {
+        status: response.status,
+        errorBody: truncatedBody,
+      });
       whatsappDeliveryAudit.recordSend({
         wamid: message.inboundWamid,
+        requestId: message.auditRequestId,
         conversationId: message.conversationId,
         to: message.to,
         ok: false,
+        metaHttpStatus: response.status,
+        metaHttpBody: truncatedBody,
         stack,
       });
       return { ok: false };
     }
 
-    const data = (await response.json()) as {
-      messages?: Array<{ id: string }>;
-    };
+    let providerMessageId: string | undefined;
+    try {
+      const data = JSON.parse(rawBody) as { messages?: Array<{ id: string }> };
+      providerMessageId = data.messages?.[0]?.id;
+    } catch {
+      providerMessageId = undefined;
+    }
 
-    const providerMessageId = data.messages?.[0]?.id;
     whatsappDeliveryAudit.recordSend({
       wamid: message.inboundWamid,
+      requestId: message.auditRequestId,
       conversationId: message.conversationId,
       to: message.to,
       providerMessageId,
       ok: true,
+      metaHttpStatus: response.status,
+      metaHttpBody: truncatedBody,
       stack,
     });
 
