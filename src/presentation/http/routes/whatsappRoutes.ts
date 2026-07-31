@@ -99,8 +99,10 @@ export function createWhatsAppRouter(
       path: req.originalUrl || '/webhook/whatsapp',
     });
 
+    console.log(`AUDIT_INSTANCE=${whatsappDeliveryAudit.auditInstance}`);
     console.log('[WEBHOOK] POST recibido', {
       requestId,
+      auditInstance: whatsappDeliveryAudit.auditInstance,
       wamids,
       textMessageCount: items.length,
       time: new Date().toISOString(),

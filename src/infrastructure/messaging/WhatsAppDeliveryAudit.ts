@@ -2,7 +2,14 @@ import { randomUUID } from 'crypto';
 
 /**
  * Auditoría temporal de entrega WhatsApp para validar idempotencia.
- * Contadores en memoria del proceso (se resetean al reiniciar).
+ *
+ * CICLO DE VIDA (evidencia de diseño):
+ * - Vive en el heap del proceso Node: export singleton `whatsappDeliveryAudit`.
+ * - Se inicializa UNA vez al cargar este módulo (import/require).
+ * - Se destruye cuando el proceso Node termina o reinicia (cold start Render,
+ *   deploy, crash, scale-down). Un proceso nuevo crea OTRO singleton con
+ *   arrays vacíos y un AUDIT_INSTANCE distinto.
+ * - reset() vacía arrays pero NO recrea el singleton ni cambia AUDIT_INSTANCE.
  */
 
 export interface WhatsAppPostEvent {
@@ -31,6 +38,11 @@ export interface WhatsAppSendEvent {
 }
 
 export interface WhatsAppDeliverySnapshot {
+  /** UUID del singleton en ESTE proceso Node (no cambia con reset()). */
+  auditInstance: string;
+  createdAt: string;
+  pid: number;
+  resetCount: number;
   postsReceived: number;
   claimsOk: number;
   duplicatesSkipped: number;
@@ -42,14 +54,50 @@ export interface WhatsAppDeliverySnapshot {
 }
 
 class WhatsAppDeliveryAuditStore {
+  /** Identidad del store en memoria de este proceso. */
+  readonly auditInstance: string;
+  readonly createdAt: string;
+  readonly pid: number;
+  private resetCount = 0;
+
   private posts: WhatsAppPostEvent[] = [];
   private claims: WhatsAppClaimEvent[] = [];
   private sends: WhatsAppSendEvent[] = [];
 
+  constructor() {
+    this.auditInstance = randomUUID();
+    this.createdAt = new Date().toISOString();
+    this.pid = process.pid;
+    // Instrumentación temporal: traza de creación del singleton.
+    console.log(`AUDIT_INSTANCE=${this.auditInstance}`);
+    console.log(
+      '[WA_AUDIT][INIT]',
+      JSON.stringify({
+        auditInstance: this.auditInstance,
+        createdAt: this.createdAt,
+        pid: this.pid,
+      }),
+    );
+  }
+
+  /**
+   * Único reset automático/manual del contenido (no destruye el singleton).
+   * Callers: POST /api/debug/whatsapp-delivery/reset
+   */
   reset(): void {
+    this.resetCount += 1;
     this.posts = [];
     this.claims = [];
     this.sends = [];
+    console.log(`AUDIT_INSTANCE=${this.auditInstance}`);
+    console.log(
+      '[WA_AUDIT][RESET]',
+      JSON.stringify({
+        auditInstance: this.auditInstance,
+        resetCount: this.resetCount,
+        pid: this.pid,
+      }),
+    );
   }
 
   recordPost(partial: Omit<WhatsAppPostEvent, 'timestamp'> & { timestamp?: string }): WhatsAppPostEvent {
@@ -58,7 +106,12 @@ class WhatsAppDeliveryAuditStore {
       timestamp: partial.timestamp ?? new Date().toISOString(),
     };
     this.posts.push(event);
-    console.log('[WA_AUDIT][POST]', JSON.stringify(event));
+    console.log(`AUDIT_INSTANCE=${this.auditInstance}`);
+    console.log('[WA_AUDIT][POST]', JSON.stringify({
+      auditInstance: this.auditInstance,
+      ...event,
+      postsReceived: this.posts.length,
+    }));
     return event;
   }
 
@@ -68,7 +121,11 @@ class WhatsAppDeliveryAuditStore {
       timestamp: event.timestamp ?? new Date().toISOString(),
     };
     this.claims.push(full);
-    console.log('[WA_AUDIT][CLAIM]', JSON.stringify(full));
+    console.log(`AUDIT_INSTANCE=${this.auditInstance}`);
+    console.log('[WA_AUDIT][CLAIM]', JSON.stringify({
+      auditInstance: this.auditInstance,
+      ...full,
+    }));
   }
 
   recordSend(event: Omit<WhatsAppSendEvent, 'timestamp' | 'stack' | 'callSite'> & {
@@ -88,7 +145,9 @@ class WhatsAppDeliveryAuditStore {
       stack: stack.split('\n').slice(0, 12).join('\n'),
     };
     this.sends.push(full);
+    console.log(`AUDIT_INSTANCE=${this.auditInstance}`);
     console.log('[WA_AUDIT][SEND_TEXT]', JSON.stringify({
+      auditInstance: this.auditInstance,
       timestamp: full.timestamp,
       wamid: full.wamid,
       conversationId: full.conversationId,
@@ -96,11 +155,28 @@ class WhatsAppDeliveryAuditStore {
       ok: full.ok,
       providerMessageId: full.providerMessageId,
       callSite: full.callSite,
+      sendTextCalls: this.sends.length,
     }));
   }
 
   snapshot(): WhatsAppDeliverySnapshot {
+    console.log(`AUDIT_INSTANCE=${this.auditInstance}`);
+    console.log(
+      '[WA_AUDIT][SNAPSHOT]',
+      JSON.stringify({
+        auditInstance: this.auditInstance,
+        createdAt: this.createdAt,
+        pid: this.pid,
+        resetCount: this.resetCount,
+        postsReceived: this.posts.length,
+        sendTextCalls: this.sends.length,
+      }),
+    );
     return {
+      auditInstance: this.auditInstance,
+      createdAt: this.createdAt,
+      pid: this.pid,
+      resetCount: this.resetCount,
       postsReceived: this.posts.length,
       claimsOk: this.claims.filter((c) => c.result === 'claim_ok').length,
       duplicatesSkipped: this.claims.filter((c) => c.result === 'duplicate_skipped').length,
@@ -140,4 +216,5 @@ function extractCallSite(stack: string): string {
   return lines.find((l) => l.startsWith('at '))?.replace(/^at\s+/, '') ?? 'unknown';
 }
 
+/** Singleton: una instancia por proceso Node (por carga de módulo). */
 export const whatsappDeliveryAudit = new WhatsAppDeliveryAuditStore();

@@ -14,7 +14,9 @@ export function createWhatsAppAuditRouter(verifyToken: string): Router {
       res.sendStatus(403);
       return;
     }
-    res.json(whatsappDeliveryAudit.snapshot());
+    const snapshot = whatsappDeliveryAudit.snapshot();
+    console.log(`AUDIT_INSTANCE=${snapshot.auditInstance}`);
+    res.json(snapshot);
   });
 
   router.post('/whatsapp-delivery/reset', (req, res) => {
@@ -24,7 +26,9 @@ export function createWhatsAppAuditRouter(verifyToken: string): Router {
       return;
     }
     whatsappDeliveryAudit.reset();
-    res.json({ ok: true, snapshot: whatsappDeliveryAudit.snapshot() });
+    const snapshot = whatsappDeliveryAudit.snapshot();
+    console.log(`AUDIT_INSTANCE=${snapshot.auditInstance}`);
+    res.json({ ok: true, snapshot });
   });
 
   return router;

@@ -126,6 +126,7 @@ describe('WhatsApp delivery evidence (dual POST same wamid)', () => {
       `${baseUrl}/api/debug/whatsapp-delivery?token=${verifyToken}`,
     ).then((r) => r.json());
 
+    expect(audit.auditInstance).toBeTruthy();
     expect(audit.postsReceived).toBe(2);
     expect(audit.claimsOk).toBe(1);
     expect(audit.duplicatesSkipped).toBe(1);
