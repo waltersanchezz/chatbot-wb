@@ -22,8 +22,8 @@ export interface LeadListFilter {
 
 /**
  * Puerto de persistencia de leads (CRM_SPEC §10.1).
- * Hoy: InMemoryLeadRepository
- * Futuro: PostgresLeadRepository (mismo contrato).
+ * Producción: SQLiteLeadRepository
+ * Tests / legacy: InMemoryLeadRepository (mismo contrato).
  */
 export interface LeadRepository {
   list(filter?: LeadListFilter): Promise<Lead[]>;

@@ -1,3 +1,4 @@
+import type { SalesFlowSnapshot } from '../sales/salesFlow';
 import type {
   BatteryPreference,
   BearingPosition,
@@ -41,6 +42,38 @@ export interface ConversationContext {
   recommendedProductIds: string[];
   needsHumanHandoff: boolean;
   handoffReason?: string;
+  /**
+   * Modelos ofrecidos tras AMBIGUOUS_MODEL.
+   * Si el usuario responde con una opción (ignorando mayúsculas/espacios),
+   * se selecciona sin repetir la búsqueda difusa.
+   */
+  pendingModelOptions?: string[];
+  /**
+   * Módulo 2: el cliente ya confirmó marca/modelo/año.
+   * Si falta, y hay los tres datos, se pide confirmación antes de planta de sonido.
+   */
+  vehicleConfirmed?: boolean;
+  /**
+   * Snapshot del SalesFlowEngine (vía ConversationOrchestrator).
+   * Fuente de verdad del flujo de baterías en producción.
+   */
+  salesFlow?: SalesFlowSnapshot;
+  /**
+   * Última referencia Willard presentada (Smart Advisor / KnowledgeEngine).
+   * Permite "¿Por qué?" sin volver a pedir el vehículo.
+   */
+  lastRecommendedReference?: string;
+  /** Referencias de la última presentación (para comparación). */
+  lastRecommendedReferences?: string[];
+  /**
+   * Conversation Recovery: oferta de continuar pendiente (sí/no).
+   * No avanza SalesFlow hasta que el usuario decida.
+   */
+  recoveryOfferPending?: boolean;
+  /** Última pregunta técnica respondida por KnowledgeEngine (contexto recuperable). */
+  lastTechnicalQuestion?: string;
+  /** Última respuesta técnica (resumen/contexto). */
+  lastTechnicalAnswer?: string;
 }
 
 export interface Conversation {

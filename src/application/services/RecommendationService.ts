@@ -8,6 +8,11 @@ import type {
   WillardRecommendedOption,
 } from '../../domain/willard/catalogTypes';
 import { normalizeReferenceLiteral } from '../../domain/willard/normalize';
+import {
+  scoreWillardModelMatch,
+  stripLeadingBrandFromModel,
+} from '../../domain/willard/modelMatch';
+import { normalizeModelSelectionKey } from '../flows/batteryFlow';
 
 /**
  * Orquesta búsqueda y recomendación Willard (spec §3.2, §6).
@@ -22,10 +27,12 @@ export class RecommendationService {
       return this.emptyVehicle(query, 'NO_USABLE_MATCH');
     }
 
-    const apps = this.usableOnly(
+    let apps = this.usableOnly(
       this.knowledge.findApplicationsByVehicle({
         marca,
-        modelo: query.modelo,
+        modelo: query.modelo
+          ? stripLeadingBrandFromModel(query.modelo, marca)
+          : query.modelo,
         version: query.version,
         requireVersion: query.requireVersion,
         limit: query.limit,
@@ -34,6 +41,13 @@ export class RecommendationService {
 
     if (apps.length === 0) {
       return this.emptyVehicle(query, 'NO_USABLE_MATCH');
+    }
+
+    // Si el usuario escribió exactamente una etiqueta del catálogo (p. ej. tras
+    // AMBIGUOUS_MODEL), acotar a esa fila aunque el fuzzy haya traído hermanas.
+    const exact = this.appsMatchingExactModelLabel(query.modelo, apps);
+    if (exact.length > 0) {
+      apps = exact;
     }
 
     if (this.isAmbiguousModel(query.modelo, apps)) {
@@ -140,6 +154,63 @@ export class RecommendationService {
     };
   }
 
+  /**
+   * Si el mensaje coincide con una etiqueta de catálogo de la marca
+   * (exacta o soft-match único), devuelve la etiqueta canónica.
+   */
+  resolveExactModelLabel(marca: string, message: string): string | undefined {
+    const brand = marca?.trim() ?? '';
+    const text = message?.trim() ?? '';
+    if (!brand || !text) return undefined;
+
+    const queryModelo = stripLeadingBrandFromModel(text, brand);
+    const apps = this.usableOnly(
+      this.knowledge.findApplicationsByVehicle({
+        marca: brand,
+        modelo: queryModelo,
+      }),
+    );
+    if (apps.length === 0) return undefined;
+
+    const exact = this.appsMatchingExactModelLabel(queryModelo, apps);
+    if (exact.length === 1) {
+      const label = exact[0]!.textoCatalogo.trim() || exact[0]!.modelo.trim();
+      return label || undefined;
+    }
+    if (exact.length > 1) {
+      // Varias filas con la misma etiqueta exacta: usar esa etiqueta.
+      const label = exact[0]!.textoCatalogo.trim() || exact[0]!.modelo.trim();
+      return label || undefined;
+    }
+
+    // Soft: único ganador por score entre apps fuzzy.
+    let bestScore = 0;
+    let best: (typeof apps)[number] | undefined;
+    let tied = false;
+    for (const app of apps) {
+      const score = scoreWillardModelMatch(
+        queryModelo,
+        app.modelo,
+        app.textoCatalogo,
+      );
+      if (score == null || score < 1) continue;
+      if (score > bestScore) {
+        bestScore = score;
+        best = app;
+        tied = false;
+      } else if (
+        score === bestScore &&
+        best &&
+        (best.modelo !== app.modelo ||
+          best.textoCatalogo !== app.textoCatalogo)
+      ) {
+        tied = true;
+      }
+    }
+    if (!best || tied) return undefined;
+    return best.textoCatalogo.trim() || best.modelo.trim() || undefined;
+  }
+
   private buildOptionsFromApplications(
     apps: WillardApplicationHit[],
   ): WillardRecommendedOption[] {
@@ -184,6 +255,28 @@ export class RecommendationService {
       }
     }
     return false;
+  }
+
+  /**
+   * Coincidencia exacta (sin mayúsculas/espacios) contra textoCatalogo o modelo.
+   * Sirve cuando el cliente elige una opción de la lista ambigua aunque se haya
+   * perdido pendingModelOptions (p. ej. reinicio en Render).
+   */
+  private appsMatchingExactModelLabel(
+    modelo: string | undefined,
+    apps: WillardApplicationHit[],
+  ): WillardApplicationHit[] {
+    if (!modelo?.trim()) return [];
+    const key = normalizeModelSelectionKey(modelo);
+    if (!key) return [];
+
+    return apps.filter((app) => {
+      const labels = [app.textoCatalogo, app.modelo];
+      if (app.version?.trim()) {
+        labels.push(`${app.modelo} ${app.version}`);
+      }
+      return labels.some((label) => normalizeModelSelectionKey(label) === key);
+    });
   }
 
   private refSignature(app: WillardApplicationHit): string {

@@ -89,6 +89,30 @@ describe('LeadService — registerFromConversation (WA path)', () => {
     expect(saved!.priority).toBe('Alta');
   });
 
+  it('handoff sin categoría aún crea lead (no silencioso)', async () => {
+    const repo = new InMemoryLeadRepository();
+    const service = new LeadService(repo, stubNotifications());
+    const conv = conversation({
+      stage: 'handoff',
+      needsHumanHandoff: true,
+      category: undefined,
+    });
+    // createEmptyContext deja category undefined si se pisa
+    conv.context.category = undefined;
+
+    const saved = await service.registerFromConversation({
+      conversation: conv,
+      phone: '573009998887',
+      customerId: 'cust-handoff',
+      assistantReply: 'Un asesor te contactará',
+    });
+
+    expect(saved).not.toBeNull();
+    expect(saved!.product).toBe('Batería');
+    expect(saved!.needsHumanHandoff).toBe(true);
+    expect(saved!.source).toBe('whatsapp_handoff');
+  });
+
   it('idempotente por conversationId (update)', async () => {
     const repo = new InMemoryLeadRepository();
     const service = new LeadService(repo, stubNotifications());

@@ -1,8 +1,12 @@
-import { Router } from 'express';
+import { Router, type Request } from 'express';
 import type { HandleIncomingMessage } from '../../../application/use-cases/HandleIncomingMessage';
 import type { WhatsAppIdempotencyGate } from '../../../infrastructure/messaging/WhatsAppMessageIdempotency';
 import { MemoryWhatsAppMessageIdempotency } from '../../../infrastructure/messaging/WhatsAppMessageIdempotency';
 import { whatsappDeliveryAudit } from '../../../infrastructure/messaging/WhatsAppDeliveryAudit';
+import {
+  summarizeWhatsAppPayload,
+  verifyWhatsAppSignature,
+} from '../../../infrastructure/messaging/whatsappSignature';
 import { logger } from '../../../infrastructure/logging/logger';
 
 interface WhatsAppTextMessage {
@@ -29,6 +33,13 @@ interface WhatsAppEntry {
   id?: string;
   changes?: WhatsAppChange[];
 }
+
+export interface WhatsAppRouterSecurity {
+  appSecret?: string;
+  requireSignature?: boolean;
+}
+
+type RequestWithRawBody = Request & { rawBody?: Buffer };
 
 /**
  * Extrae todos los mensajes de texto del payload Meta (todos los entry/changes).
@@ -62,19 +73,20 @@ export function extractWhatsAppTextMessages(body: unknown): Array<{
 /**
  * Webhook WhatsApp Cloud API (verificación + recepción).
  * Idempotencia por wamid: Meta reenvía el mismo evento (at-least-once).
+ * Production Sprint 1: firma X-Hub-Signature-256 + logs redactados.
  */
 export function createWhatsAppRouter(
   useCase: HandleIncomingMessage,
   verifyToken: string,
   idempotencyGate?: WhatsAppIdempotencyGate,
+  security: WhatsAppRouterSecurity = {},
 ): Router {
   const idempotency = idempotencyGate ?? new MemoryWhatsAppMessageIdempotency();
   const router = Router();
+  const appSecret = security.appSecret?.trim() ?? '';
+  const requireSignature = Boolean(security.requireSignature && appSecret);
 
   router.get('/', (req, res) => {
-    console.log('[WEBHOOK] GET recibido');
-    console.log(JSON.stringify(req.query, null, 2));
-
     const mode = req.query['hub.mode'];
     const token = req.query['hub.verify_token'];
     const challenge = req.query['hub.challenge'];
@@ -89,34 +101,48 @@ export function createWhatsAppRouter(
   });
 
   router.post('/', async (req, res) => {
+    if (requireSignature) {
+      const raw =
+        (req as RequestWithRawBody).rawBody ??
+        Buffer.from(JSON.stringify(req.body ?? {}), 'utf8');
+      const header =
+        (req.header('x-hub-signature-256') ||
+          req.header('X-Hub-Signature-256')) ??
+        undefined;
+      const ok = verifyWhatsAppSignature(raw, header, appSecret);
+      if (!ok) {
+        logger.warn('WhatsApp webhook signature rejected', {
+          service: 'WhatsAppWebhook',
+          operation: 'verifySignature',
+        });
+        res.sendStatus(403);
+        return;
+      }
+    }
+
     const requestId = whatsappDeliveryAudit.newRequestId();
     const items = extractWhatsAppTextMessages(req.body);
-    const wamids = items.map((i) => i.message.id);
+    const summary = summarizeWhatsAppPayload(req.body);
 
     whatsappDeliveryAudit.recordPost({
       requestId,
-      wamids,
+      wamids: summary.wamids,
       path: req.originalUrl || '/webhook/whatsapp',
     });
 
-    console.log(`AUDIT_INSTANCE=${whatsappDeliveryAudit.auditInstance}`);
-    console.log('[WEBHOOK] POST recibido', {
+    logger.info('WhatsApp webhook POST', {
+      service: 'WhatsAppWebhook',
       requestId,
-      auditInstance: whatsappDeliveryAudit.auditInstance,
-      wamids,
-      textMessageCount: items.length,
-      time: new Date().toISOString(),
+      entryCount: summary.entryCount,
+      textMessageCount: summary.textMessageCount,
+      wamidCount: summary.wamids.length,
     });
-    console.log(JSON.stringify(req.body, null, 2));
 
     // ACK inmediato — evita que Meta reintente por timeout mientras procesamos.
     res.sendStatus(200);
 
     try {
       if (items.length === 0) {
-        console.log('[WhatsApp Webhook] Evento ignorado (sin mensajes de texto)', {
-          requestId,
-        });
         return;
       }
 
@@ -129,10 +155,6 @@ export function createWhatsAppRouter(
         });
 
         if (!claimed) {
-          console.log('[WhatsApp Webhook] Duplicado ignorado', {
-            requestId,
-            messageId: message.id,
-          });
           logger.info('WhatsApp webhook duplicate skipped', {
             requestId,
             messageId: message.id,
@@ -140,11 +162,11 @@ export function createWhatsAppRouter(
           continue;
         }
 
-        console.log('[WhatsApp Webhook] claim OK — procesando', {
+        logger.info('WhatsApp webhook processing message', {
           requestId,
-          from: message.from,
           messageId: message.id,
-          preview: message.text!.body.slice(0, 80),
+          fromSuffix: message.from.slice(-4),
+          previewLen: message.text!.body.length,
         });
 
         await useCase.execute({
@@ -157,19 +179,8 @@ export function createWhatsAppRouter(
           inboundWamid: message.id,
           auditRequestId: requestId,
         });
-        console.log('[WhatsApp Webhook] HandleIncomingMessage finalizó', {
-          requestId,
-          messageId: message.id,
-        });
       }
     } catch (err) {
-      console.error('[WhatsApp Webhook] Error procesando mensaje:', { requestId });
-      if (err instanceof Error) {
-        console.error(err.message);
-        console.error(err.stack);
-      } else {
-        console.error(err);
-      }
       logger.error('WhatsApp webhook processing failed', {
         requestId,
         error: err instanceof Error ? err.message : 'unknown',

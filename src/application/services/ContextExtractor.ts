@@ -56,8 +56,14 @@ export class ContextExtractor {
     // usa la respuesta libre del usuario (vehículo completo o modelo).
     this.fillExpectedVehicleSlot(next, text, lower, expectedVehicleField);
 
-    // Baterías — no aplicar Sí/No aquí durante flujo de rodamientos.
-    if (context.category !== 'rodamientos' && next.battery.soundSystem === undefined) {
+    // Baterías — Sí/No de planta solo después de confirmar el vehículo (Módulo 2).
+    // Evita que un "sí" de confirmación marque planta de sonido por error.
+    if (
+      context.category !== 'rodamientos' &&
+      next.battery.soundSystem === undefined &&
+      (context.vehicleConfirmed === true ||
+        context.stage === 'collecting_product_details')
+    ) {
       const sound = this.extractSoundSystemAnswer(lower);
       if (sound !== undefined) next.battery.soundSystem = sound;
     }

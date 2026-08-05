@@ -392,13 +392,17 @@ entrada: marca, modelo?, version?
   → normalizar
   → candidatas = apps utilizables donde normalize(marca) == normalize(app.marca)
   → si modelo:
-        score = scoreWillardModelMatch(query.modelo, app.modelo, app.textoCatalogo)
+        modeloQuery = stripLeadingBrandFromModel(modelo, marca)
+        score = scoreWillardModelMatch(modeloQuery, app.modelo, app.textoCatalogo)
           4 = igualdad normalize/compact en modelo
           3 = igualdad normalize/compact en textoCatalogo
-          2 = todos los tokens de query ⊆ tokens de modelo (enteros;
-              variante glued letras+dígitos: mazda3 → [mazda, 3])
-          1 = todos los tokens de query ⊆ tokens de texto solamente
+          2 = tokens exactos ⊆ modelo, soft-tokens ⊆ modelo, o compact
+              con edit-distance acotado en modelo
+          1 = igual sobre textoCatalogo
           null = sin match
+        soft-token (letras): igualdad | prefijo len≥3 | edit≤1 len≥3 |
+          edit≤1 en tokens cortos (p.ej. gt≈gti)
+        glued/números: solo igualdad exacta (no cx3↔cx30)
         reglas:
           - nunca includes de caracteres ("3" dentro de "cx3")
           - query numérica corta (/^\d{1,2}$/) exige score ≥ 2

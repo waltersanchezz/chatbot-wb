@@ -162,11 +162,20 @@ export class LeadService {
       console.log('[LeadService] return anticipado: flujo aún no terminado', {
         stage: context.stage,
         category: context.category,
+        needsHumanHandoff: context.needsHumanHandoff,
       });
       return null;
     }
 
-    const product = this.resolveProduct(context.category);
+    const needsHumanHandoff =
+      context.needsHumanHandoff === true || context.stage === 'handoff';
+    /**
+     * Handoff humano siempre genera lead (batería por defecto si aún no hay categoría).
+     * Evita “un asesor te contacta” sin CRM/Telegram.
+     */
+    const product =
+      this.resolveProduct(context.category) ??
+      (needsHumanHandoff ? ('Batería' as LeadProduct) : null);
     if (!product) {
       console.log('[LeadService] return anticipado: producto no resuelto', {
         category: context.category,
@@ -180,8 +189,6 @@ export class LeadService {
     const vehicleModel = context.vehicle.model?.trim() || '';
     const year = context.vehicle.year?.trim() || '';
     const now = new Date();
-    const needsHumanHandoff =
-      context.needsHumanHandoff === true || context.stage === 'handoff';
     const source: LeadSource =
       context.stage === 'handoff' || context.needsHumanHandoff
         ? 'whatsapp_handoff'
@@ -999,10 +1006,14 @@ export class LeadService {
   }
 
   private isSuccessfulFlowEnd(context: Conversation['context']): boolean {
+    // Cualquier handoff humano debe materializarse en CRM + Telegram.
+    if (context.needsHumanHandoff === true || context.stage === 'handoff') {
+      return true;
+    }
     if (context.category !== 'baterias' && context.category !== 'rodamientos') {
       return false;
     }
-    return context.stage === 'closing' || context.stage === 'handoff';
+    return context.stage === 'closing';
   }
 
   private resolveProduct(

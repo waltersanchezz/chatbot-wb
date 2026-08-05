@@ -2,6 +2,8 @@ import { describe, expect, it } from 'vitest';
 import {
   compactWillardModel,
   scoreWillardModelMatch,
+  softTokenMatch,
+  stripLeadingBrandFromModel,
   tokenizeWillardModel,
 } from '../../src/domain/willard/modelMatch';
 
@@ -37,6 +39,34 @@ describe('compactWillardModel', () => {
     expect(compactWillardModel('Mazda 3')).toBe('mazda3');
     expect(compactWillardModel('CX-30')).toBe('cx30');
     expect(compactWillardModel('2.3')).toBe('2.3');
+  });
+});
+
+describe('stripLeadingBrandFromModel', () => {
+  it('removes repeated brand prefix from model text', () => {
+    expect(stripLeadingBrandFromModel('Chevrolet Spark GT', 'chevrolet')).toBe(
+      'spark gt',
+    );
+    expect(stripLeadingBrandFromModel('Mazda 3 Skyactive', 'MAZDA')).toBe(
+      '3 skyactive',
+    );
+  });
+
+  it('leaves model unchanged when brand is not a prefix', () => {
+    expect(stripLeadingBrandFromModel('Spark GT', 'chevrolet')).toBe('Spark GT');
+  });
+});
+
+describe('softTokenMatch / editDistance', () => {
+  it('allows gt≈gti and small typos on letter tokens', () => {
+    expect(softTokenMatch('gt', 'gti')).toBe(true);
+    expect(softTokenMatch('skyactive', 'skyactiv')).toBe(true);
+    expect(softTokenMatch('spark', 'spark')).toBe(true);
+  });
+
+  it('does not soft-match glued alnum siblings (cx3 vs cx30)', () => {
+    expect(softTokenMatch('cx3', 'cx30')).toBe(false);
+    expect(softTokenMatch('3', 'cx3')).toBe(false);
   });
 });
 
@@ -80,6 +110,25 @@ describe('scoreWillardModelMatch', () => {
     expect(
       scoreWillardModelMatch('hybrid', 'CX30', 'CX30 Hybrid'),
     ).toBe(1);
+  });
+
+  it('tolerates spark gt ≈ Spark GTI and case/spacing variants', () => {
+    expect(
+      scoreWillardModelMatch('spark gt', 'Spark', 'Spark GTI 1.2LT'),
+    ).toBe(1);
+    expect(
+      scoreWillardModelMatch('SPARK  GT', 'Spark', 'Spark GTI 1.2LT'),
+    ).toBe(1);
+  });
+
+  it('tolerates compact typos on longer labels', () => {
+    expect(
+      scoreWillardModelMatch(
+        'mazda 3 skyactiv',
+        'Mazda 3 Skyactive',
+        'Mazda 3 Skyactive',
+      ),
+    ).toBe(2);
   });
 
   it('returns null for empty query', () => {

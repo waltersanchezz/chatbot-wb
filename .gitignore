@@ -8,3 +8,7 @@ coverage/
 .idea/
 .vscode/
 *.tsbuildinfo
+*.sqlite
+*.sqlite-wal
+*.sqlite-shm
+data/rodacenter.sqlite

@@ -6,10 +6,18 @@ import type { ConversationRepository } from '../../domain/ports/ConversationRepo
 import type { CustomerRepository } from '../../domain/ports/CustomerRepository';
 import type { LogRepository } from '../../domain/ports/LogRepository';
 import type { MessagingProvider } from '../../domain/ports/MessagingProvider';
+import { logger } from '../../infrastructure/logging/logger';
+import { buildTurnLogFields } from '../../infrastructure/logging/turnContext';
+import { whatsappDeliveryAudit } from '../../infrastructure/messaging/WhatsAppDeliveryAudit';
+import {
+  FRIENDLY_ERROR_REPLY,
+  tryCallAsync,
+} from '../../shared/result';
+import { withTimeout } from '../../shared/timeout';
 import type { Channel } from '../../shared/types';
 import type { ConversationEngine } from '../services/ConversationEngine';
 import type { LeadService } from '../services/LeadService';
-import { whatsappDeliveryAudit } from '../../infrastructure/messaging/WhatsAppDeliveryAudit';
+import type { MetricsService } from '../services/MetricsService';
 
 export interface IncomingMessageInput {
   phone: string;
@@ -20,7 +28,7 @@ export interface IncomingMessageInput {
   sendReply?: boolean;
   /** WhatsApp Cloud API message id (wamid) for idempotency/audit correlation. */
   inboundWamid?: string;
-  /** Correlación auditoría: requestId del POST webhook (solo traza). */
+  /** Correlación auditoría / logging estructurado. */
   auditRequestId?: string;
 }
 
@@ -30,9 +38,26 @@ export interface IncomingMessageResult {
   reply: string;
   needsHumanHandoff: boolean;
   durationMs: number;
+  requestId: string;
 }
 
+export interface HandleIncomingTimeouts {
+  engineMs: number;
+  messagingMs: number;
+  persistenceMs: number;
+  crmMs: number;
+}
+
+const DEFAULT_TIMEOUTS: HandleIncomingTimeouts = {
+  engineMs: 8_000,
+  messagingMs: 6_000,
+  persistenceMs: 3_000,
+  crmMs: 5_000,
+};
+
 export class HandleIncomingMessage {
+  private readonly timeouts: HandleIncomingTimeouts;
+
   constructor(
     private readonly customers: CustomerRepository,
     private readonly conversations: ConversationRepository,
@@ -41,14 +66,20 @@ export class HandleIncomingMessage {
     private readonly messaging: MessagingProvider,
     private readonly leadService: LeadService,
     private readonly sessionTtlMinutes: number,
-  ) {}
+    private readonly metrics: MetricsService,
+    timeouts?: Partial<HandleIncomingTimeouts>,
+  ) {
+    this.timeouts = { ...DEFAULT_TIMEOUTS, ...timeouts };
+  }
 
   async execute(input: IncomingMessageInput): Promise<IncomingMessageResult> {
     const started = Date.now();
+    const requestId = input.auditRequestId ?? randomUUID();
     let reply = '';
     let conversation: Conversation | null = null;
+    let isNewConversation = false;
+    let previousContext = createEmptyContext();
 
-    // Instrumentación temporal: entrada HandleIncomingMessage (no cambia flujo).
     if (input.inboundWamid && input.auditRequestId) {
       whatsappDeliveryAudit.recordHandleEnter({
         wamid: input.inboundWamid,
@@ -56,53 +87,112 @@ export class HandleIncomingMessage {
       });
     }
 
-    console.log('[HandleIncomingMessage] Mensaje recibido', {
-      channel: input.channel,
-      phone: input.phone,
-      inboundWamid: input.inboundWamid,
-      textPreview: input.text.slice(0, 80),
-    });
-
     try {
-      const customer = await this.customers.findOrCreate(
-        input.phone,
-        input.channel,
-        input.customerName,
+      const customerOutcome = await withTimeout(
+        () =>
+          this.customers.findOrCreate(
+            input.phone,
+            input.channel,
+            input.customerName,
+          ),
+        this.timeouts.persistenceMs,
+        {
+          service: 'CustomerRepository',
+          operation: 'findOrCreate',
+          code: 'TIMEOUT',
+        },
       );
-      console.log('[HandleIncomingMessage] Cliente listo', { customerId: customer.id });
+      if (!customerOutcome.ok) throw customerOutcome.error;
+      const customer = customerOutcome.value;
 
-      const externalId = input.externalConversationId ?? `${input.channel}:${input.phone}`;
-      conversation = await this.conversations.findByExternalId(externalId);
+      const externalId =
+        input.externalConversationId ?? `${input.channel}:${input.phone}`;
+
+      const findOutcome = await withTimeout(
+        () => this.conversations.findByExternalId(externalId),
+        this.timeouts.persistenceMs,
+        {
+          service: 'ConversationRepository',
+          operation: 'findByExternalId',
+          code: 'TIMEOUT',
+        },
+      );
+      if (!findOutcome.ok) throw findOutcome.error;
+      conversation = findOutcome.value;
 
       const now = new Date();
       if (!conversation || conversation.expiresAt < now) {
-        conversation = this.newConversation(customer.id, input.channel, externalId, now);
-        console.log('[HandleIncomingMessage] Nueva conversación', { id: conversation.id });
-      } else {
-        console.log('[HandleIncomingMessage] Conversación existente', { id: conversation.id });
+        conversation = this.newConversation(
+          customer.id,
+          input.channel,
+          externalId,
+          now,
+        );
+        isNewConversation = true;
       }
 
+      previousContext = { ...conversation.context };
       const inbound: Message = {
         id: randomUUID(),
         conversationId: conversation.id,
         role: 'customer',
         content: input.text,
         createdAt: now,
-        metadata: input.customerName ? { customerName: input.customerName } : undefined,
+        metadata: input.customerName
+          ? { customerName: input.customerName }
+          : undefined,
       };
       conversation.messages.push(inbound);
 
-      console.log('[HandleIncomingMessage] Procesando con ConversationEngine...');
-      const result = await this.engine.process(conversation, input.text);
-      reply = result.reply;
-      conversation.context = result.context;
+      const engineOutcome = await withTimeout(
+        () => this.engine.process(conversation!, input.text),
+        this.timeouts.engineMs,
+        {
+          service: 'ConversationEngine',
+          operation: 'process',
+          code: 'TIMEOUT',
+          meta: { requestId, conversationId: conversation.id },
+        },
+      );
+
+      if (!engineOutcome.ok) {
+        logger.exception(
+          'HandleIncomingMessage — engine timeout/error (controlado)',
+          engineOutcome.error,
+          {
+            service: 'ConversationEngine',
+            operation: 'process',
+            requestId,
+            conversationId: conversation.id,
+            waId: input.inboundWamid ?? null,
+          },
+        );
+        reply = FRIENDLY_ERROR_REPLY;
+        conversation.context = {
+          ...conversation.context,
+          needsHumanHandoff: true,
+          handoffReason:
+            conversation.context.handoffReason ?? 'Error técnico controlado',
+        };
+        this.metrics.recordTurn({
+          isNewConversation,
+          previous: previousContext,
+          next: conversation.context,
+          isError: true,
+        });
+      } else {
+        reply = engineOutcome.value.reply;
+        conversation.context = engineOutcome.value.context;
+        this.metrics.recordTurn({
+          isNewConversation,
+          previous: previousContext,
+          next: conversation.context,
+          isError: reply === FRIENDLY_ERROR_REPLY,
+        });
+      }
+
       conversation.updatedAt = now;
       conversation.expiresAt = this.expiry(now);
-      console.log('[HandleIncomingMessage] Respuesta generada', {
-        stage: conversation.context.stage,
-        category: conversation.context.category,
-        replyPreview: reply.slice(0, 80),
-      });
 
       const outbound: Message = {
         id: randomUUID(),
@@ -113,45 +203,67 @@ export class HandleIncomingMessage {
       };
       conversation.messages.push(outbound);
 
-      await this.conversations.save(conversation);
-      console.log('[HandleIncomingMessage] Conversación guardada');
-
-      // 1) WhatsApp PRIMERO — nunca esperar a Telegram/CRM.
-      if (input.sendReply !== false) {
-        console.log('[HandleIncomingMessage] Enviando respuesta a WhatsApp...', {
-          inboundWamid: input.inboundWamid,
-          conversationId: conversation.id,
-          // Único call site de envío WhatsApp en el use-case:
-          // HandleIncomingMessage.ts → messaging.sendText
-          callSite: 'HandleIncomingMessage.execute',
-        });
-        const sendResult = await this.messaging.sendText({
-          to: input.phone,
-          body: reply,
-          channel: input.channel,
-          inboundWamid: input.inboundWamid,
-          auditRequestId: input.auditRequestId,
-          conversationId: conversation.id,
-        });
-        console.log('[HandleIncomingMessage] Respuesta WhatsApp enviada', {
-          ...sendResult,
-          inboundWamid: input.inboundWamid,
-          conversationId: conversation.id,
-        });
-      } else {
-        console.log('[HandleIncomingMessage] sendReply=false → no se envía a WhatsApp');
+      const saveOutcome = await withTimeout(
+        () => this.conversations.save(conversation!),
+        this.timeouts.persistenceMs,
+        {
+          service: 'ConversationRepository',
+          operation: 'save',
+          code: 'TIMEOUT',
+        },
+      );
+      if (!saveOutcome.ok) {
+        logger.exception(
+          'HandleIncomingMessage — save timeout/error (controlado)',
+          saveOutcome.error,
+          { requestId, conversationId: conversation.id },
+        );
       }
 
-      // 2) CRM + Telegram en segundo plano; fallos no afectan la respuesta.
+      if (input.sendReply !== false) {
+        const sendOutcome = await withTimeout(
+          () =>
+            this.messaging.sendText({
+              to: input.phone,
+              body: reply,
+              channel: input.channel,
+              inboundWamid: input.inboundWamid,
+              auditRequestId: requestId,
+              conversationId: conversation!.id,
+            }),
+          this.timeouts.messagingMs,
+          {
+            service: 'MessagingProvider',
+            operation: 'sendText',
+            code: 'TIMEOUT',
+            meta: { requestId, waId: input.inboundWamid },
+          },
+        );
+        if (!sendOutcome.ok) {
+          logger.exception(
+            'HandleIncomingMessage — messaging timeout/error (controlado)',
+            sendOutcome.error,
+            {
+              requestId,
+              conversationId: conversation.id,
+              waId: input.inboundWamid ?? null,
+            },
+          );
+        }
+      }
+
       void this.captureLeadSafe({
         conversation,
         phone: input.phone,
         customerId: customer.id,
         customerName: input.customerName ?? customer.name,
         assistantReply: reply,
+        requestId,
       });
 
       const durationMs = Date.now() - started;
+      const turnOk = engineOutcome.ok && reply !== FRIENDLY_ERROR_REPLY;
+
       await this.writeLog({
         conversation,
         customerPhone: input.phone,
@@ -159,16 +271,30 @@ export class HandleIncomingMessage {
         inbound: input.text,
         outbound: reply,
         durationMs,
+        requestId,
+        waId: input.inboundWamid,
       });
 
-      console.log('[HandleIncomingMessage] Flujo completado', { durationMs });
+      // Único log estructurado de cierre de turno (sin duplicar console.log).
+      logger.turn(
+        buildTurnLogFields({
+          requestId,
+          conversationId: conversation.id,
+          waId: input.inboundWamid,
+          stage: conversation.context.stage,
+          intent: conversation.context.intent,
+          durationMs,
+        }),
+        { ok: turnOk },
+      );
 
       if (input.inboundWamid && input.auditRequestId) {
         whatsappDeliveryAudit.recordHandleExit({
           wamid: input.inboundWamid,
           requestId: input.auditRequestId,
           durationMs,
-          ok: true,
+          ok: turnOk,
+          error: turnOk ? undefined : 'engine_timeout_or_error',
         });
       }
 
@@ -178,15 +304,104 @@ export class HandleIncomingMessage {
         reply,
         needsHumanHandoff: conversation.context.needsHumanHandoff,
         durationMs,
+        requestId,
       };
     } catch (err) {
       const durationMs = Date.now() - started;
-      console.error('[HandleIncomingMessage] Excepción en el flujo:');
-      if (err instanceof Error) {
-        console.error(err.message);
-        console.error(err.stack);
+      const controlled = logger.exception(
+        'HandleIncomingMessage — excepción controlada (conversación no se rompe)',
+        err,
+        {
+          service: 'HandleIncomingMessage',
+          operation: 'execute',
+          requestId,
+          conversationId: conversation?.id ?? 'unknown',
+          waId: input.inboundWamid ?? null,
+          stage: conversation?.context.stage ?? null,
+          intent: conversation?.context.intent ?? null,
+          durationMs,
+        },
+      );
+
+      reply = FRIENDLY_ERROR_REPLY;
+
+      if (conversation) {
+        const nextContext = {
+          ...conversation.context,
+          needsHumanHandoff: true,
+          handoffReason:
+            conversation.context.handoffReason ?? 'Error técnico controlado',
+        };
+        this.metrics.recordTurn({
+          isNewConversation,
+          previous: previousContext,
+          next: nextContext,
+          isError: true,
+        });
+        conversation.context = nextContext;
+        conversation.messages.push({
+          id: randomUUID(),
+          conversationId: conversation.id,
+          role: 'assistant',
+          content: reply,
+          createdAt: new Date(),
+        });
+        const saved = await withTimeout(
+          () => this.conversations.save(conversation!),
+          this.timeouts.persistenceMs,
+          {
+            service: 'ConversationRepository',
+            operation: 'saveOnError',
+            code: 'TIMEOUT',
+          },
+        );
+        if (!saved.ok) {
+          logger.exception(
+            'HandleIncomingMessage — no se pudo guardar tras error',
+            saved.error,
+            { requestId },
+          );
+        }
+
+        // Handoff por error: igual debe crear lead + Telegram (no silencioso).
+        void this.captureLeadSafe({
+          conversation,
+          phone: input.phone,
+          customerId: conversation.customerId,
+          customerName: input.customerName,
+          assistantReply: reply,
+          requestId,
+        });
       } else {
-        console.error(err);
+        // Sin conversación aún: contar error igual.
+        this.metrics.increment('errors');
+      }
+
+      if (input.sendReply !== false) {
+        const sendOutcome = await withTimeout(
+          () =>
+            this.messaging.sendText({
+              to: input.phone,
+              body: reply,
+              channel: input.channel,
+              inboundWamid: input.inboundWamid,
+              auditRequestId: requestId,
+              conversationId: conversation?.id,
+            }),
+          this.timeouts.messagingMs,
+          {
+            service: 'MessagingProvider',
+            operation: 'sendTextFriendlyError',
+            code: 'TIMEOUT',
+          },
+        );
+        if (!sendOutcome.ok) {
+          logger.exception(
+            'HandleIncomingMessage — fallo enviando mensaje amable',
+            sendOutcome.error,
+            { requestId },
+          );
+        }
       }
 
       if (input.inboundWamid && input.auditRequestId) {
@@ -195,22 +410,57 @@ export class HandleIncomingMessage {
           requestId: input.auditRequestId,
           durationMs,
           ok: false,
-          error: err instanceof Error ? err.message : 'unknown',
+          error: controlled.message,
         });
       }
 
-      await this.logs.append({
-        id: randomUUID(),
-        date: new Date(),
-        customerId: conversation?.customerId ?? 'unknown',
-        customerPhone: input.phone,
+      await tryCallAsync(
+        () =>
+          this.logs.append({
+            id: randomUUID(),
+            date: new Date(),
+            customerId: conversation?.customerId ?? 'unknown',
+            customerPhone: input.phone,
+            conversationId: conversation?.id ?? 'unknown',
+            inboundMessage: input.text,
+            outboundResponse: reply,
+            durationMs,
+            error: controlled.message,
+            metadata: {
+              requestId,
+              waId: input.inboundWamid,
+              intent: conversation?.context.intent,
+              stage: conversation?.context.stage,
+            },
+          }),
+        {
+          service: 'LogRepository',
+          operation: 'appendOnError',
+          code: 'PERSISTENCE',
+        },
+      );
+
+      // Un solo cierre estructurado (exception ya registró stack; turn cierra el turno).
+      logger.turn(
+        buildTurnLogFields({
+          requestId,
+          conversationId: conversation?.id,
+          waId: input.inboundWamid,
+          stage: conversation?.context.stage,
+          intent: conversation?.context.intent,
+          durationMs,
+        }),
+        { ok: false, error: controlled.message },
+      );
+
+      return {
         conversationId: conversation?.id ?? 'unknown',
-        inboundMessage: input.text,
-        outboundResponse: reply,
+        customerId: conversation?.customerId ?? 'unknown',
+        reply,
+        needsHumanHandoff: true,
         durationMs,
-        error: err instanceof Error ? err.message : 'Error desconocido',
-      });
-      throw err;
+        requestId,
+      };
     }
   }
 
@@ -220,19 +470,36 @@ export class HandleIncomingMessage {
     customerId: string;
     customerName?: string;
     assistantReply: string;
+    requestId: string;
   }): Promise<void> {
-    try {
-      console.log('[HandleIncomingMessage] CRM/Telegram en segundo plano...');
-      await this.leadService.registerFromConversation(params);
-      console.log('[HandleIncomingMessage] CRM/Telegram finalizó sin tumbar WhatsApp');
-    } catch (err) {
-      console.error('[HandleIncomingMessage] Error en CRM/Telegram (ignorado para WhatsApp):');
-      if (err instanceof Error) {
-        console.error(err.message);
-        console.error(err.stack);
-      } else {
-        console.error(err);
-      }
+    const outcome = await withTimeout(
+      () =>
+        this.leadService.registerFromConversation({
+          conversation: params.conversation,
+          phone: params.phone,
+          customerId: params.customerId,
+          customerName: params.customerName,
+          assistantReply: params.assistantReply,
+        }),
+      this.timeouts.crmMs,
+      {
+        service: 'LeadService',
+        operation: 'registerFromConversation',
+        code: 'TIMEOUT',
+        meta: { requestId: params.requestId },
+      },
+    );
+    if (!outcome.ok) {
+      logger.exception(
+        'HandleIncomingMessage — CRM/Telegram timeout/error (ignorado para WhatsApp)',
+        outcome.error,
+        {
+          service: 'LeadService',
+          operation: 'registerFromConversation',
+          requestId: params.requestId,
+          conversationId: params.conversation.id,
+        },
+      );
     }
   }
 
@@ -266,6 +533,8 @@ export class HandleIncomingMessage {
     inbound: string;
     outbound: string;
     durationMs: number;
+    requestId: string;
+    waId?: string;
   }): Promise<void> {
     const log: ConversationLog = {
       id: randomUUID(),
@@ -277,11 +546,28 @@ export class HandleIncomingMessage {
       outboundResponse: params.outbound,
       durationMs: params.durationMs,
       metadata: {
+        requestId: params.requestId,
+        waId: params.waId,
         intent: params.conversation.context.intent,
         stage: params.conversation.context.stage,
         handoff: params.conversation.context.needsHumanHandoff,
       },
     };
-    await this.logs.append(log);
+    const outcome = await withTimeout(
+      () => this.logs.append(log),
+      this.timeouts.persistenceMs,
+      {
+        service: 'LogRepository',
+        operation: 'append',
+        code: 'TIMEOUT',
+      },
+    );
+    if (!outcome.ok) {
+      logger.exception(
+        'HandleIncomingMessage — log append timeout/error',
+        outcome.error,
+        { requestId: params.requestId },
+      );
+    }
   }
 }

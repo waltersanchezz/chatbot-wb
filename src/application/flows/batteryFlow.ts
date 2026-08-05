@@ -4,6 +4,10 @@ import type {
   WillardProductLine,
   WillardRecommendedOption,
 } from '../../domain/willard/catalogTypes';
+import {
+  scoreWillardModelMatch,
+  stripLeadingBrandFromModel,
+} from '../../domain/willard/modelMatch';
 
 export interface FlowReply {
   text: string;
@@ -12,9 +16,8 @@ export interface FlowReply {
   handoffReason?: string;
 }
 
-const ACKS = ['✅ Perfecto', '✅ Excelente', '✅ Listo', '✅ Muy bien'];
 const CLOSING =
-  '👨‍🔧 Uno de nuestros asesores confirmará la disponibilidad y el precio actualizado para ayudarte lo antes posible.';
+  'Uno de nuestros asesores te confirmará disponibilidad y precio actualizado lo antes posible.';
 
 const PRODUCT_LINE_LABEL: Record<WillardProductLine, string> = {
   willardAgmEfb: 'Willard AGM / EFB',
@@ -30,12 +33,6 @@ const LINE_ORDER: WillardProductLine[] = [
   'extrema',
 ];
 
-function pickAck(seed: string): string {
-  let hash = 0;
-  for (let i = 0; i < seed.length; i += 1) hash = (hash + seed.charCodeAt(i)) % ACKS.length;
-  return ACKS[hash];
-}
-
 /**
  * Datos mínimos del vehículo para buscar en Willard.
  * Exige marca y modelo: no recomendar (ni transferir) solo con marca.
@@ -44,59 +41,120 @@ export function hasBatteryVehicle(ctx: ConversationContext): boolean {
   return Boolean(ctx.vehicle.brand?.trim() && ctx.vehicle.model?.trim());
 }
 
+export function hasCompleteVehicle(ctx: ConversationContext): boolean {
+  return Boolean(
+    ctx.vehicle.brand?.trim() &&
+      ctx.vehicle.model?.trim() &&
+      ctx.vehicle.year?.trim(),
+  );
+}
+
+/** Resumen + confirmación (Módulo 2). */
+export function formatVehicleConfirmation(
+  brand: string,
+  model: string,
+  year: string,
+): string {
+  return [
+    'Perfecto, anoté esto:',
+    '',
+    `🚗 ${brand} ${model}`,
+    `📅 Año ${year}`,
+    '',
+    '¿Está bien así?',
+    'Responde *sí* para continuar o *no* si hay que corregir algo.',
+  ].join('\n');
+}
+
+export function formatAskVehicle(): string {
+  return [
+    'Con gusto te ayudo a ubicar la batería Willard correcta.',
+    '',
+    '¿Para qué vehículo la necesitas?',
+    'Puedes escribirlo junto, por ejemplo: *Renault Logan 2015* o *Mazda 2 2008*.',
+  ].join('\n');
+}
+
+export function formatAskModel(brand: string): string {
+  return [
+    `Dale, un *${brand}*.`,
+    '',
+    '¿Qué modelo es?',
+    'Ejemplo: *2*, *Symbol*, *Spark GT*…',
+  ].join('\n');
+}
+
+export function formatAskBrand(): string {
+  return [
+    '¿De qué marca es el vehículo?',
+    'Ejemplo: *Renault*, *Mazda*, *Chevrolet*…',
+  ].join('\n');
+}
+
+export function formatAskYear(brand: string, model: string): string {
+  return [
+    `Listo: *${brand} ${model}*.`,
+    '',
+    '¿De qué año es?',
+    'Solo el año, por ejemplo: *2013*.',
+  ].join('\n');
+}
+
+export function formatAskSoundSystem(): string {
+  return [
+    'Última pregunta para afinar la recomendación:',
+    '',
+    '¿El vehículo tiene planta de sonido o amplificador?',
+    'Responde *sí* o *no*.',
+  ].join('\n');
+}
+
+/**
+ * Siguiente pregunta del flujo de baterías (copy de asesor Rodacenter).
+ * Orden: vehículo → modelo → año → confirmación (si aplica) → planta → recomendar.
+ */
 export function batteryNextQuestion(ctx: ConversationContext): FlowReply {
   if (!ctx.vehicle.brand?.trim() && !ctx.vehicle.model?.trim()) {
     return {
-      text: [
-        '🔋 Perfecto, te ayudo con la batería.',
-        '',
-        '🚗 ¿Para qué vehículo necesitas la batería?',
-        '📝 Ejemplos:',
-        '• Renault Symbol',
-        '• Mazda 3',
-        '• Kia Picanto',
-      ].join('\n'),
+      text: formatAskVehicle(),
       stage: 'collecting_vehicle',
     };
   }
 
   if (!ctx.vehicle.brand?.trim() || !ctx.vehicle.model?.trim()) {
-    const known = ctx.vehicle.brand?.trim() || ctx.vehicle.model?.trim() || 'vehículo';
     return {
-      text: [
-        `${pickAck(known)}`,
-        '',
-        ctx.vehicle.brand?.trim() && !ctx.vehicle.model?.trim()
-          ? '🚗 ¿Qué modelo es?'
-          : '🚗 ¿Cuál es la marca del vehículo?',
-        '📝 Ejemplo: Symbol, Mazda 3, Picanto',
-      ].join('\n'),
+      text: ctx.vehicle.brand?.trim()
+        ? formatAskModel(ctx.vehicle.brand.trim())
+        : formatAskBrand(),
       stage: 'collecting_vehicle',
     };
   }
 
-  if (!ctx.vehicle.year) {
+  if (!ctx.vehicle.year?.trim()) {
     return {
-      text: [
-        `${pickAck(ctx.vehicle.brand ?? ctx.vehicle.model ?? 'v')}`,
-        '',
-        '📅 ¿Qué modelo (año) es?',
-        '📝 Ejemplo: 2005',
-      ].join('\n'),
+      text: formatAskYear(
+        ctx.vehicle.brand.trim(),
+        ctx.vehicle.model.trim(),
+      ),
+      stage: 'collecting_vehicle',
+    };
+  }
+
+  // Módulo 2: confirmar datos antes de planta de sonido.
+  if (!ctx.vehicleConfirmed) {
+    return {
+      text: formatVehicleConfirmation(
+        ctx.vehicle.brand.trim(),
+        ctx.vehicle.model.trim(),
+        ctx.vehicle.year.trim(),
+      ),
       stage: 'collecting_vehicle',
     };
   }
 
   if (ctx.battery.soundSystem === undefined) {
     return {
-      text: [
-        `${pickAck(ctx.vehicle.year)}`,
-        '',
-        '🔊 ¿El vehículo tiene planta de sonido o amplificador?',
-        'Responde:',
-        '✅ Sí',
-        '❌ No',
-      ].join('\n'),
+      text: formatAskSoundSystem(),
       stage: 'collecting_product_details',
     };
   }
@@ -105,6 +163,19 @@ export function batteryNextQuestion(ctx: ConversationContext): FlowReply {
     text: '',
     stage: 'recommending',
   };
+}
+
+/** Respuesta afirmativa corta (confirmación / planta). */
+export function isAffirmativeReply(text: string): boolean {
+  // Anclar a fin de string: `\b` falla con tildes (sí) en JS.
+  return /^(si|sí|sip|sep|ok|okay|dale|correcto|exacto|claro|afirmativo|yes)$/i.test(
+    text.trim(),
+  );
+}
+
+/** Respuesta negativa corta. */
+export function isNegativeReply(text: string): boolean {
+  return /^(no|nop|incorrecto|mal|negativo)$/i.test(text.trim());
 }
 
 function formatSpecDetails(option: WillardRecommendedOption): string[] {
@@ -148,6 +219,86 @@ function groupOptionsByLine(
   }));
 }
 
+/** Normaliza para comparar opción pendiente vs respuesta del usuario. */
+export function normalizeModelSelectionKey(text: string): string {
+  return text.toLowerCase().replace(/\s+/g, '');
+}
+
+/**
+ * Elige la mejor opción pendiente para el mensaje del usuario.
+ * 1) Igualdad exacta (case/espacios).
+ * 2) Mejor scoreWillardModelMatch ≥ 1; empate entre opciones distintas → undefined.
+ */
+export function matchPendingModelOption(
+  message: string,
+  options: string[] | undefined,
+  brand?: string,
+): string | undefined {
+  if (!options?.length) return undefined;
+  const raw = message.trim();
+  if (!raw) return undefined;
+
+  const query = stripLeadingBrandFromModel(raw, brand);
+  const exactKey = normalizeModelSelectionKey(query);
+  const exact = options.find(
+    (option) => normalizeModelSelectionKey(option) === exactKey,
+  );
+  if (exact) return exact;
+
+  let bestScore = 0;
+  let best: string | undefined;
+  let tied = false;
+
+  for (const option of options) {
+    const score = scoreWillardModelMatch(query, option, option);
+    if (score == null || score < 1) continue;
+    if (score > bestScore) {
+      bestScore = score;
+      best = option;
+      tied = false;
+    } else if (score === bestScore && best && option !== best) {
+      tied = true;
+    }
+  }
+
+  if (tied) return undefined;
+  return best;
+}
+
+/** Etiquetas mostradas al usuario en AMBIGUOUS_MODEL (texto catálogo). */
+export function ambiguousModelLabels(
+  result: RecommendationResult,
+): string[] {
+  return uniqueTextos(result.applications);
+}
+
+/** Copy de aclaración de modelo (intérprete o RecommendationService). */
+export function formatModelClarification(labels: string[]): string {
+  const list =
+    labels.length > 0
+      ? labels.map((t) => `• ${t}`).join('\n')
+      : '• (varios modelos del catálogo)';
+
+  return [
+    'Encontré varias opciones parecidas en el catálogo.',
+    '',
+    '¿Cuál es la tuya?',
+    list,
+    '',
+    'Escríbela como te salga; mayúsculas no importan.',
+  ].join('\n');
+}
+
+/**
+ * Confirmación breve cuando el intérprete resolvió un vehículo claro.
+ */
+export function formatVehicleInterpretedAck(
+  marca: string,
+  modelo: string,
+): string {
+  return `✅ Entendí tu ${marca} ${modelo}.`;
+}
+
 /**
  * Presentación de recomendación Willard (solo copy/layout).
  * No altera outcomes ni la lógica de RecommendationService.
@@ -157,21 +308,9 @@ export function formatBatteryRecommendation(
   result: RecommendationResult,
 ): FlowReply {
   if (result.reasonCode === 'AMBIGUOUS_MODEL') {
-    const labels = uniqueTextos(result.applications);
-    const list =
-      labels.length > 0
-        ? labels.map((t) => `• ${t}`).join('\n')
-        : '• (varios modelos del catálogo)';
-
+    const labels = ambiguousModelLabels(result);
     return {
-      text: [
-        '🚗 Encontré varios modelos que podrían coincidir.',
-        '',
-        '¿Cuál es exactamente el tuyo?',
-        list,
-        '',
-        '📝 Escribe el modelo tal como aparece arriba.',
-      ].join('\n'),
+      text: formatModelClarification(labels),
       stage: 'collecting_vehicle',
       needsHandoff: false,
     };

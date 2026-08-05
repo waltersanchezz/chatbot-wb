@@ -19,23 +19,23 @@ export class WhatsAppCloudProvider implements MessagingProvider {
     const stack = new Error('sendText_trace').stack ?? '';
 
     if (!this.config.accessToken || !this.config.phoneNumberId) {
-      logger.info('WhatsApp stub send (no credentials)', {
+      // Nunca reportar ok:true sin envío real — evita “éxito silencioso” en producción.
+      logger.error('WhatsApp send aborted: missing Cloud API credentials', {
         to: message.to,
-        body: message.body,
+        hasAccessToken: Boolean(this.config.accessToken),
+        hasPhoneNumberId: Boolean(this.config.phoneNumberId),
       });
-      const providerMessageId = `wa-stub-${Date.now()}`;
       whatsappDeliveryAudit.recordSend({
         wamid: message.inboundWamid,
         requestId: message.auditRequestId,
         conversationId: message.conversationId,
         to: message.to,
-        providerMessageId,
-        ok: true,
+        ok: false,
         metaHttpStatus: 0,
-        metaHttpBody: 'stub:no-credentials',
+        metaHttpBody: 'error:missing-credentials',
         stack,
       });
-      return { ok: true, providerMessageId };
+      return { ok: false };
     }
 
     const url = `https://graph.facebook.com/${this.config.apiVersion}/${this.config.phoneNumberId}/messages`;

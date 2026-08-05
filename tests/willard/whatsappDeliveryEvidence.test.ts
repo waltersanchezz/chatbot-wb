@@ -7,17 +7,19 @@ import { MemoryWhatsAppMessageIdempotency } from '../../src/infrastructure/messa
 import { whatsappDeliveryAudit } from '../../src/infrastructure/messaging/WhatsAppDeliveryAudit';
 import { ConsoleMessagingProvider } from '../../src/infrastructure/messaging/ConsoleMessagingProvider';
 import { HandleIncomingMessage } from '../../src/application/use-cases/HandleIncomingMessage';
-import { ConversationEngine } from '../../src/application/services/ConversationEngine';
-import { RecommendationService } from '../../src/application/services/RecommendationService';
 import { LeadService } from '../../src/application/services/LeadService';
+import { MetricsService } from '../../src/application/services/MetricsService';
 import { NotificationService } from '../../src/application/services/NotificationService';
 import { InMemoryConversationRepository } from '../../src/infrastructure/persistence/InMemoryConversationRepository';
 import { InMemoryCustomerRepository } from '../../src/infrastructure/persistence/InMemoryCustomerRepository';
 import { InMemoryLeadRepository } from '../../src/infrastructure/persistence/InMemoryLeadRepository';
 import { InMemoryInteractionRepository } from '../../src/infrastructure/persistence/InMemoryInteractionRepository';
-import { InMemoryProductRepository } from '../../src/infrastructure/persistence/InMemoryProductRepository';
 import { FileLogRepository } from '../../src/infrastructure/persistence/FileLogRepository';
 import { FakeWillardBatteryKnowledge, hit } from './FakeWillardBatteryKnowledge';
+import {
+  buildTestConversationEngine,
+  catalogRowsFromHits,
+} from './buildTestConversationEngine';
 import os from 'os';
 import path from 'path';
 import fs from 'fs';
@@ -37,24 +39,25 @@ describe('WhatsApp delivery evidence (dual POST same wamid)', () => {
 
   it('same wamid → 2 POSTs, 1 claim_ok, 1 duplicate_skipped, 1 sendText', async () => {
     const tmpLog = fs.mkdtempSync(path.join(os.tmpdir(), 'wa-ev-'));
-    const knowledge = new FakeWillardBatteryKnowledge([
+    const apps = [
       hit({
         marca: 'RENAULT',
         modelo: 'Symbol',
         textoCatalogo: 'Symbol',
         refs: { willard: ['FAKE-SYM'] },
       }),
-    ]);
+    ];
+    const knowledge = new FakeWillardBatteryKnowledge(apps);
+    const { engine } = buildTestConversationEngine(
+      knowledge,
+      catalogRowsFromHits(apps),
+    );
     const messaging = new ConsoleMessagingProvider();
     const useCase = new HandleIncomingMessage(
       new InMemoryCustomerRepository(),
       new InMemoryConversationRepository(),
       new FileLogRepository(tmpLog),
-      new ConversationEngine(
-        new InMemoryProductRepository(),
-        new RecommendationService(knowledge),
-        { appName: 'Test', companyName: 'Rodacenter' },
-      ),
+      engine,
       messaging,
       new LeadService(
         new InMemoryLeadRepository(),
@@ -62,6 +65,7 @@ describe('WhatsApp delivery evidence (dual POST same wamid)', () => {
         new InMemoryInteractionRepository(),
       ),
       120,
+      new MetricsService(),
     );
 
     const app = express();

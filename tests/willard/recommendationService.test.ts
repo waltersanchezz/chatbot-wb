@@ -267,4 +267,43 @@ describe('RecommendationService', () => {
     expect(result.options).toHaveLength(2);
     expect(result.applications).toHaveLength(2);
   });
+
+  it('exact catalog label (case/spaces) disambiguates fuzzy siblings', () => {
+    const knowledge = new FakeWillardBatteryKnowledge([
+      hit({
+        marca: 'MAZDA',
+        modelo: 'Mazda 3 Skyactive',
+        textoCatalogo: 'Mazda 3 Skyactive',
+        refs: { willard: ['FAKE-SKY'] },
+        fila: 1,
+      }),
+      hit({
+        marca: 'MAZDA',
+        modelo: 'Mazda 3 All New',
+        textoCatalogo: 'Mazda 3 All New',
+        refs: { willard: ['FAKE-ALLNEW'] },
+        fila: 2,
+      }),
+    ]);
+    const service = new RecommendationService(knowledge);
+
+    const ambiguous = service.recommendByVehicle({
+      marca: 'MAZDA',
+      modelo: 'Mazda 3',
+    });
+    expect(ambiguous.reasonCode).toBe('AMBIGUOUS_MODEL');
+
+    const exact = service.recommendByVehicle({
+      marca: 'MAZDA',
+      modelo: 'mazda 3 skyactive',
+    });
+    expect(exact.outcome).toBe('matched');
+    expect(exact.reasonCode).toBeUndefined();
+    expect(exact.options.map((o) => o.reference)).toEqual(['FAKE-SKY']);
+    expect(exact.applications).toHaveLength(1);
+
+    expect(
+      service.resolveExactModelLabel('mazda', '  Mazda  3  Skyactive '),
+    ).toBe('Mazda 3 Skyactive');
+  });
 });

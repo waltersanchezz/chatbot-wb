@@ -103,7 +103,7 @@ describe('formatBatteryRecommendation formatter (PR3)', () => {
     const reply = formatBatteryRecommendation(emptyCtx, result);
     expect(reply.stage).toBe('collecting_vehicle');
     expect(reply.needsHandoff).toBe(false);
-    expect(reply.text).toContain('varios modelos');
+    expect(reply.text).toMatch(/varias opciones parecidas|varios modelos/i);
     expect(reply.text).toContain('• CX3');
     expect(reply.text).toContain('• CX30');
     expect(reply.text).not.toContain('FAKE-CX3');

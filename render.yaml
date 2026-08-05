@@ -2,14 +2,20 @@ services:
   - type: web
     name: rodacenter-ai
     runtime: node
-    plan: free
+    # Free no soporta Persistent Disk. Starter (o superior) es obligatorio para SQLite/idempotencia.
+    plan: starter
     region: oregon
     # All packages required by `tsc` (typescript, @types/*) live in dependencies.
     # Use omit=dev so NODE_ENV=production cannot skip @types/node.
     # Explicit reinstall of @types/node guards against lockfile/hoist edge cases on Render.
-    buildCommand: npm ci --omit=dev && npm install @types/node@24.13.3 --no-save && npm run build
+    # Backend + panel Vite del operador (apps/dashboard/dist → /dashboard).
+    buildCommand: npm ci --omit=dev && npm install @types/node@24.13.3 --no-save && npm run build && npm run dashboard:build
     startCommand: npm start
     healthCheckPath: /health
+    disk:
+      name: rodacenter-data
+      mountPath: /var/data
+      sizeGB: 1
     envVars:
       - key: NODE_VERSION
         value: "24"
@@ -23,14 +29,31 @@ services:
         value: rule-based
       - key: LOG_LEVEL
         value: info
+      - key: DATA_DIR
+        value: /var/data
+      - key: SQLITE_PATH
+        value: /var/data/rodacenter.sqlite
       - key: LOG_DIR
-        value: logs
+        value: /var/data/logs
+      - key: WHATSAPP_IDEMPOTENCY_PATH
+        value: /var/data/whatsapp-processed-wamids.json
       - key: SESSION_TTL_MINUTES
         value: "120"
+      - key: AUTH_REQUIRED
+        value: "true"
       - key: WHATSAPP_API_VERSION
         value: v21.0
-      # Configurar en el dashboard de Render (no commitear secretos):
+      # Secretos — configurar en el dashboard de Render (sync: false).
+      # Fail-fast al arrancar si faltan o son defaults inseguros (Production Sprint 1).
+      - key: JWT_SECRET
+        sync: false
+      - key: AUTH_ADMIN_EMAIL
+        sync: false
+      - key: AUTH_ADMIN_PASSWORD
+        sync: false
       - key: WHATSAPP_VERIFY_TOKEN
+        sync: false
+      - key: WHATSAPP_APP_SECRET
         sync: false
       - key: WHATSAPP_ACCESS_TOKEN
         sync: false

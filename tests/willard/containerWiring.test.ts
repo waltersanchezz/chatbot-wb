@@ -1,33 +1,60 @@
-import { describe, expect, it } from 'vitest';
-import { RecommendationService } from '../../src/application/services/RecommendationService';
+import { describe, expect, it, vi } from 'vitest';
+import { ConversationOrchestrator } from '../../src/application/services/ConversationOrchestrator';
+import { BatteryRecommendationEngine } from '../../src/application/services/BatteryRecommendationEngine';
 import { CatalogFileWillardBatteryKnowledge } from '../../src/infrastructure/catalog/CatalogFileWillardBatteryKnowledge';
 import { buildContainer } from '../../src/infrastructure/di/container';
+import { createEmptyContext } from '../../src/domain/entities/Conversation';
 
-describe('buildContainer Willard DI', () => {
-  it('wires WhatsApp battery flow exclusively through RecommendationService + catalog', () => {
+describe('buildContainer Willard DI — flujo oficial Orchestrator', () => {
+  it('wires ConversationEngine exclusively through ConversationOrchestrator', () => {
     const container = buildContainer();
 
     expect(container.willardCatalogKnowledge).toBeInstanceOf(
       CatalogFileWillardBatteryKnowledge,
     );
-    expect(container.recommendationService).toBeInstanceOf(RecommendationService);
+    expect(container.conversationOrchestrator).toBeInstanceOf(
+      ConversationOrchestrator,
+    );
+    expect(container.batteryRecommendationEngine).toBeInstanceOf(
+      BatteryRecommendationEngine,
+    );
+    expect(container.engine.batteryFlowMode).toBe('orchestrator');
     expect(container).not.toHaveProperty('willardKnowledge');
+  });
 
-    const bmw = container.recommendationService.recommendByVehicle({
-      marca: 'BMW',
-      modelo: '320i',
-    });
-    expect(bmw.outcome).toBe('matched');
-    expect(bmw.options.length).toBeGreaterThan(0);
-    expect(bmw.applications.some((a) => a.modelo === '320i')).toBe(true);
+  it('production battery path uses Orchestrator (RecommendationService.recommendByVehicle never called)', async () => {
+    const container = buildContainer();
+    const engine = container.engine;
 
-    const mazda3 = container.recommendationService.recommendByVehicle({
-      marca: 'MAZDA',
-      modelo: 'Mazda 3',
-    });
-    expect(mazda3.outcome).toBe('partial');
-    expect(mazda3.reasonCode).toBe('AMBIGUOUS_MODEL');
-    expect(mazda3.options).toEqual([]);
-    expect(mazda3.applications.length).toBeGreaterThanOrEqual(2);
+    const spy = vi.spyOn(container.recommendationService, 'recommendByVehicle');
+    const orchSpy = vi.spyOn(container.conversationOrchestrator, 'handle');
+
+    const conv = {
+      id: 'c-prod',
+      customerId: 'u1',
+      channel: 'whatsapp' as const,
+      externalId: 'wa:prod',
+      context: createEmptyContext(),
+      messages: [] as { role: string; content: string }[],
+      createdAt: new Date(),
+      updatedAt: new Date(),
+      expiresAt: new Date(Date.now() + 3_600_000),
+    };
+
+    let result = await engine.process(conv as never, 'batería');
+    conv.context = result.context;
+    result = await engine.process(conv as never, 'BMW 320i 2015');
+    conv.context = result.context;
+    if (!result.context.vehicleConfirmed) {
+      result = await engine.process(conv as never, 'sí');
+      conv.context = result.context;
+    }
+    if (result.context.battery.soundSystem === undefined) {
+      result = await engine.process(conv as never, 'no');
+    }
+
+    expect(spy).not.toHaveBeenCalled();
+    expect(orchSpy).toHaveBeenCalled();
+    expect(engine.batteryFlowMode).toBe('orchestrator');
   });
 });

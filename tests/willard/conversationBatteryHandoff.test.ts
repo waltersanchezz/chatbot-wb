@@ -1,10 +1,8 @@
 import { describe, expect, it } from 'vitest';
-import { ConversationEngine } from '../../src/application/services/ConversationEngine';
-import { RecommendationService } from '../../src/application/services/RecommendationService';
+import path from 'path';
 import { createEmptyContext } from '../../src/domain/entities/Conversation';
 import { CatalogFileWillardBatteryKnowledge } from '../../src/infrastructure/catalog/CatalogFileWillardBatteryKnowledge';
-import { InMemoryProductRepository } from '../../src/infrastructure/persistence/InMemoryProductRepository';
-import path from 'path';
+import { buildTestConversationEngine } from './buildTestConversationEngine';
 
 const fixtures = path.join(process.cwd(), 'tests', 'fixtures', 'willard');
 
@@ -13,11 +11,7 @@ function buildEngine() {
     path.join(fixtures, 'apps-mini.json'),
     path.join(fixtures, 'refs-mini.json'),
   );
-  return new ConversationEngine(
-    new InMemoryProductRepository(),
-    new RecommendationService(knowledge),
-    { appName: 'Test AI', companyName: 'Rodacenter' },
-  );
+  return buildTestConversationEngine(knowledge).engine;
 }
 
 function conversation() {
@@ -34,11 +28,11 @@ function conversation() {
   };
 }
 
-describe('ConversationEngine battery handoff timing', () => {
+describe('ConversationEngine battery handoff timing (Orchestrator)', () => {
   it('asking for battery only collects vehicle — no Willard handoff yet', async () => {
     const engine = buildEngine();
     const conv = conversation();
-    const result = await engine.process(conv as any, 'batería');
+    const result = await engine.process(conv as never, 'batería');
 
     expect(result.context.stage).toBe('collecting_vehicle');
     expect(result.context.needsHumanHandoff).toBe(false);
@@ -51,10 +45,10 @@ describe('ConversationEngine battery handoff timing', () => {
   it('does not recommend with brand alone (asks for model first)', async () => {
     const engine = buildEngine();
     const conv = conversation();
-    conv.context = (await engine.process(conv as any, 'batería')).context;
-    const result = await engine.process(conv as any, 'BMW');
+    conv.context = (await engine.process(conv as never, 'batería')).context;
+    const result = await engine.process(conv as never, 'BMW');
 
-    expect(result.context.vehicle.brand).toBe('bmw');
+    expect(result.context.vehicle.brand?.toUpperCase()).toBe('BMW');
     expect(result.context.stage).toBe('collecting_vehicle');
     expect(result.context.needsHumanHandoff).toBe(false);
     expect(result.reply.toLowerCase()).toContain('modelo');
@@ -68,9 +62,9 @@ describe('ConversationEngine battery handoff timing', () => {
       'Referencia Willard no encontrada en base de conocimiento';
     conv.context.stage = 'handoff';
     conv.context.category = 'baterias';
-    conv.messages.push({ role: 'customer', content: 'prev' });
+    conv.messages.push({ role: 'customer', content: 'prev' } as never);
 
-    const result = await engine.process(conv as any, 'batería');
+    const result = await engine.process(conv as never, 'batería');
 
     expect(result.context.needsHumanHandoff).toBe(false);
     expect(result.context.handoffReason).toBeUndefined();
@@ -82,12 +76,12 @@ describe('ConversationEngine battery handoff timing', () => {
   it('handoff with Willard-not-found only after full data and empty search', async () => {
     const engine = buildEngine();
     const conv = conversation();
-    conv.context = (await engine.process(conv as any, 'batería')).context;
-    conv.context = (await engine.process(conv as any, 'ZZZZ FakeCar')).context;
-    // Free-text may land as brand only — force brand+model for the test.
+    conv.context = (await engine.process(conv as never, 'batería')).context;
+    // Vehículo inexistente forzado al SalesFlow vía hidratación de contexto.
     conv.context.vehicle = { brand: 'ZZZZ', model: 'FakeCar' };
-    conv.context = (await engine.process(conv as any, '2018')).context;
-    const result = await engine.process(conv as any, 'No');
+    conv.context.salesFlow = undefined;
+    conv.context = (await engine.process(conv as never, '2018')).context;
+    const result = await engine.process(conv as never, 'No');
 
     expect(result.context.battery.soundSystem).toBe(false);
     expect(result.context.stage).toBe('handoff');
@@ -100,10 +94,12 @@ describe('ConversationEngine battery handoff timing', () => {
   it('matched recommendation does not set needsHumanHandoff', async () => {
     const engine = buildEngine();
     const conv = conversation();
-    conv.context = (await engine.process(conv as any, 'batería')).context;
-    conv.context.vehicle = { brand: 'BMW', model: '320i' };
-    conv.context = (await engine.process(conv as any, '2015')).context;
-    const result = await engine.process(conv as any, 'No');
+    conv.context = (await engine.process(conv as never, 'batería')).context;
+    const afterVehicle = await engine.process(conv as never, 'BMW 320i');
+    conv.context = afterVehicle.context;
+    // Año aparte → auto-confirm → planta
+    conv.context = (await engine.process(conv as never, '2015')).context;
+    const result = await engine.process(conv as never, 'No');
 
     expect(result.context.stage).toBe('closing');
     expect(result.context.needsHumanHandoff).toBe(false);

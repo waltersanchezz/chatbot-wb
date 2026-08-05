@@ -1,14 +1,20 @@
-import path from 'path';
+import fs from 'fs';
 import { env } from './infrastructure/config/env';
+import { assertProductionReady } from './infrastructure/config/productionGuard';
 import { buildContainer } from './infrastructure/di/container';
 import { FileWhatsAppMessageIdempotency } from './infrastructure/messaging/WhatsAppMessageIdempotency';
 import { logger } from './infrastructure/logging/logger';
 import { createApp } from './presentation/http/createApp';
 
 async function bootstrap(): Promise<void> {
+  assertProductionReady(env);
+
+  fs.mkdirSync(env.dataDir, { recursive: true });
+  fs.mkdirSync(env.logDir, { recursive: true });
+
   const container = buildContainer();
   const whatsappIdempotency = new FileWhatsAppMessageIdempotency(
-    path.join(env.logDir, 'whatsapp-processed-wamids.json'),
+    env.whatsapp.idempotencyPath,
   );
   const app = createApp({
     handleIncomingMessage: container.handleIncomingMessage,
@@ -18,6 +24,26 @@ async function bootstrap(): Promise<void> {
     customerProfileService: container.customerProfileService,
     interactionService: container.interactionService,
     whatsappIdempotency,
+    dashboardService: container.dashboardService,
+    conversationService: container.conversationService,
+    conversationDetailService: container.conversationDetailService,
+    clientService: container.clientService,
+    pipelineService: container.pipelineService,
+    taskService: container.taskService,
+    analyticsService: container.analyticsService,
+    companyService: container.companyService,
+    onboardingService: container.onboardingService,
+    knowledgeService: container.knowledgeManagerService,
+    automationService: container.automationService,
+    workflowService: container.workflowService,
+    billingService: container.billingService,
+    marketplaceService: container.marketplaceService,
+    copilotService: container.copilotService,
+    integrationService: container.integrationService,
+    observabilityService: container.observabilityService,
+    developerService: container.developerService,
+    eventBus: container.eventBus,
+    authService: container.authService,
   });
 
   app.listen(env.port, () => {
@@ -26,7 +52,11 @@ async function bootstrap(): Promise<void> {
       company: env.companyName,
       aiProvider: env.aiProvider,
       env: env.nodeEnv,
-      whatsappIdempotency: 'file',
+      dataDir: env.dataDir,
+      sqlitePath: env.sqlitePath,
+      whatsappIdempotencyPath: env.whatsapp.idempotencyPath,
+      whatsappSignatureRequired: env.whatsapp.signatureRequired,
+      authRequired: env.auth.required,
     });
   });
 }

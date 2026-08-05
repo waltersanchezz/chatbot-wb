@@ -199,6 +199,19 @@ export class CatalogFileWillardBatteryKnowledge implements WillardBatteryKnowled
     return this.specsByReference.get(literal) ?? null;
   }
 
+  /** Filas utilizables para índice del VehicleInterpreter (no expone pending). */
+  exportUsableVehicleRows(): Array<{
+    marca: string;
+    modelo: string;
+    textoCatalogo: string;
+  }> {
+    return this.applications.map((app) => ({
+      marca: app.hit.marca,
+      modelo: app.hit.modelo,
+      textoCatalogo: app.hit.textoCatalogo,
+    }));
+  }
+
   private loadApplications(filePath: string): void {
     const raw = JSON.parse(readFileSync(filePath, 'utf8')) as RawApplicationsFile;
     const rows = Array.isArray(raw.aplicaciones) ? raw.aplicaciones : [];
