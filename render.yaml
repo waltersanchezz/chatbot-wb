@@ -5,11 +5,10 @@ services:
     # Free no soporta Persistent Disk. Starter (o superior) es obligatorio para SQLite/idempotencia.
     plan: starter
     region: oregon
-    # All packages required by `tsc` (typescript, @types/*) live in dependencies.
-    # Use omit=dev so NODE_ENV=production cannot skip @types/node.
-    # Explicit reinstall of @types/node guards against lockfile/hoist edge cases on Render.
+    # Root + dashboard: include build toolchain (tsc/vite). Dashboard build deps live in
+    # apps/dashboard dependencies so nested `npm ci` also works with NODE_ENV=production.
     # Backend + panel Vite del operador (apps/dashboard/dist → /dashboard).
-    buildCommand: npm ci --omit=dev && npm install @types/node@24.13.3 --no-save && npm run build && npm run dashboard:build
+    buildCommand: npm ci --include=dev && npm run build && npm run dashboard:build
     startCommand: npm start
     healthCheckPath: /health
     disk:
