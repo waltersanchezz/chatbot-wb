@@ -42,7 +42,7 @@ export function assertProductionReady(
 
   if (!config.sqlitePath || config.sqlitePath === ':memory:') {
     errors.push(
-      'SQLITE_PATH must be a durable file path in production (not :memory:)',
+      'SQLITE_PATH must be set to a durable file path in production (e.g. /var/data/rodacenter.sqlite), not empty or :memory:',
     );
   }
 

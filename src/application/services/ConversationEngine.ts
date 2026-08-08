@@ -18,6 +18,7 @@ import {
   formatAskSoundSystem,
   formatAskVehicle,
   formatAskYear,
+  formatAskYearReminder,
   formatModelClarification,
   formatVehicleConfirmation,
   isAffirmativeReply,
@@ -474,9 +475,11 @@ export class ConversationEngine {
         });
         result = this.maybeAutoConfirmYearOnly(result, true);
       } else if (modelIsCanonicalLabel) {
+        // Input no-año (p. ej. "Hola"): un recordatorio controlado por inbound,
+        // sin reenviar indefinidamente el mismo formatAskYear.
         const brand = sales.vehicle.brand?.trim() ?? '';
         return {
-          reply: formatAskYear(brand || 'tu vehículo', modelTrimmed),
+          reply: formatAskYearReminder(brand || 'tu vehículo', modelTrimmed),
           context: this.mergeOrchestratorContext(context, { session }),
         };
       } else {

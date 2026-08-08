@@ -94,12 +94,24 @@ const dataDir = path.isAbsolute(raw.DATA_DIR)
   ? raw.DATA_DIR
   : path.resolve(projectRoot, raw.DATA_DIR);
 
-const sqlitePath = raw.SQLITE_PATH.trim()
-  ? raw.SQLITE_PATH.trim() === ':memory:'
+/**
+ * Una sola ruta SQLite para CRM / sessions / idempotency / wa_id locks.
+ * Producción: SQLITE_PATH obligatorio (p. ej. /var/data/rodacenter.sqlite).
+ * Nunca caer en data/rodacenter.sqlite en production si falta la variable.
+ */
+const sqlitePathRaw = raw.SQLITE_PATH.trim();
+if (raw.NODE_ENV === 'production' && !sqlitePathRaw) {
+  throw new Error(
+    'SQLITE_PATH is required in production (expected /var/data/rodacenter.sqlite). Refusing silent fallback to data/rodacenter.sqlite.',
+  );
+}
+
+const sqlitePath = sqlitePathRaw
+  ? sqlitePathRaw === ':memory:'
     ? ':memory:'
-    : path.isAbsolute(raw.SQLITE_PATH.trim())
-      ? raw.SQLITE_PATH.trim()
-      : path.resolve(projectRoot, raw.SQLITE_PATH.trim())
+    : path.isAbsolute(sqlitePathRaw)
+      ? sqlitePathRaw
+      : path.resolve(projectRoot, sqlitePathRaw)
   : path.join(dataDir, 'rodacenter.sqlite');
 
 const logDir = raw.LOG_DIR.trim()

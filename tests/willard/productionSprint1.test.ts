@@ -300,6 +300,12 @@ describe('Production Sprint 1 — fail-fast production', () => {
         sqlitePath: ':memory:',
       } as never),
     ).toThrow(/SQLITE_PATH/);
+    expect(() =>
+      assertProductionReady({
+        ...base,
+        sqlitePath: '',
+      } as never),
+    ).toThrow(/SQLITE_PATH/);
   });
 
   it('rejects missing Telegram handoff credentials', () => {

@@ -15,6 +15,7 @@ import {
 } from '../../shared/result';
 import { withTimeout } from '../../shared/timeout';
 import type { Channel } from '../../shared/types';
+import { WaIdTurnSerializer } from '../concurrency/WaIdTurnSerializer';
 import type { ConversationEngine } from '../services/ConversationEngine';
 import type { LeadService } from '../services/LeadService';
 import type { MetricsService } from '../services/MetricsService';
@@ -39,6 +40,8 @@ export interface IncomingMessageResult {
   needsHumanHandoff: boolean;
   durationMs: number;
   requestId: string;
+  /** true si se omitió sendText porque el save falló/timeout. */
+  sendSkippedDueToPersistFailure?: boolean;
 }
 
 export interface HandleIncomingTimeouts {
@@ -55,8 +58,11 @@ const DEFAULT_TIMEOUTS: HandleIncomingTimeouts = {
   crmMs: 5_000,
 };
 
+const defaultTurnSerializer = new WaIdTurnSerializer();
+
 export class HandleIncomingMessage {
   private readonly timeouts: HandleIncomingTimeouts;
+  private readonly turnSerializer: WaIdTurnSerializer;
 
   constructor(
     private readonly customers: CustomerRepository,
@@ -68,11 +74,23 @@ export class HandleIncomingMessage {
     private readonly sessionTtlMinutes: number,
     private readonly metrics: MetricsService,
     timeouts?: Partial<HandleIncomingTimeouts>,
+    turnSerializer?: WaIdTurnSerializer,
   ) {
     this.timeouts = { ...DEFAULT_TIMEOUTS, ...timeouts };
+    this.turnSerializer = turnSerializer ?? defaultTurnSerializer;
   }
 
   async execute(input: IncomingMessageInput): Promise<IncomingMessageResult> {
+    const waKey =
+      input.externalConversationId?.trim() ||
+      `${input.channel}:${input.phone}`;
+
+    return this.turnSerializer.run(waKey, () => this.executeTurn(input));
+  }
+
+  private async executeTurn(
+    input: IncomingMessageInput,
+  ): Promise<IncomingMessageResult> {
     const started = Date.now();
     const requestId = input.auditRequestId ?? randomUUID();
     let reply = '';
@@ -148,9 +166,10 @@ export class HandleIncomingMessage {
         role: 'customer',
         content: input.text,
         createdAt: now,
-        metadata: input.customerName
-          ? { customerName: input.customerName }
-          : undefined,
+        metadata: {
+          ...(input.customerName ? { customerName: input.customerName } : {}),
+          ...(input.inboundWamid ? { inboundWamid: input.inboundWamid } : {}),
+        },
       };
       conversation.messages.push(inbound);
 
@@ -229,6 +248,9 @@ export class HandleIncomingMessage {
           role: 'assistant',
           content: reply,
           createdAt: new Date(),
+          metadata: input.inboundWamid
+            ? { inboundWamid: input.inboundWamid }
+            : undefined,
         };
         conversation.messages.push(outbound);
       }
@@ -255,10 +277,43 @@ export class HandleIncomingMessage {
       });
       if (!saveOutcome.ok) {
         logger.exception(
-          'HandleIncomingMessage — save timeout/error (controlado)',
+          'HandleIncomingMessage — save timeout/error; sendText bloqueado',
           saveOutcome.error,
           { requestId, conversationId: conversation.id },
         );
+
+        const durationMs = Date.now() - started;
+        if (input.inboundWamid && input.auditRequestId) {
+          whatsappDeliveryAudit.recordHandleExit({
+            wamid: input.inboundWamid,
+            requestId: input.auditRequestId,
+            durationMs,
+            ok: false,
+            error: 'persist_failed_before_send',
+          });
+        }
+
+        logger.turn(
+          buildTurnLogFields({
+            requestId,
+            conversationId: conversation.id,
+            waId: input.inboundWamid,
+            stage: conversation.context.stage,
+            intent: conversation.context.intent,
+            durationMs,
+          }),
+          { ok: false, error: 'persist_failed_before_send' },
+        );
+
+        return {
+          conversationId: conversation.id,
+          customerId: customer.id,
+          reply,
+          needsHumanHandoff: conversation.context.needsHumanHandoff,
+          durationMs,
+          requestId,
+          sendSkippedDueToPersistFailure: true,
+        };
       }
 
       if (input.sendReply !== false && !suppressReply) {
@@ -366,6 +421,7 @@ export class HandleIncomingMessage {
 
       reply = FRIENDLY_ERROR_REPLY;
 
+      let persistOk = false;
       if (conversation) {
         const nextContext = {
           ...conversation.context,
@@ -386,6 +442,9 @@ export class HandleIncomingMessage {
           role: 'assistant',
           content: reply,
           createdAt: new Date(),
+          metadata: input.inboundWamid
+            ? { inboundWamid: input.inboundWamid }
+            : undefined,
         });
         const saved = await withTimeout(
           () => this.conversations.save(conversation!),
@@ -396,29 +455,30 @@ export class HandleIncomingMessage {
             code: 'TIMEOUT',
           },
         );
+        persistOk = saved.ok;
         if (!saved.ok) {
           logger.exception(
-            'HandleIncomingMessage — no se pudo guardar tras error',
+            'HandleIncomingMessage — no se pudo guardar tras error; sendText bloqueado',
             saved.error,
             { requestId },
           );
+        } else {
+          // Handoff por error: igual debe crear lead + Telegram (no silencioso).
+          void this.captureLeadSafe({
+            conversation,
+            phone: input.phone,
+            customerId: conversation.customerId,
+            customerName: input.customerName,
+            assistantReply: reply,
+            requestId,
+          });
         }
-
-        // Handoff por error: igual debe crear lead + Telegram (no silencioso).
-        void this.captureLeadSafe({
-          conversation,
-          phone: input.phone,
-          customerId: conversation.customerId,
-          customerName: input.customerName,
-          assistantReply: reply,
-          requestId,
-        });
       } else {
         // Sin conversación aún: contar error igual.
         this.metrics.increment('errors');
       }
 
-      if (input.sendReply !== false) {
+      if (input.sendReply !== false && persistOk) {
         const sendOutcome = await withTimeout(
           () =>
             this.messaging.sendText({
@@ -501,6 +561,7 @@ export class HandleIncomingMessage {
         needsHumanHandoff: true,
         durationMs,
         requestId,
+        sendSkippedDueToPersistFailure: conversation ? !persistOk : undefined,
       };
     }
   }
@@ -616,6 +677,7 @@ export class HandleIncomingMessage {
 /**
  * Evita reenviar el mismo texto del bot si el último outbound es idéntico
  * dentro de la ventana (retries Meta / doble entrega con otro wamid).
+ * Defensa secundaria; la primaria es serialización por wa_id + save-before-send.
  * Exportada para tests unitarios.
  */
 export function isDuplicateRecentAssistantReply(

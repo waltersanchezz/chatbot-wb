@@ -2,7 +2,6 @@ import fs from 'fs';
 import { env } from './infrastructure/config/env';
 import { assertProductionReady } from './infrastructure/config/productionGuard';
 import { buildContainer } from './infrastructure/di/container';
-import { FileWhatsAppMessageIdempotency } from './infrastructure/messaging/WhatsAppMessageIdempotency';
 import { logger } from './infrastructure/logging/logger';
 import { createApp } from './presentation/http/createApp';
 
@@ -13,9 +12,7 @@ async function bootstrap(): Promise<void> {
   fs.mkdirSync(env.logDir, { recursive: true });
 
   const container = buildContainer();
-  const whatsappIdempotency = new FileWhatsAppMessageIdempotency(
-    env.whatsapp.idempotencyPath,
-  );
+  /** Idempotencia SQLite: misma ruta que CRM / sessions / wa_id locks (container.sqlitePath). */
   const app = createApp({
     handleIncomingMessage: container.handleIncomingMessage,
     products: container.products,
@@ -23,7 +20,7 @@ async function bootstrap(): Promise<void> {
     leadService: container.leadService,
     customerProfileService: container.customerProfileService,
     interactionService: container.interactionService,
-    whatsappIdempotency,
+    whatsappIdempotency: container.whatsappIdempotency,
     dashboardService: container.dashboardService,
     conversationService: container.conversationService,
     conversationDetailService: container.conversationDetailService,
@@ -53,7 +50,7 @@ async function bootstrap(): Promise<void> {
       aiProvider: env.aiProvider,
       env: env.nodeEnv,
       dataDir: env.dataDir,
-      sqlitePath: env.sqlitePath,
+      sqlitePath: container.sqlitePath,
       whatsappIdempotencyPath: env.whatsapp.idempotencyPath,
       whatsappSignatureRequired: env.whatsapp.signatureRequired,
       authRequired: env.auth.required,

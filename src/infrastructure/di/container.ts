@@ -24,7 +24,11 @@ import { ObservabilityService } from '../../application/services/ObservabilitySe
 import { DeveloperService } from '../../application/services/DeveloperService';
 import { ConversationMemory } from '../../application/services/ConversationMemory';
 import { ConversationRecoveryEngine } from '../../application/services/ConversationRecoveryEngine';
+import { WaIdTurnQueue } from '../../application/concurrency/WaIdTurnQueue';
+import { WaIdTurnSerializer } from '../../application/concurrency/WaIdTurnSerializer';
 import { HandleIncomingMessage } from '../../application/use-cases/HandleIncomingMessage';
+import { SqliteWaIdTurnLock } from '../messaging/SqliteWaIdTurnLock';
+import { SqliteWhatsAppMessageIdempotency } from '../messaging/SqliteWhatsAppMessageIdempotency';
 import { LearningEngine } from '../../application/services/LearningEngine';
 import { DashboardService } from '../../application/services/DashboardService';
 import { ConversationService } from '../../application/services/ConversationService';
@@ -364,6 +368,17 @@ export function buildContainer() {
   /** Hardening: métricas independientes del flujo conversacional. */
   const metricsService = new MetricsService();
 
+  /** Un turno a la vez por wa_id (in-process + lease SQLite para overlapping deploys). */
+  const waIdTurnSerializer = new WaIdTurnSerializer(
+    new WaIdTurnQueue(),
+    new SqliteWaIdTurnLock(sqlitePath),
+  );
+
+  /** Misma SQLITE_PATH que CRM / sessions / locks — claim atómico de wamid. */
+  const whatsappIdempotency = new SqliteWhatsAppMessageIdempotency(sqlitePath, {
+    legacyFilePath: env.whatsapp.idempotencyPath,
+  });
+
   const handleIncomingMessage = new HandleIncomingMessage(
     customers,
     conversations,
@@ -374,6 +389,7 @@ export function buildContainer() {
     env.sessionTtlMinutes,
     metricsService,
     env.timeouts,
+    waIdTurnSerializer,
   );
 
   return {
@@ -451,6 +467,8 @@ export function buildContainer() {
     messaging,
     engine,
     handleIncomingMessage,
+    whatsappIdempotency,
+    sqlitePath,
   };
 }
 

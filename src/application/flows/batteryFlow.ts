@@ -100,6 +100,18 @@ export function formatAskYear(brand: string, model: string): string {
   ].join('\n');
 }
 
+/**
+ * Recordatorio controlado en ASK_YEAR cuando el inbound no es un año
+ * (p. ej. "Hola"). Distinto de formatAskYear para no spamear el mismo copy.
+ */
+export function formatAskYearReminder(brand: string, model: string): string {
+  return [
+    `Para seguir con tu *${brand} ${model}*, necesito solo el año.`,
+    '',
+    'Escríbelo en 4 dígitos, por ejemplo: *2013*.',
+  ].join('\n');
+}
+
 export function formatAskSoundSystem(): string {
   return [
     'Última pregunta para afinar la recomendación:',

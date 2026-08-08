@@ -20,6 +20,11 @@ describe('buildContainer Willard DI — flujo oficial Orchestrator', () => {
     );
     expect(container.engine.batteryFlowMode).toBe('orchestrator');
     expect(container).not.toHaveProperty('willardKnowledge');
+    expect(container.sqlitePath).toBeTruthy();
+    expect(container.whatsappIdempotency).toBeTruthy();
+    expect(container.whatsappIdempotency.claim('wamid.DI_WIRE_' + Date.now())).toBe(
+      true,
+    );
   });
 
   it('production battery path uses Orchestrator (RecommendationService.recommendByVehicle never called)', async () => {
