@@ -1,16 +1,3 @@
-export type ConversationStatus = 'activa' | 'esperando' | 'cerrada' | 'abandonada'
-
-export interface MockConversation {
-  id: string
-  customer: string
-  phone: string
-  vehicle: string
-  reference: string | null
-  status: ConversationStatus
-  updatedAt: string
-  durationMin: number
-}
-
 export interface MockClient {
   id: string
   name: string
@@ -63,59 +50,6 @@ export const mockStats: MockStat[] = [
     value: '4:12',
     delta: 'estable',
     trend: 'flat',
-  },
-]
-
-export const mockConversations: MockConversation[] = [
-  {
-    id: 'cv-1001',
-    customer: 'Carlos Mejía',
-    phone: '+57 300 111 2233',
-    vehicle: 'Renault Logan 2015',
-    reference: 'FAKE-LOG',
-    status: 'esperando',
-    updatedAt: 'hace 4 min',
-    durationMin: 6,
-  },
-  {
-    id: 'cv-1002',
-    customer: 'Laura Gómez',
-    phone: '+57 310 444 5566',
-    vehicle: 'Mazda 2 2020',
-    reference: 'FAKE-M2',
-    status: 'activa',
-    updatedAt: 'hace 1 min',
-    durationMin: 3,
-  },
-  {
-    id: 'cv-1003',
-    customer: 'Andrés Ríos',
-    phone: '+57 320 777 8899',
-    vehicle: 'Chevrolet Spark 2018',
-    reference: null,
-    status: 'abandonada',
-    updatedAt: 'hace 42 min',
-    durationMin: 2,
-  },
-  {
-    id: 'cv-1004',
-    customer: 'Diana Palacio',
-    phone: '+57 301 222 3344',
-    vehicle: 'Kia Rio 2019',
-    reference: 'FAKE-KIA',
-    status: 'cerrada',
-    updatedAt: 'hace 1 h',
-    durationMin: 9,
-  },
-  {
-    id: 'cv-1005',
-    customer: 'Felipe Castaño',
-    phone: '+57 315 555 6677',
-    vehicle: 'Toyota Corolla 2016',
-    reference: 'FAKE-COR',
-    status: 'esperando',
-    updatedAt: 'hace 12 min',
-    durationMin: 5,
   },
 ]
 

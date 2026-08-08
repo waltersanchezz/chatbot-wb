@@ -10,6 +10,8 @@ export interface ClientDto {
   primerContacto: string;
   ultimaActividad: string;
   cantidadVehiculos: number;
+  /** Vehículo de la conversación más reciente (label + año si hay). */
+  ultimoVehiculo: string | null;
   leadPromedio: number | null;
   ultimaReferencia: string | null;
   estadoUltimaConversacion: string;

@@ -3,11 +3,14 @@
  * Solo formatea datos existentes — no inventa información de negocio.
  */
 
-/** Extrae dígitos de un waId / teléfono persistido (p.ej. wa:+57300…). */
+/** Extrae dígitos de un waId / teléfono persistido (p.ej. wa:+57300… / whatsapp:57…). */
 export function phoneDigits(raw: string | null | undefined): string {
   if (!raw?.trim()) return ''
-  return raw.replace(/^wa:/i, '').replace(/\D/g, '')
+  return raw
+    .replace(/^(whatsapp:|wa:)/i, '')
+    .replace(/\D/g, '')
 }
+
 
 /**
  * Indica si el valor parece un identificador técnico (wa:prod, test, etc.)
@@ -16,7 +19,10 @@ export function phoneDigits(raw: string | null | undefined): string {
 export function isTechnicalPhoneId(raw: string | null | undefined): boolean {
   const digits = phoneDigits(raw)
   if (digits.length < 8) return true
-  const stripped = (raw ?? '').replace(/^wa:/i, '').trim().toLowerCase()
+  const stripped = (raw ?? '')
+    .replace(/^(whatsapp:|wa:)/i, '')
+    .trim()
+    .toLowerCase()
   if (!stripped) return true
   if (/^(prod|dev|test|local|demo|null|undefined)$/i.test(stripped)) return true
   return false
@@ -103,6 +109,15 @@ export function salesFlowBadgeClass(state: string | null | undefined): string {
   }
   if (!state) return map.UNKNOWN
   return map[state] ?? map.UNKNOWN
+}
+
+/** Planta de sonido: Sí / No / sin dato. */
+export function formatSoundSystem(
+  value: boolean | null | undefined,
+): string {
+  if (value === true) return 'Sí'
+  if (value === false) return 'No'
+  return '—'
 }
 
 /** Resultado de coincidencia de batería — lenguaje comercial. */

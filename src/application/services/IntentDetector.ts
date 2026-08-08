@@ -71,7 +71,7 @@ export class IntentDetector {
   detect(message: string, previousIntent?: ConversationIntent): ConversationIntent {
     const text = message.trim();
 
-    if (HANDOFF.test(text)) return 'handoff';
+    if (HANDOFF.test(text) && text.length < 160) return 'handoff';
     if (matchesBatteryIntent(text)) return 'baterias';
     if (matchesBearingIntent(text)) return 'rodamientos';
     if (OTHER.test(text)) return 'otro_producto';

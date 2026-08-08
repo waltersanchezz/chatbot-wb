@@ -460,6 +460,10 @@ function toClientDto(client: AggregatedClient): ClientDto {
       : null;
 
   const vehicles = uniqueVehicles(convs.map((c) => c.vehicle).filter(Boolean) as ClientVehicleDto[]);
+  const latestVehicle = convs[0]?.vehicle ?? null;
+  const ultimoVehiculo = latestVehicle
+    ? [latestVehicle.label, latestVehicle.year].filter(Boolean).join(' ')
+    : null;
 
   return {
     id: client.waId,
@@ -469,6 +473,7 @@ function toClientDto(client: AggregatedClient): ClientDto {
     primerContacto: new Date(first).toISOString(),
     ultimaActividad: new Date(last).toISOString(),
     cantidadVehiculos: vehicles.length,
+    ultimoVehiculo,
     leadPromedio,
     ultimaReferencia: convs[0]?.reference ?? null,
     estadoUltimaConversacion: convs[0]?.state ?? 'UNKNOWN',

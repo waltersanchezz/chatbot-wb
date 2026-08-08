@@ -17,9 +17,16 @@ export interface ConversationDetailDto {
   waId: string;
   vehicle: string | null;
   year: string | null;
+  /** Planta de sonido / amplificador (salesFlow o battery context). */
+  soundSystem: boolean | null;
   recommendedReference: string | null;
+  /** Capacidad / CCA desde ficha Willard de la referencia, si existe. */
+  amperage: string | null;
+  /** Línea / tipo de caja Willard (p.ej. Willard AGM). */
+  caseType: string | null;
   matchKind: string | null;
   leadScore: number | null;
+  /** Estado del flujo comercial (SalesFlow), solo lectura. */
   salesFlowState: string;
   createdAt: string;
   updatedAt: string;

@@ -78,7 +78,13 @@ export class SQLiteConversationDetailRepository
     leadScore?: number | null;
     lastReference?: string | null;
     matchKind?: string | null;
-    vehicle?: { brand?: string; model?: string; year?: string };
+    vehicle?: {
+      brand?: string;
+      model?: string;
+      year?: string;
+      soundSystem?: boolean;
+    };
+    soundSystem?: boolean | null;
     customerName?: string | null;
     salesFlowState?: string;
     messages?: Array<{
@@ -91,6 +97,11 @@ export class SQLiteConversationDetailRepository
     updatedAt: number;
   }): void {
     const vehicle = input.vehicle ?? {};
+    const soundSystem =
+      input.soundSystem ??
+      (typeof vehicle.soundSystem === 'boolean' ? vehicle.soundSystem : undefined);
+    const vehicleWithSound =
+      soundSystem === undefined ? vehicle : { ...vehicle, soundSystem };
     const messages = (input.messages ?? []).map((m) => ({
       id: m.id,
       conversationId: input.conversationId,
@@ -109,13 +120,15 @@ export class SQLiteConversationDetailRepository
       channel: 'whatsapp',
       externalId: input.waId,
       context: {
-        vehicle,
+        vehicle: vehicleWithSound,
+        battery:
+          soundSystem === undefined ? {} : { soundSystem },
         lastRecommendedReference: input.lastReference ?? undefined,
         salesFlow: {
           state: input.salesFlowState ?? input.state,
           leadScore: input.leadScore ?? 0,
           matchKind: input.matchKind ?? undefined,
-          vehicle,
+          vehicle: vehicleWithSound,
         },
       },
       messages,
@@ -128,7 +141,7 @@ export class SQLiteConversationDetailRepository
       state: input.salesFlowState ?? input.state,
       leadScore: input.leadScore ?? 0,
       matchKind: input.matchKind ?? undefined,
-      vehicle,
+      vehicle: vehicleWithSound,
     });
 
     this.db
@@ -161,7 +174,7 @@ export class SQLiteConversationDetailRepository
         input.state,
         input.leadScore ?? null,
         input.lastReference ?? null,
-        JSON.stringify(vehicle),
+        JSON.stringify(vehicleWithSound),
         salesFlowJson,
         conversationJson,
         input.savedAt,
@@ -175,7 +188,12 @@ export class SQLiteConversationDetailRepository
   }
 
   private fromSession(row: SessionRow): ConversationDetailDto {
-    let vehicleObj: { brand?: string; model?: string; year?: string } = {};
+    let vehicleObj: {
+      brand?: string;
+      model?: string;
+      year?: string;
+      soundSystem?: boolean;
+    } = {};
     try {
       vehicleObj = JSON.parse(row.last_vehicle_json || '{}') as typeof vehicleObj;
     } catch {
@@ -185,6 +203,8 @@ export class SQLiteConversationDetailRepository
     let salesFlowState = row.state;
     let leadScore = row.lead_score;
     let matchKind: string | null = null;
+    let soundSystem: boolean | null =
+      typeof vehicleObj.soundSystem === 'boolean' ? vehicleObj.soundSystem : null;
 
     try {
       if (row.sales_flow_json) {
@@ -192,12 +212,22 @@ export class SQLiteConversationDetailRepository
           state?: string;
           leadScore?: number;
           matchKind?: string;
-          vehicle?: { brand?: string; model?: string; year?: string };
+          vehicle?: {
+            brand?: string;
+            model?: string;
+            year?: string;
+            soundSystem?: boolean;
+          };
         };
         if (sales.state) salesFlowState = sales.state;
         if (typeof sales.leadScore === 'number') leadScore = sales.leadScore;
         if (sales.matchKind) matchKind = sales.matchKind;
-        if (sales.vehicle && !vehicleObj.brand) vehicleObj = sales.vehicle;
+        if (sales.vehicle) {
+          if (!vehicleObj.brand) vehicleObj = { ...vehicleObj, ...sales.vehicle };
+          if (typeof sales.vehicle.soundSystem === 'boolean') {
+            soundSystem = sales.vehicle.soundSystem;
+          }
+        }
       }
     } catch {
       /* ignore */
@@ -221,16 +251,27 @@ export class SQLiteConversationDetailRepository
           metadata?: { customerName?: string };
         }>;
         context?: {
-          vehicle?: { brand?: string; model?: string; year?: string };
+          vehicle?: {
+            brand?: string;
+            model?: string;
+            year?: string;
+            soundSystem?: boolean;
+          };
+          battery?: { soundSystem?: boolean };
           lastRecommendedReference?: string;
-          salesFlow?: { matchKind?: string; state?: string; leadScore?: number };
+          salesFlow?: {
+            matchKind?: string;
+            state?: string;
+            leadScore?: number;
+            vehicle?: { soundSystem?: boolean };
+          };
         };
       };
 
       if (conv.createdAt) createdAt = new Date(conv.createdAt).toISOString();
       if (conv.updatedAt) updatedAt = new Date(conv.updatedAt).toISOString();
       if (!vehicleObj.brand && conv.context?.vehicle) {
-        vehicleObj = conv.context.vehicle;
+        vehicleObj = { ...vehicleObj, ...conv.context.vehicle };
       }
       if (!recommendedReference && conv.context?.lastRecommendedReference) {
         recommendedReference = conv.context.lastRecommendedReference;
@@ -246,6 +287,15 @@ export class SQLiteConversationDetailRepository
         leadScore == null
       ) {
         leadScore = conv.context.salesFlow.leadScore;
+      }
+      if (soundSystem === null) {
+        if (typeof conv.context?.battery?.soundSystem === 'boolean') {
+          soundSystem = conv.context.battery.soundSystem;
+        } else if (typeof conv.context?.salesFlow?.vehicle?.soundSystem === 'boolean') {
+          soundSystem = conv.context.salesFlow.vehicle.soundSystem;
+        } else if (typeof conv.context?.vehicle?.soundSystem === 'boolean') {
+          soundSystem = conv.context.vehicle.soundSystem;
+        }
       }
 
       const named = conv.messages?.find((m) => m.metadata?.customerName)?.metadata
@@ -286,7 +336,10 @@ export class SQLiteConversationDetailRepository
       waId: row.wa_id,
       vehicle: [vehicleObj.brand, vehicleObj.model].filter(Boolean).join(' ') || null,
       year: vehicleObj.year?.trim() || null,
+      soundSystem,
       recommendedReference,
+      amperage: null,
+      caseType: null,
       matchKind,
       leadScore: leadScore ?? null,
       salesFlowState,
@@ -347,7 +400,10 @@ export class SQLiteConversationDetailRepository
         [withVehicle?.brand, withVehicle?.model].filter(Boolean).join(' ') ||
         null,
       year: withVehicle?.year ?? null,
+      soundSystem: null,
       recommendedReference: withRef?.reference ?? null,
+      amperage: null,
+      caseType: null,
       matchKind: withMatch?.match_kind ?? null,
       leadScore: null,
       salesFlowState: withState?.sales_state ?? 'UNKNOWN',

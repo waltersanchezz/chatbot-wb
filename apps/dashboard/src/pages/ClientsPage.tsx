@@ -1,5 +1,5 @@
-import { useEffect, useState } from 'react'
-import { useQuery } from '@tanstack/react-query'
+import { useEffect, useMemo, useState } from 'react'
+import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { useSearchParams } from 'react-router-dom'
 import { buildWhatsAppLink } from '../api/conversationsApi'
 import {
@@ -7,13 +7,24 @@ import {
   fetchClients,
   type ClientDto,
 } from '../api/clientsApi'
+import {
+  fetchLeads,
+  patchLeadStatus,
+  type LeadListItem,
+} from '../api/leadsApi'
 import { Card } from '../components/Card'
+import { CommercialStatusSelect } from '../components/CommercialStatusSelect'
 import { DataTable, type DataTableColumn } from '../components/DataTable'
 import { EmptyState } from '../components/EmptyState'
 import { Loading } from '../components/Loading'
 import { PageSkeleton } from '../components/Skeleton'
 import { QueryError } from '../components/QueryError'
 import { InterestBadge, SalesFlowBadge } from '../components/StatusBadge'
+import {
+  leadStatusPatchPath,
+  pickLeadForPhone,
+  type CommercialStatus,
+} from '../lib/commercialLeadStatus'
 import {
   customerDisplayName,
   formatDateTime,
@@ -22,54 +33,8 @@ import {
   isTechnicalPhoneId,
 } from '../lib/operatorDisplay'
 
-const columns: DataTableColumn<ClientDto>[] = [
-  {
-    key: 'cliente',
-    header: 'Cliente',
-    cell: (row) => (
-      <div>
-        <p className="font-medium text-ink">
-          {customerDisplayName(row.nombre, row.waId)}
-        </p>
-        <p className="text-xs text-ink-muted">
-          {formatPhoneDisplay(row.waId)}
-        </p>
-      </div>
-    ),
-  },
-  {
-    key: 'conversaciones',
-    header: 'Conversaciones',
-    cell: (row) => (
-      <span className="text-sm tabular-nums text-ink">
-        {row.cantidadConversaciones}
-      </span>
-    ),
-  },
-  {
-    key: 'lead',
-    header: 'Interés',
-    cell: (row) => <InterestBadge score={row.leadPromedio} />,
-  },
-  {
-    key: 'estado',
-    header: 'Último estado',
-    cell: (row) => (
-      <SalesFlowBadge state={row.estadoUltimaConversacion} />
-    ),
-  },
-  {
-    key: 'actividad',
-    header: 'Última actividad',
-    cell: (row) => (
-      <span className="text-sm text-ink-muted">
-        {formatDateTime(row.ultimaActividad)}
-      </span>
-    ),
-  },
-]
-
 export function ClientsPage() {
+  const queryClient = useQueryClient()
   const [searchParams] = useSearchParams()
   const initialQ = searchParams.get('q')?.trim() ?? ''
   const [search, setSearch] = useState(initialQ)
@@ -80,6 +45,7 @@ export function ClientsPage() {
   const [sortOrder, setSortOrder] = useState<'asc' | 'desc'>('desc')
   const [page, setPage] = useState(1)
   const [selectedId, setSelectedId] = useState<string | null>(null)
+  const [statusError, setStatusError] = useState<string | null>(null)
 
   useEffect(() => {
     const t = window.setTimeout(() => {
@@ -99,6 +65,12 @@ export function ClientsPage() {
         sortBy,
         sortOrder,
       }),
+    placeholderData: (prev) => prev,
+  })
+
+  const leadsQuery = useQuery({
+    queryKey: ['api', 'leads'],
+    queryFn: fetchLeads,
   })
 
   const detailQuery = useQuery({
@@ -107,11 +79,131 @@ export function ClientsPage() {
     enabled: Boolean(selectedId),
   })
 
-  if (query.isLoading) {
+  const statusMutation = useMutation({
+    mutationFn: async (input: {
+      lead: LeadListItem
+      label: CommercialStatus
+    }) => {
+      const path = leadStatusPatchPath(input.lead.status, input.label)
+      let last = input.lead
+      for (const status of path) {
+        last = await patchLeadStatus(
+          input.lead.id,
+          status,
+          status === 'perdido' ? { lostReason: 'No interesado' } : undefined,
+        )
+      }
+      return last
+    },
+    onSuccess: async () => {
+      setStatusError(null)
+      await queryClient.invalidateQueries({ queryKey: ['api', 'leads'] })
+    },
+    onError: (err: Error & { status?: number }) => {
+      setStatusError(
+        err.status === 409
+          ? 'Ese cambio de estado no está permitido.'
+          : 'No se pudo actualizar el estado.',
+      )
+    },
+  })
+
+  const leads = leadsQuery.data ?? []
+
+  const columns = useMemo<DataTableColumn<ClientDto>[]>(
+    () => [
+      {
+        key: 'nombre',
+        header: 'Nombre',
+        cell: (row) => (
+          <span className="font-medium text-ink">
+            {customerDisplayName(row.nombre, row.waId)}
+          </span>
+        ),
+      },
+      {
+        key: 'telefono',
+        header: 'Teléfono',
+        cell: (row) => (
+          <span className="text-sm text-ink-muted">
+            {formatPhoneDisplay(row.waId)}
+          </span>
+        ),
+      },
+      {
+        key: 'vehiculo',
+        header: 'Vehículo',
+        cell: (row) => (
+          <span className="text-sm text-ink">
+            {row.ultimoVehiculo?.trim() || '—'}
+          </span>
+        ),
+      },
+      {
+        key: 'referencia',
+        header: 'Referencia recomendada',
+        cell: (row) => (
+          <span className="text-sm font-medium text-ink">
+            {row.ultimaReferencia
+              ? formatWillardReference(row.ultimaReferencia)
+              : '—'}
+          </span>
+        ),
+      },
+      {
+        key: 'estado',
+        header: 'Estado',
+        cell: (row) => (
+          <CommercialStatusSelect
+            lead={pickLeadForPhone(leads, row.waId)}
+            disabled={statusMutation.isPending}
+            onChange={(label, lead) => {
+              statusMutation.mutate({ lead, label })
+            }}
+          />
+        ),
+      },
+      {
+        key: 'actividad',
+        header: 'Última actividad',
+        cell: (row) => (
+          <span className="text-sm text-ink-muted">
+            {formatDateTime(row.ultimaActividad)}
+          </span>
+        ),
+      },
+      {
+        key: 'whatsapp',
+        header: 'WhatsApp',
+        cell: (row) => {
+          const canOpen = !isTechnicalPhoneId(row.waId)
+          if (!canOpen) {
+            return (
+              <span className="text-xs text-ink-muted">No disponible</span>
+            )
+          }
+          return (
+            <a
+              href={buildWhatsAppLink(row.waId)}
+              target="_blank"
+              rel="noopener noreferrer"
+              onClick={(e) => e.stopPropagation()}
+              className="inline-flex rounded-lg bg-ok px-2.5 py-1.5 text-xs font-semibold text-white hover:bg-ok/90"
+            >
+              Abrir WhatsApp
+            </a>
+          )
+        },
+      },
+    ],
+    [leads, statusMutation.isPending, statusMutation.mutate],
+  )
+
+  if (query.isLoading && !query.data) {
     return <PageSkeleton rows={6} />
   }
 
-  if (query.isError || !query.data) {
+  if (query.isError && !query.data) {
     return (
       <QueryError
         title="No se pudieron cargar los clientes"
@@ -122,6 +214,16 @@ export function ClientsPage() {
   }
 
   const data = query.data
+  if (!data) {
+    return <PageSkeleton rows={6} />
+  }
+
+  const selectedLead = selectedId
+    ? pickLeadForPhone(
+        leads,
+        detailQuery.data?.waId ?? selectedId,
+      )
+    : null
 
   return (
     <>
@@ -131,15 +233,16 @@ export function ClientsPage() {
         action={
           <div className="flex flex-wrap items-center gap-2">
             <label className="sr-only" htmlFor="client-search">
-              Buscar
+              Buscar por nombre, teléfono o vehículo
             </label>
             <input
               id="client-search"
               type="search"
               value={search}
               onChange={(e) => setSearch(e.target.value)}
-              placeholder="Buscar nombre, teléfono, estado…"
-              className="w-full rounded-lg border border-line bg-panel px-3 py-2 text-sm text-ink outline-none ring-accent focus:ring-2 sm:w-56"
+              placeholder="Nombre, teléfono o vehículo…"
+              autoComplete="off"
+              className="w-full rounded-lg border border-line bg-panel px-3 py-2 text-sm text-ink outline-none ring-accent focus:ring-2 sm:w-64"
             />
             <select
               value={`${sortBy}:${sortOrder}`}
@@ -166,18 +269,31 @@ export function ClientsPage() {
           </div>
         }
       >
-        <DataTable
-          columns={columns}
-          rows={data.items}
-          rowKey={(row) => row.id}
-          onRowClick={(row) => setSelectedId(row.id)}
-          emptyTitle="Sin clientes todavía"
-          emptyDescription={
-            debouncedQ
-              ? 'Ningún resultado para esa búsqueda.'
-              : 'Cuando un cliente escriba por WhatsApp, aparecerá aquí.'
+        {statusError ? (
+          <p className="mb-3 text-sm text-danger" role="alert">
+            {statusError}
+          </p>
+        ) : null}
+        <div
+          className={
+            query.isFetching && query.isPlaceholderData
+              ? 'opacity-60 transition-opacity'
+              : 'transition-opacity'
           }
-        />
+        >
+          <DataTable
+            columns={columns}
+            rows={data.items}
+            rowKey={(row) => row.id}
+            onRowClick={(row) => setSelectedId(row.id)}
+            emptyTitle="Sin clientes todavía"
+            emptyDescription={
+              debouncedQ
+                ? 'Ningún resultado para nombre, teléfono o vehículo.'
+                : 'Cuando un cliente escriba por WhatsApp, aparecerá aquí.'
+            }
+          />
+        </div>
 
         {data.totalPages > 1 ? (
           <div className="mt-4 flex items-center justify-between border-t border-line pt-4 text-sm">
@@ -212,6 +328,11 @@ export function ClientsPage() {
           loading={detailQuery.isLoading}
           error={detailQuery.isError}
           detail={detailQuery.data}
+          lead={selectedLead}
+          statusPending={statusMutation.isPending}
+          onStatusChange={(label, lead) => {
+            statusMutation.mutate({ lead, label })
+          }}
           onClose={() => setSelectedId(null)}
         />
       ) : null}
@@ -224,12 +345,18 @@ function ClientDetailDrawer({
   loading,
   error,
   detail,
+  lead,
+  statusPending,
+  onStatusChange,
   onClose,
 }: {
   open: boolean
   loading: boolean
   error: boolean
   detail: Awaited<ReturnType<typeof fetchClientDetail>> | undefined
+  lead: LeadListItem | null
+  statusPending: boolean
+  onStatusChange: (label: CommercialStatus, lead: LeadListItem) => void
   onClose: () => void
 }) {
   useEffect(() => {
@@ -300,6 +427,14 @@ function ClientDetailDrawer({
           {detail && !loading ? (
             <div className="space-y-6">
               <section className="space-y-3 rounded-xl border border-line bg-surface/50 px-4 py-3">
+                <div className="flex items-center justify-between gap-3 text-sm">
+                  <span className="text-ink-muted">Estado comercial</span>
+                  <CommercialStatusSelect
+                    lead={lead}
+                    disabled={statusPending}
+                    onChange={onStatusChange}
+                  />
+                </div>
                 <div className="flex items-center justify-between gap-3 text-sm">
                   <span className="text-ink-muted">Interés</span>
                   <InterestBadge score={detail.leadPromedio} />

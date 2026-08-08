@@ -1,4 +1,5 @@
 import { apiFetch } from './http'
+import { phoneDigits } from '../lib/operatorDisplay'
 
 export interface ConversationListItemDto {
   id: string
@@ -32,6 +33,10 @@ export interface ConversationsQuery {
   sortOrder?: 'asc' | 'desc'
 }
 
+/**
+ * Lista real de conversaciones (backend SQLite).
+ * No hay fallback a mocks: si falla, el caller muestra error/vacío.
+ */
 export async function fetchConversations(
   params: ConversationsQuery = {},
 ): Promise<ConversationListDto> {
@@ -47,7 +52,20 @@ export async function fetchConversations(
   if (!res.ok) {
     throw new Error(`Conversations API ${res.status}`)
   }
-  return (await res.json()) as ConversationListDto
+  const body = (await res.json()) as Partial<ConversationListDto>
+  if (!body || !Array.isArray(body.items)) {
+    throw new Error('Conversations API: respuesta inválida')
+  }
+  return {
+    items: body.items,
+    page: body.page ?? params.page ?? 1,
+    pageSize: body.pageSize ?? params.pageSize ?? 20,
+    total: body.total ?? body.items.length,
+    totalPages: body.totalPages ?? 1,
+    query: body.query ?? null,
+    sortBy: body.sortBy ?? params.sortBy ?? 'lastActivityAt',
+    sortOrder: body.sortOrder ?? params.sortOrder ?? 'desc',
+  }
 }
 
 export type ConversationMessageSender = 'bot' | 'customer'
@@ -65,7 +83,10 @@ export interface ConversationDetailDto {
   waId: string
   vehicle: string | null
   year: string | null
+  soundSystem: boolean | null
   recommendedReference: string | null
+  amperage: string | null
+  caseType: string | null
   matchKind: string | null
   leadScore: number | null
   salesFlowState: string
@@ -87,9 +108,9 @@ export async function fetchConversationDetail(
   return (await res.json()) as ConversationDetailDto
 }
 
-/** Construye enlace wa.me a partir del waId persistido (p.ej. wa:+57300…). */
+/** Construye enlace wa.me a partir del waId persistido (wa: / whatsapp: / +57…). */
 export function buildWhatsAppLink(waId: string): string {
-  const digits = waId.replace(/^wa:/i, '').replace(/\D/g, '')
+  const digits = phoneDigits(waId)
   if (digits.length < 8) return '#'
   return `https://wa.me/${digits}`
 }

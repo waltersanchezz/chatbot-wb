@@ -158,6 +158,48 @@ describe('CRM leadRoutes HTTP', () => {
     expect(res.status).toBe(404);
   });
 
+  it('PATCH status cotizado → vendido persiste y audita lead.status_changed', async () => {
+    const lead = await seedLead();
+    const quoted = await fetch(`${baseUrl}/api/leads/${lead.id}/status`, {
+      method: 'PATCH',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ status: 'cotizado' }),
+    });
+    expect(quoted.status).toBe(200);
+
+    const sold = await fetch(`${baseUrl}/api/leads/${lead.id}/status`, {
+      method: 'PATCH',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ status: 'vendido' }),
+    });
+    expect(sold.status).toBe(200);
+    const body = (await sold.json()) as { status: string };
+    expect(body.status).toBe('vendido');
+
+    const noteRes = await fetch(`${baseUrl}/api/leads/${lead.id}/notes`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ note: 'Venta cerrada — referencia: 24BD-900' }),
+    });
+    expect(noteRes.status).toBe(200);
+    const noted = (await noteRes.json()) as { status: string; notes: string };
+    expect(noted.status).toBe('vendido');
+    expect(noted.notes).toContain('Venta cerrada — referencia: 24BD-900');
+
+    const eventsRes = await fetch(`${baseUrl}/api/leads/${lead.id}/events`);
+    expect(eventsRes.status).toBe(200);
+    const events = (await eventsRes.json()) as {
+      items: Array<{ type: string; payload?: { from?: string; to?: string } }>;
+    };
+    const statusEvents = events.items.filter((e) => e.type === 'lead.status_changed');
+    expect(statusEvents.some((e) => e.payload?.to === 'cotizado')).toBe(true);
+    expect(
+      statusEvents.some(
+        (e) => e.payload?.from === 'cotizado' && e.payload?.to === 'vendido',
+      ),
+    ).toBe(true);
+  });
+
   it('PATCH status usa changeStatus; transición ilegal → 409', async () => {
     const lead = await seedLead();
     const ok = await fetch(`${baseUrl}/api/leads/${lead.id}/status`, {

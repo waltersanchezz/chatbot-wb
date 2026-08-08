@@ -89,6 +89,7 @@ describe('SQLiteClientRepository', () => {
     expect(carlos.cantidadVehiculos).toBe(2);
     expect(carlos.leadPromedio).toBe(80);
     expect(carlos.ultimaReferencia).toBeTruthy();
+    expect(carlos.ultimoVehiculo).toMatch(/MAZDA 2/i);
 
     expect(repo.list({ q: 'logan' }).total).toBe(1);
     expect(repo.list({ q: 'fake-log' }).total).toBe(1);
@@ -175,6 +176,7 @@ describe('GET /api/clients', () => {
       cantidadConversaciones: 1,
       leadPromedio: 88,
       ultimaReferencia: 'FAKE-LOG',
+      ultimoVehiculo: 'RENAULT Logan 2015',
       estadoUltimaConversacion: 'READY_FOR_ADVISOR',
     });
     expect(JSON.stringify(body)).not.toMatch(/SELECT|FROM persisted/i);

@@ -26,6 +26,8 @@ export function invalidateForRealtimeEvent(
       void queryClient.invalidateQueries({
         queryKey: ['api', 'conversation-detail'],
       })
+      void queryClient.invalidateQueries({ queryKey: ['api', 'clients'] })
+      void queryClient.invalidateQueries({ queryKey: ['api', 'client-detail'] })
       void queryClient.invalidateQueries({ queryKey: ['api', 'dashboard'] })
       break
     case 'client.created':

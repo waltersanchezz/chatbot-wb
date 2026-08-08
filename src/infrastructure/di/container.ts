@@ -238,6 +238,7 @@ export function buildContainer() {
   );
   const conversationDetailService = new ConversationDetailService(
     conversationDetailRepository,
+    willardCatalogKnowledge,
   );
 
   /** Client API (agregación por waId — Dashboard Sprint 4). */

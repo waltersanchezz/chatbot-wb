@@ -1,5 +1,6 @@
 import type { AddressInfo } from 'net';
 import type { Express } from 'express';
+import path from 'path';
 import { afterAll, beforeAll, describe, expect, it, vi } from 'vitest';
 import { ConversationDetailService } from '../../src/application/services/ConversationDetailService';
 import { ConversationService } from '../../src/application/services/ConversationService';
@@ -7,6 +8,7 @@ import { CustomerProfileService } from '../../src/application/services/CustomerP
 import { InteractionService } from '../../src/application/services/InteractionService';
 import { LeadService } from '../../src/application/services/LeadService';
 import { HandleIncomingMessage } from '../../src/application/use-cases/HandleIncomingMessage';
+import { CatalogFileWillardBatteryKnowledge } from '../../src/infrastructure/catalog/CatalogFileWillardBatteryKnowledge';
 import { SQLiteConversationDetailRepository } from '../../src/infrastructure/persistence/SQLiteConversationDetailRepository';
 import { SQLiteConversationRepository } from '../../src/infrastructure/persistence/SQLiteConversationRepository';
 import { FileLogRepository } from '../../src/infrastructure/persistence/FileLogRepository';
@@ -16,6 +18,8 @@ import { InMemoryLeadRepository } from '../../src/infrastructure/persistence/InM
 import { InMemoryProductRepository } from '../../src/infrastructure/persistence/InMemoryProductRepository';
 import { InMemoryVehicleProfileRepository } from '../../src/infrastructure/persistence/InMemoryVehicleProfileRepository';
 import { createApp } from '../../src/presentation/http/createApp';
+
+const fixtures = path.join(process.cwd(), 'tests', 'fixtures', 'willard');
 
 async function listen(app: Express): Promise<{
   baseUrl: string;
@@ -48,7 +52,8 @@ describe('SQLiteConversationDetailRepository', () => {
       leadScore: 75,
       matchKind: 'exact',
       lastReference: 'FAKE-LOG',
-      vehicle: { brand: 'RENAULT', model: 'Logan', year: '2015' },
+      vehicle: { brand: 'RENAULT', model: 'Logan', year: '2015', soundSystem: false },
+      soundSystem: false,
       customerName: 'Carlos Mejía',
       messages: [
         {
@@ -80,7 +85,10 @@ describe('SQLiteConversationDetailRepository', () => {
     expect(detail!.waId).toBe('wa:+573001112233');
     expect(detail!.vehicle).toBe('RENAULT Logan');
     expect(detail!.year).toBe('2015');
+    expect(detail!.soundSystem).toBe(false);
     expect(detail!.recommendedReference).toBe('FAKE-LOG');
+    expect(detail!.amperage).toBeNull();
+    expect(detail!.caseType).toBeNull();
     expect(detail!.matchKind).toBe('exact');
     expect(detail!.leadScore).toBe(75);
     expect(detail!.salesFlowState).toBe('WAITING_CONFIRMATION');
@@ -90,6 +98,52 @@ describe('SQLiteConversationDetailRepository', () => {
     expect(detail!.timeline[2]?.text).toBe('2015');
 
     expect(repo.findById('missing')).toBeNull();
+    repo.close();
+  });
+
+  it('enriquece amperaje y tipo de caja desde ficha Willard (solo lectura)', () => {
+    const repo = new SQLiteConversationDetailRepository(':memory:');
+    const knowledge = new CatalogFileWillardBatteryKnowledge(
+      path.join(fixtures, 'apps-mini.json'),
+      path.join(fixtures, 'refs-mini.json'),
+    );
+    const service = new ConversationDetailService(repo, knowledge);
+    const t0 = Date.UTC(2026, 6, 31, 12, 0, 0);
+
+    repo.upsertSession({
+      waId: 'wa:+573001110000',
+      conversationId: 'c-enrich-1',
+      state: 'READY_FOR_ADVISOR',
+      salesFlowState: 'READY_FOR_ADVISOR',
+      leadScore: 90,
+      matchKind: 'exact',
+      lastReference: 'W-L5-95AH',
+      vehicle: {
+        brand: 'BMW',
+        model: '320i',
+        year: '2015',
+        soundSystem: true,
+      },
+      customerName: 'Ana',
+      messages: [
+        {
+          id: 'm1',
+          role: 'customer',
+          content: 'BMW 320i 2015',
+          createdAt: t0,
+        },
+      ],
+      savedAt: t0,
+      updatedAt: t0,
+    });
+
+    const detail = service.getById('c-enrich-1');
+    expect(detail).toBeTruthy();
+    expect(detail!.soundSystem).toBe(true);
+    expect(detail!.recommendedReference).toBe('W-L5-95AH');
+    expect(detail!.amperage).toMatch(/95 Ah/);
+    expect(detail!.amperage).toMatch(/CCA/);
+    expect(detail!.caseType).toBeTruthy();
     repo.close();
   });
 });
@@ -175,12 +229,18 @@ describe('GET /api/conversations/:id', () => {
       timeline: Array<{ sender: string; text: string }>;
       leadScore: number;
       matchKind: string;
+      soundSystem: boolean | null;
+      amperage: string | null;
+      caseType: string | null;
     };
 
     expect(body.id).toBe('c-http-detail');
     expect(body.waId).toBe('wa:+573009998887');
     expect(body.leadScore).toBe(91);
     expect(body.matchKind).toBe('similar');
+    expect(body.soundSystem).toBeNull();
+    expect(body.amperage).toBeNull();
+    expect(body.caseType).toBeNull();
     expect(body.timeline).toHaveLength(2);
     expect(body.timeline[1]?.sender).toBe('bot');
     expect(JSON.stringify(body)).not.toMatch(/SELECT|FROM persisted/i);

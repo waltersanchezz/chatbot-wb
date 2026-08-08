@@ -63,7 +63,6 @@ export class MemoryWhatsAppMessageIdempotency implements WhatsAppIdempotencyGate
  */
 export class FileWhatsAppMessageIdempotency implements WhatsAppIdempotencyGate {
   private readonly seen = new Map<string, number>();
-  private loaded = false;
 
   constructor(
     private readonly filePath: string,
@@ -71,7 +70,9 @@ export class FileWhatsAppMessageIdempotency implements WhatsAppIdempotencyGate {
   ) {}
 
   claim(messageId: string, now = Date.now()): boolean {
-    this.ensureLoaded(now);
+    // Releer disco en cada claim: reduce carrera entre reinicios / instancias
+    // que comparten el mismo archivo de wamids.
+    this.mergeFromDisk(now);
     const id = messageId.trim();
     if (!id) return true;
 
@@ -85,13 +86,12 @@ export class FileWhatsAppMessageIdempotency implements WhatsAppIdempotencyGate {
 
   /** Recarga forzada desde disco (tests de “reinicio”). */
   reloadFromDisk(now = Date.now()): void {
-    this.loaded = false;
     this.seen.clear();
-    this.ensureLoaded(now);
+    this.mergeFromDisk(now);
   }
 
   size(): number {
-    this.ensureLoaded();
+    this.mergeFromDisk();
     return this.seen.size;
   }
 
@@ -100,10 +100,7 @@ export class FileWhatsAppMessageIdempotency implements WhatsAppIdempotencyGate {
     this.persist();
   }
 
-  private ensureLoaded(now = Date.now()): void {
-    if (this.loaded) return;
-    this.loaded = true;
-
+  private mergeFromDisk(now = Date.now()): void {
     try {
       if (!fs.existsSync(this.filePath)) return;
       const raw = fs.readFileSync(this.filePath, 'utf8');
@@ -111,11 +108,12 @@ export class FileWhatsAppMessageIdempotency implements WhatsAppIdempotencyGate {
       if (parsed?.version !== 1 || typeof parsed.entries !== 'object') return;
       for (const [id, ts] of Object.entries(parsed.entries)) {
         if (typeof ts === 'number' && now - ts <= this.ttlMs) {
-          this.seen.set(id, ts);
+          const prev = this.seen.get(id);
+          if (prev === undefined || ts < prev) this.seen.set(id, ts);
         }
       }
     } catch {
-      // Archivo corrupto: empezar limpio; no tumbar el webhook.
+      // Archivo corrupto: conservar memoria; no tumbar el webhook.
     }
   }
 

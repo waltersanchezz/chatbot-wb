@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react'
-import { useQuery } from '@tanstack/react-query'
+import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { useSearchParams } from 'react-router-dom'
 import {
   buildWhatsAppLink,
@@ -8,7 +8,14 @@ import {
   type ConversationDetailDto,
   type ConversationListItemDto,
 } from '../api/conversationsApi'
+import {
+  fetchLeads,
+  patchLeadStatus,
+  postLeadNote,
+  type LeadListItem,
+} from '../api/leadsApi'
 import { Card } from '../components/Card'
+import { CommercialStatusSelect } from '../components/CommercialStatusSelect'
 import { DataTable, type DataTableColumn } from '../components/DataTable'
 import { EmptyState } from '../components/EmptyState'
 import { Loading } from '../components/Loading'
@@ -20,12 +27,21 @@ import {
   SalesFlowBadge,
 } from '../components/StatusBadge'
 import {
+  isTerminalLeadStatus,
+  leadStatusPatchPath,
+  leadStatusToCommercial,
+  pickLeadForPhone,
+  type CommercialStatus,
+} from '../lib/commercialLeadStatus'
+import {
   buildCommercialMilestones,
   customerDisplayName,
   formatDateTime,
   formatPhoneDisplay,
+  formatSoundSystem,
   formatWillardReference,
   isTechnicalPhoneId,
+  salesFlowLabel,
 } from '../lib/operatorDisplay'
 
 const columns: DataTableColumn<ConversationListItemDto>[] = [
@@ -86,6 +102,7 @@ const columns: DataTableColumn<ConversationListItemDto>[] = [
 ]
 
 export function ConversationsPage() {
+  const queryClient = useQueryClient()
   const [searchParams] = useSearchParams()
   const initialQ = searchParams.get('q')?.trim() ?? ''
   const [search, setSearch] = useState(initialQ)
@@ -96,6 +113,7 @@ export function ConversationsPage() {
   const [sortOrder, setSortOrder] = useState<'asc' | 'desc'>('desc')
   const [page, setPage] = useState(1)
   const [selectedId, setSelectedId] = useState<string | null>(null)
+  const [statusError, setStatusError] = useState<string | null>(null)
 
   useEffect(() => {
     const t = window.setTimeout(() => {
@@ -105,6 +123,7 @@ export function ConversationsPage() {
     return () => window.clearTimeout(t)
   }, [search])
 
+  /** Fuente única: GET /api/conversations. Sin mocks ni placeholders demo. */
   const query = useQuery({
     queryKey: ['api', 'conversations', debouncedQ, sortBy, sortOrder, page],
     queryFn: () =>
@@ -115,29 +134,88 @@ export function ConversationsPage() {
         sortBy,
         sortOrder,
       }),
+    staleTime: 0,
+    gcTime: 0,
+    refetchOnMount: 'always',
+    refetchOnWindowFocus: true,
+    retry: 1,
+  })
+
+  const leadsQuery = useQuery({
+    queryKey: ['api', 'leads'],
+    queryFn: fetchLeads,
   })
 
   const detailQuery = useQuery({
     queryKey: ['api', 'conversation-detail', selectedId],
     queryFn: () => fetchConversationDetail(selectedId!),
     enabled: Boolean(selectedId),
+    staleTime: 0,
+    refetchOnMount: 'always',
+  })
+
+  const statusMutation = useMutation({
+    mutationFn: async (input: {
+      lead: LeadListItem
+      label: CommercialStatus
+      note?: string
+    }) => {
+      const path = leadStatusPatchPath(input.lead.status, input.label)
+      let last = input.lead
+      for (const status of path) {
+        last = await patchLeadStatus(
+          input.lead.id,
+          status,
+          status === 'perdido' ? { lostReason: 'No interesado' } : undefined,
+        )
+      }
+      const note = input.note?.trim()
+      if (note) {
+        last = await postLeadNote(input.lead.id, note)
+      }
+      return last
+    },
+    onSuccess: async () => {
+      setStatusError(null)
+      await queryClient.invalidateQueries({ queryKey: ['api', 'leads'] })
+    },
+    onError: (err: Error & { status?: number }) => {
+      setStatusError(
+        err.status === 409
+          ? 'Ese cambio de estado no está permitido.'
+          : 'No se pudo actualizar el estado.',
+      )
+    },
   })
 
   if (query.isLoading) {
     return <PageSkeleton rows={6} />
   }
 
-  if (query.isError || !query.data) {
+  if (query.isError) {
     return (
       <QueryError
         title="No se pudieron cargar las conversaciones"
-        description="Revisa tu conexión o vuelve a iniciar sesión."
+        description="No hay datos de demostración: revisa tu conexión o vuelve a iniciar sesión."
         onRetry={() => void query.refetch()}
       />
     )
   }
 
+  if (!query.data) {
+    return (
+      <EmptyState
+        title="Sin conversaciones"
+        description="Cuando un cliente escriba por WhatsApp, aparecerá aquí."
+      />
+    )
+  }
+
   const data = query.data
+  const leads = leadsQuery.data ?? []
+  const selectedLead = detailQuery.data
+    ? pickLeadForPhone(leads, detailQuery.data.waId)
+    : null
 
   return (
     <>
@@ -178,11 +256,19 @@ export function ConversationsPage() {
           </div>
         }
       >
+        {statusError ? (
+          <p className="mb-3 text-sm text-danger" role="alert">
+            {statusError}
+          </p>
+        ) : null}
         <DataTable
           columns={columns}
           rows={data.items}
           rowKey={(row) => row.id}
-          onRowClick={(row) => setSelectedId(row.id)}
+          onRowClick={(row) => {
+            setStatusError(null)
+            setSelectedId(row.id)
+          }}
           emptyTitle="No hay conversaciones todavía"
           emptyDescription={
             debouncedQ
@@ -224,6 +310,14 @@ export function ConversationsPage() {
           loading={detailQuery.isLoading}
           error={detailQuery.isError}
           detail={detailQuery.data}
+          lead={selectedLead}
+          statusPending={statusMutation.isPending}
+          onStatusChange={(label, lead) => {
+            statusMutation.mutate({ lead, label })
+          }}
+          onCloseSale={(lead, note) => {
+            statusMutation.mutate({ lead, label: 'Vendido', note })
+          }}
           onClose={() => setSelectedId(null)}
         />
       ) : null}
@@ -236,22 +330,53 @@ function ConversationDetailDrawer({
   loading,
   error,
   detail,
+  lead,
+  statusPending,
+  onStatusChange,
+  onCloseSale,
   onClose,
 }: {
   open: boolean
   loading: boolean
   error: boolean
   detail: ConversationDetailDto | undefined
+  lead: LeadListItem | null
+  statusPending: boolean
+  onStatusChange: (label: CommercialStatus, lead: LeadListItem) => void
+  onCloseSale: (lead: LeadListItem, note?: string) => void
   onClose: () => void
 }) {
+  const [closingSale, setClosingSale] = useState(false)
+  const [saleNote, setSaleNote] = useState('')
+
   useEffect(() => {
     if (!open) return
     const onKey = (e: KeyboardEvent) => {
-      if (e.key === 'Escape') onClose()
+      if (e.key === 'Escape') {
+        if (closingSale) setClosingSale(false)
+        else onClose()
+      }
     }
     window.addEventListener('keydown', onKey)
     return () => window.removeEventListener('keydown', onKey)
-  }, [open, onClose])
+  }, [open, onClose, closingSale])
+
+  useEffect(() => {
+    if (!open || !lead || !detail) return
+    if (isTerminalLeadStatus(lead.status)) {
+      setClosingSale(false)
+      return
+    }
+    const ref =
+      detail.recommendedReference?.trim() ||
+      lead.recommendation?.trim() ||
+      ''
+    setSaleNote(
+      ref
+        ? `Venta cerrada — referencia: ${formatWillardReference(ref)}`
+        : 'Venta cerrada',
+    )
+  }, [open, lead?.id, lead?.status, detail?.recommendedReference, lead?.recommendation])
 
   if (!open) return null
 
@@ -268,6 +393,22 @@ function ConversationDetailDrawer({
         matchKind: detail.matchKind,
       })
     : []
+  const canCloseSale =
+    Boolean(lead) && lead !== null && !isTerminalLeadStatus(lead.status)
+  const isSold = lead ? leadStatusToCommercial(lead.status) === 'Vendido' : false
+
+  const requestCloseSale = () => {
+    if (!lead || isTerminalLeadStatus(lead.status)) return
+    setClosingSale(true)
+  }
+
+  const handleStatusChange = (label: CommercialStatus, target: LeadListItem) => {
+    if (label === 'Vendido') {
+      requestCloseSale()
+      return
+    }
+    onStatusChange(label, target)
+  }
 
   return (
     <div className="fixed inset-0 z-40 flex justify-end">
@@ -326,26 +467,114 @@ function ConversationDetailDrawer({
                   <MatchBadge matchKind={detail.matchKind} />
                 </div>
                 <DetailRow
-                  label="Vehículo"
-                  value={
-                    detail.vehicle
-                      ? `${detail.vehicle}${detail.year ? ` · ${detail.year}` : ''}`
-                      : 'Sin vehículo'
-                  }
+                  label="Cliente"
+                  value={customerDisplayName(detail.customerName, detail.waId)}
                 />
                 <DetailRow
-                  label="Batería Willard"
+                  label="Teléfono"
+                  value={formatPhoneDisplay(detail.waId)}
+                />
+                <DetailRow
+                  label="Vehículo"
+                  value={detail.vehicle?.trim() || '—'}
+                />
+                <DetailRow label="Año" value={detail.year?.trim() || '—'} />
+                <DetailRow
+                  label="Planta de sonido"
+                  value={formatSoundSystem(detail.soundSystem)}
+                />
+                <DetailRow
+                  label="Referencia recomendada"
                   value={formatWillardReference(detail.recommendedReference)}
+                />
+                <DetailRow
+                  label="Amperaje"
+                  value={detail.amperage?.trim() || '—'}
+                />
+                <DetailRow
+                  label="Tipo de caja"
+                  value={detail.caseType?.trim() || '—'}
+                />
+                <div className="flex items-center justify-between gap-3 text-sm">
+                  <span className="shrink-0 text-ink-muted">Estado comercial</span>
+                  <CommercialStatusSelect
+                    lead={lead}
+                    disabled={statusPending}
+                    onChange={handleStatusChange}
+                  />
+                </div>
+                <DetailRow
+                  label="Estado del flujo"
+                  value={salesFlowLabel(detail.salesFlowState)}
                 />
                 <DetailRow
                   label="Última actividad"
                   value={formatDateTime(detail.updatedAt)}
                 />
-                <DetailRow
-                  label="Inicio"
-                  value={formatDateTime(detail.createdAt)}
-                />
               </section>
+
+              {canCloseSale || isSold ? (
+                <section className="space-y-3 rounded-xl border border-line px-4 py-3">
+                  <h3 className="text-sm font-semibold text-ink">Cierre comercial</h3>
+                  {isSold ? (
+                    <p className="text-sm text-ok">
+                      Oportunidad marcada como vendida.
+                      {lead?.notes?.trim() ? (
+                        <span className="mt-1 block text-xs text-ink-muted whitespace-pre-wrap">
+                          {lead.notes.trim()}
+                        </span>
+                      ) : null}
+                    </p>
+                  ) : closingSale ? (
+                    <div className="space-y-3">
+                      <p className="text-sm text-ink">
+                        ¿Confirmas que esta oportunidad fue vendida?
+                      </p>
+                      <label className="block text-xs text-ink-muted" htmlFor="sale-note">
+                        Nota opcional (sin precio ni factura)
+                      </label>
+                      <textarea
+                        id="sale-note"
+                        value={saleNote}
+                        onChange={(e) => setSaleNote(e.target.value)}
+                        rows={3}
+                        className="w-full rounded-lg border border-line bg-panel px-3 py-2 text-sm text-ink outline-none ring-accent focus:ring-2"
+                      />
+                      <div className="flex flex-wrap gap-2">
+                        <button
+                          type="button"
+                          disabled={statusPending || !lead}
+                          onClick={() => {
+                            if (!lead) return
+                            onCloseSale(lead, saleNote.trim() || undefined)
+                            setClosingSale(false)
+                          }}
+                          className="rounded-lg bg-ok px-3 py-2 text-sm font-semibold text-white hover:bg-ok/90 disabled:opacity-50"
+                        >
+                          Confirmar venta
+                        </button>
+                        <button
+                          type="button"
+                          disabled={statusPending}
+                          onClick={() => setClosingSale(false)}
+                          className="rounded-lg border border-line px-3 py-2 text-sm text-ink-muted hover:bg-surface"
+                        >
+                          Cancelar
+                        </button>
+                      </div>
+                    </div>
+                  ) : (
+                    <button
+                      type="button"
+                      disabled={statusPending || !lead}
+                      onClick={requestCloseSale}
+                      className="w-full rounded-lg border border-ok/30 bg-ok/10 px-3 py-2.5 text-sm font-semibold text-ok hover:bg-ok/15 disabled:opacity-50"
+                    >
+                      Cerrar venta
+                    </button>
+                  )}
+                </section>
+              ) : null}
 
               {milestones.length > 0 ? (
                 <section>
@@ -380,7 +609,7 @@ function ConversationDetailDrawer({
 
               <section>
                 <h3 className="mb-3 text-sm font-semibold text-ink">
-                  Mensajes
+                  Historial de mensajes
                 </h3>
                 {detail.timeline.length === 0 ? (
                   <EmptyState
@@ -437,17 +666,25 @@ function ConversationDetailDrawer({
             href={waHref}
             target="_blank"
             rel="noopener noreferrer"
+            aria-label={
+              canOpenWa
+                ? `Abrir WhatsApp con ${formatPhoneDisplay(detail?.waId)}`
+                : 'WhatsApp no disponible'
+            }
             aria-disabled={!canOpenWa}
             className={[
-              'flex w-full items-center justify-center rounded-lg px-4 py-2.5 text-sm font-semibold transition',
+              'flex w-full flex-col items-center justify-center rounded-lg px-4 py-2.5 text-sm font-semibold transition',
               canOpenWa
                 ? 'bg-ok text-white hover:bg-ok/90'
                 : 'pointer-events-none bg-surface text-ink-muted',
             ].join(' ')}
           >
-            {canOpenWa
-              ? `Contactar por WhatsApp · ${formatPhoneDisplay(detail?.waId)}`
-              : 'WhatsApp no disponible'}
+            <span>{canOpenWa ? 'Abrir WhatsApp' : 'WhatsApp no disponible'}</span>
+            {canOpenWa ? (
+              <span className="mt-0.5 text-xs font-medium text-white/90">
+                {formatPhoneDisplay(detail?.waId)}
+              </span>
+            ) : null}
           </a>
         </footer>
       </aside>

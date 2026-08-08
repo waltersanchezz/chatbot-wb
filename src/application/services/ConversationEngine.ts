@@ -29,7 +29,12 @@ import {
   bearingTechnicalInfo,
   formatBearingRecommendation,
 } from '../flows/bearingFlow';
-import { handoffMessage } from '../flows/handoffFlow';
+import {
+  handoffAlreadyActiveMessage,
+  handoffMessage,
+  isOutboundHandoffEcho,
+} from '../flows/handoffFlow';
+
 import { categoryPrompt, welcomeMessage } from '../flows/welcomeFlow';
 import { normalizeWillardText } from '../../domain/willard/normalize';
 import { ContextExtractor } from './ContextExtractor';
@@ -65,6 +70,8 @@ export interface EngineConfig {
 export interface EngineResult {
   reply: string;
   context: ConversationContext;
+  /** No enviar WhatsApp (eco de handoff / handoff ya notificado). */
+  suppressReply?: boolean;
 }
 
 const WILLARD_NOT_FOUND =
@@ -157,6 +164,23 @@ export class ConversationEngine {
       };
     }
 
+    // Eco del propio handoff (p.ej. webhook reinyecta el texto con "asesor"):
+    // no reprocesar ni reenviar el bloque completo.
+    if (isOutboundHandoffEcho(userMessage)) {
+      const ctx = conversation.context;
+      return {
+        reply: '',
+        context: {
+          ...ctx,
+          stage: 'handoff',
+          needsHumanHandoff: true,
+          handoffReason:
+            ctx.handoffReason ?? 'Cliente aceptó la recomendación Willard',
+        },
+        suppressReply: true,
+      };
+    }
+
     this.maybeRestoreFromPersistence(conversation);
 
     const recovered = this.tryHandleRecovery(conversation, userMessage);
@@ -178,6 +202,20 @@ export class ConversationEngine {
     context = { ...context, intent };
 
     if (intent === 'handoff') {
+      if (conversation.context.needsHumanHandoff || conversation.context.stage === 'handoff') {
+        return {
+          reply: handoffAlreadyActiveMessage(),
+          context: {
+            ...context,
+            stage: 'handoff',
+            needsHumanHandoff: true,
+            handoffReason:
+              conversation.context.handoffReason ??
+              context.handoffReason ??
+              'Solicitud del cliente',
+          },
+        };
+      }
       context.stage = 'handoff';
       context.needsHumanHandoff = true;
       context.handoffReason = context.handoffReason ?? 'Solicitud del cliente';
@@ -278,7 +316,8 @@ export class ConversationEngine {
     if (context.needsHumanHandoff) {
       context.stage = 'handoff';
       context.handoffReason = context.handoffReason ?? 'Solicitud del cliente';
-      return { reply: handoffMessage(context.handoffReason), context };
+      // Ya notificado: no reenviar el bloque largo (Motivo + solicitar asesores).
+      return { reply: handoffAlreadyActiveMessage(), context };
     }
 
     if (intent === 'otro_producto') {
@@ -899,8 +938,14 @@ export class ConversationEngine {
     }
 
     if (sales.state === 'READY_FOR_ADVISOR') {
+      const alreadyNotified =
+        context.needsHumanHandoff === true ||
+        context.stage === 'handoff' ||
+        context.salesFlow?.state === 'READY_FOR_ADVISOR';
       return {
-        reply: handoffMessage(merged.handoffReason ?? WILLARD_NOT_FOUND),
+        reply: alreadyNotified
+          ? handoffAlreadyActiveMessage()
+          : handoffMessage(merged.handoffReason ?? WILLARD_NOT_FOUND),
         context: merged,
       };
     }

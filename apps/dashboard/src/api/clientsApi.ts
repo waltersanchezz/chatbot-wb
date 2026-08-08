@@ -8,6 +8,7 @@ export interface ClientDto {
   primerContacto: string
   ultimaActividad: string
   cantidadVehiculos: number
+  ultimoVehiculo: string | null
   leadPromedio: number | null
   ultimaReferencia: string | null
   estadoUltimaConversacion: string

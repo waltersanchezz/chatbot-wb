@@ -80,6 +80,16 @@ export class HandleIncomingMessage {
     let isNewConversation = false;
     let previousContext = createEmptyContext();
 
+    // TEMP DIAG: traza de entrada — no cambia lógica
+    console.log('[DIAG][HandleIncomingMessage.execute] ENTER', {
+      waId: input.externalConversationId ?? `${input.channel}:${input.phone}`,
+      phone: input.phone,
+      channel: input.channel,
+      inboundWamid: input.inboundWamid ?? null,
+      textPreview: input.text.slice(0, 80),
+      requestId,
+    });
+
     if (input.inboundWamid && input.auditRequestId) {
       whatsappDeliveryAudit.recordHandleEnter({
         wamid: input.inboundWamid,
@@ -191,17 +201,37 @@ export class HandleIncomingMessage {
         });
       }
 
+      const duplicateRecentReply = isDuplicateRecentAssistantReply(
+        conversation,
+        reply,
+      );
+      const suppressReply =
+        (engineOutcome.ok === true &&
+          (engineOutcome.value.suppressReply === true || !reply.trim())) ||
+        duplicateRecentReply;
+
+      if (duplicateRecentReply) {
+        logger.info('HandleIncomingMessage — outbound duplicate suppressed', {
+          requestId,
+          conversationId: conversation.id,
+          waId: input.inboundWamid ?? null,
+          previewLen: reply.trim().length,
+        });
+      }
+
       conversation.updatedAt = now;
       conversation.expiresAt = this.expiry(now);
 
-      const outbound: Message = {
-        id: randomUUID(),
-        conversationId: conversation.id,
-        role: 'assistant',
-        content: reply,
-        createdAt: new Date(),
-      };
-      conversation.messages.push(outbound);
+      if (reply.trim() && !suppressReply) {
+        const outbound: Message = {
+          id: randomUUID(),
+          conversationId: conversation.id,
+          role: 'assistant',
+          content: reply,
+          createdAt: new Date(),
+        };
+        conversation.messages.push(outbound);
+      }
 
       const saveOutcome = await withTimeout(
         () => this.conversations.save(conversation!),
@@ -212,6 +242,17 @@ export class HandleIncomingMessage {
           code: 'TIMEOUT',
         },
       );
+      // TEMP DIAG: resultado del save post-turno
+      console.log('[DIAG][HandleIncomingMessage.execute] AFTER conversations.save', {
+        waId: conversation.externalId,
+        conversationId: conversation.id,
+        saveOk: saveOutcome.ok,
+        saveError: saveOutcome.ok
+          ? null
+          : saveOutcome.error instanceof Error
+            ? saveOutcome.error.message
+            : String(saveOutcome.error),
+      });
       if (!saveOutcome.ok) {
         logger.exception(
           'HandleIncomingMessage — save timeout/error (controlado)',
@@ -220,7 +261,7 @@ export class HandleIncomingMessage {
         );
       }
 
-      if (input.sendReply !== false) {
+      if (input.sendReply !== false && !suppressReply) {
         const sendOutcome = await withTimeout(
           () =>
             this.messaging.sendText({
@@ -570,4 +611,30 @@ export class HandleIncomingMessage {
       );
     }
   }
+}
+
+/**
+ * Evita reenviar el mismo texto del bot si el último outbound es idéntico
+ * dentro de la ventana (retries Meta / doble entrega con otro wamid).
+ * Exportada para tests unitarios.
+ */
+export function isDuplicateRecentAssistantReply(
+  conversation: Conversation,
+  reply: string,
+  nowMs: number = Date.now(),
+  windowMs: number = 3 * 60_000,
+): boolean {
+  const normalized = reply.trim();
+  if (!normalized) return false;
+
+  for (let i = conversation.messages.length - 1; i >= 0; i -= 1) {
+    const m = conversation.messages[i]!;
+    if (m.role !== 'assistant') continue;
+    if (m.content.trim() !== normalized) return false;
+    const created = new Date(m.createdAt).getTime();
+    if (Number.isNaN(created)) return false;
+    const age = nowMs - created;
+    return age >= 0 && age < windowMs;
+  }
+  return false;
 }
