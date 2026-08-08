@@ -158,6 +158,22 @@ export class HandleIncomingMessage {
       );
       return 'failed';
     }
+
+    // MessagingProvider puede devolver { ok:false } sin lanzar (p.ej. Cloud sin
+    // credenciales o Graph API error). No tratarlo como envío exitoso.
+    const providerResult = sendOutcome.value;
+    if (!providerResult?.ok) {
+      logger.error(`HandleIncomingMessage — ${operation} provider returned ok:false`, {
+        requestId: turnId,
+        conversationId: conversationId ?? null,
+        waId: input.inboundWamid ?? null,
+      });
+      console.log(
+        `[TURN SEND FAIL] turnId=${turnId} inboundWamid=${wamid ?? 'none'} reason=provider_ok_false`,
+      );
+      return 'failed';
+    }
+
     return 'sent';
   }
 
@@ -408,8 +424,10 @@ export class HandleIncomingMessage {
         `[TURN SAVE OK] turnId=${turnId} conversationId=${conversation.id}`,
       );
 
+      let sendStatus: 'sent' | 'skipped_duplicate' | 'failed' | 'not_attempted' =
+        'not_attempted';
       if (input.sendReply !== false && !suppressReply) {
-        await this.sendTextOnce(
+        sendStatus = await this.sendTextOnce(
           input,
           turnId,
           reply,
@@ -428,7 +446,10 @@ export class HandleIncomingMessage {
       });
 
       const durationMs = Date.now() - started;
-      const turnOk = engineOutcome.ok && reply !== FRIENDLY_ERROR_REPLY;
+      const turnOk =
+        engineOutcome.ok &&
+        reply !== FRIENDLY_ERROR_REPLY &&
+        sendStatus !== 'failed';
 
       await this.writeLog({
         conversation,

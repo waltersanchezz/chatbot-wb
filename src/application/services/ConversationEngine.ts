@@ -724,6 +724,16 @@ export class ConversationEngine {
     const cleaned = userMessage.trim();
 
     if (conversation.context.recoveryOfferPending) {
+      // Intención explícita de producto: salir de la oferta y dejar IntentDetector
+      // enrutar (evita re-emitir la misma oferta → suppressReply silencia WhatsApp).
+      if (matchesBatteryIntent(cleaned) || matchesBearingIntent(cleaned)) {
+        recovery.clear(memoryKey);
+        conversation.context = {
+          ...conversation.context,
+          recoveryOfferPending: false,
+        };
+        return null;
+      }
       if (recovery.isContinueReply(cleaned) || isAffirmativeReply(cleaned)) {
         const decision = recovery.accept(memoryKey);
         if (decision.type === 'CONTINUE') {
