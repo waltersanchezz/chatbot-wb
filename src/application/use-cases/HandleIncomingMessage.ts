@@ -1,4 +1,4 @@
-import { randomUUID } from 'crypto';
+import { createHash, randomUUID } from 'crypto';
 import { createEmptyContext, type Conversation } from '../../domain/entities/Conversation';
 import type { ConversationLog } from '../../domain/entities/ConversationLog';
 import type { Message } from '../../domain/entities/Message';
@@ -9,6 +9,7 @@ import type { MessagingProvider } from '../../domain/ports/MessagingProvider';
 import { logger } from '../../infrastructure/logging/logger';
 import { buildTurnLogFields } from '../../infrastructure/logging/turnContext';
 import { whatsappDeliveryAudit } from '../../infrastructure/messaging/WhatsAppDeliveryAudit';
+import type { WhatsAppIdempotencyGate } from '../../infrastructure/messaging/WhatsAppMessageIdempotency';
 import {
   FRIENDLY_ERROR_REPLY,
   tryCallAsync,
@@ -19,6 +20,10 @@ import { WaIdTurnSerializer } from '../concurrency/WaIdTurnSerializer';
 import type { ConversationEngine } from '../services/ConversationEngine';
 import type { LeadService } from '../services/LeadService';
 import type { MetricsService } from '../services/MetricsService';
+
+function replyHash(text: string): string {
+  return createHash('sha256').update(text).digest('hex').slice(0, 16);
+}
 
 export interface IncomingMessageInput {
   phone: string;
@@ -63,6 +68,7 @@ const defaultTurnSerializer = new WaIdTurnSerializer();
 export class HandleIncomingMessage {
   private readonly timeouts: HandleIncomingTimeouts;
   private readonly turnSerializer: WaIdTurnSerializer;
+  private readonly sendGate: WhatsAppIdempotencyGate | undefined;
 
   constructor(
     private readonly customers: CustomerRepository,
@@ -75,9 +81,11 @@ export class HandleIncomingMessage {
     private readonly metrics: MetricsService,
     timeouts?: Partial<HandleIncomingTimeouts>,
     turnSerializer?: WaIdTurnSerializer,
+    sendGate?: WhatsAppIdempotencyGate,
   ) {
     this.timeouts = { ...DEFAULT_TIMEOUTS, ...timeouts };
     this.turnSerializer = turnSerializer ?? defaultTurnSerializer;
+    this.sendGate = sendGate;
   }
 
   async execute(input: IncomingMessageInput): Promise<IncomingMessageResult> {
@@ -88,19 +96,91 @@ export class HandleIncomingMessage {
     return this.turnSerializer.run(waKey, () => this.executeTurn(input));
   }
 
+  /**
+   * 1 inboundWamid → máximo 1 sendText (reusa claimOutbound del mismo gate).
+   * Sin wamid / sin gate → envío normal (p.ej. /api/chat).
+   */
+  private async sendTextOnce(
+    input: IncomingMessageInput,
+    turnId: string,
+    body: string,
+    conversationId: string | undefined,
+    operation: 'sendText' | 'sendTextFriendlyError',
+  ): Promise<'sent' | 'skipped_duplicate' | 'failed'> {
+    const wamid = input.inboundWamid?.trim();
+    if (wamid && this.sendGate) {
+      const allowed = this.sendGate.claimOutbound(wamid);
+      if (!allowed) {
+        console.log(
+          `[TURN SEND SKIP] turnId=${turnId} inboundWamid=${wamid} reason=already_sent`,
+        );
+        logger.info('sendText skipped: outbound already claimed for wamid', {
+          turnId,
+          inboundWamid: wamid,
+        });
+        return 'skipped_duplicate';
+      }
+    }
+
+    const hash = replyHash(body);
+    console.log(
+      `[TURN SEND] turnId=${turnId} inboundWamid=${wamid ?? 'none'} replyHash=${hash}`,
+    );
+
+    const sendOutcome = await withTimeout(
+      () =>
+        this.messaging.sendText({
+          to: input.phone,
+          body,
+          channel: input.channel,
+          inboundWamid: input.inboundWamid,
+          auditRequestId: turnId,
+          conversationId,
+        }),
+      this.timeouts.messagingMs,
+      {
+        service: 'MessagingProvider',
+        operation,
+        code: 'TIMEOUT',
+        meta: { requestId: turnId, waId: input.inboundWamid },
+      },
+    );
+
+    if (!sendOutcome.ok) {
+      logger.exception(
+        `HandleIncomingMessage — ${operation} timeout/error (controlado)`,
+        sendOutcome.error,
+        {
+          requestId: turnId,
+          conversationId: conversationId ?? null,
+          waId: input.inboundWamid ?? null,
+        },
+      );
+      return 'failed';
+    }
+    return 'sent';
+  }
+
   private async executeTurn(
     input: IncomingMessageInput,
   ): Promise<IncomingMessageResult> {
     const started = Date.now();
-    const requestId = input.auditRequestId ?? randomUUID();
+    const turnId = input.auditRequestId ?? randomUUID();
+    const requestId = turnId;
+    const waId =
+      input.externalConversationId ?? `${input.channel}:${input.phone}`;
     let reply = '';
     let conversation: Conversation | null = null;
     let isNewConversation = false;
     let previousContext = createEmptyContext();
 
+    console.log(
+      `[TURN START] turnId=${turnId} waId=${waId} inboundWamid=${input.inboundWamid ?? 'none'} text=${JSON.stringify(input.text.slice(0, 120))}`,
+    );
+
     // TEMP DIAG: traza de entrada — no cambia lógica
     console.log('[DIAG][HandleIncomingMessage.execute] ENTER', {
-      waId: input.externalConversationId ?? `${input.channel}:${input.phone}`,
+      waId,
       phone: input.phone,
       channel: input.channel,
       inboundWamid: input.inboundWamid ?? null,
@@ -282,6 +362,10 @@ export class HandleIncomingMessage {
           { requestId, conversationId: conversation.id },
         );
 
+        console.log(
+          `[TURN SAVE FAIL] turnId=${turnId} conversationId=${conversation.id}`,
+        );
+
         const durationMs = Date.now() - started;
         if (input.inboundWamid && input.auditRequestId) {
           whatsappDeliveryAudit.recordHandleExit({
@@ -305,6 +389,10 @@ export class HandleIncomingMessage {
           { ok: false, error: 'persist_failed_before_send' },
         );
 
+        console.log(
+          `[TURN END] turnId=${turnId} ok=false reason=persist_failed_before_send`,
+        );
+
         return {
           conversationId: conversation.id,
           customerId: customer.id,
@@ -316,36 +404,18 @@ export class HandleIncomingMessage {
         };
       }
 
+      console.log(
+        `[TURN SAVE OK] turnId=${turnId} conversationId=${conversation.id}`,
+      );
+
       if (input.sendReply !== false && !suppressReply) {
-        const sendOutcome = await withTimeout(
-          () =>
-            this.messaging.sendText({
-              to: input.phone,
-              body: reply,
-              channel: input.channel,
-              inboundWamid: input.inboundWamid,
-              auditRequestId: requestId,
-              conversationId: conversation!.id,
-            }),
-          this.timeouts.messagingMs,
-          {
-            service: 'MessagingProvider',
-            operation: 'sendText',
-            code: 'TIMEOUT',
-            meta: { requestId, waId: input.inboundWamid },
-          },
+        await this.sendTextOnce(
+          input,
+          turnId,
+          reply,
+          conversation.id,
+          'sendText',
         );
-        if (!sendOutcome.ok) {
-          logger.exception(
-            'HandleIncomingMessage — messaging timeout/error (controlado)',
-            sendOutcome.error,
-            {
-              requestId,
-              conversationId: conversation.id,
-              waId: input.inboundWamid ?? null,
-            },
-          );
-        }
       }
 
       void this.captureLeadSafe({
@@ -393,6 +463,8 @@ export class HandleIncomingMessage {
           error: turnOk ? undefined : 'engine_timeout_or_error',
         });
       }
+
+      console.log(`[TURN END] turnId=${turnId} ok=${turnOk}`);
 
       return {
         conversationId: conversation.id,
@@ -479,30 +551,13 @@ export class HandleIncomingMessage {
       }
 
       if (input.sendReply !== false && persistOk) {
-        const sendOutcome = await withTimeout(
-          () =>
-            this.messaging.sendText({
-              to: input.phone,
-              body: reply,
-              channel: input.channel,
-              inboundWamid: input.inboundWamid,
-              auditRequestId: requestId,
-              conversationId: conversation?.id,
-            }),
-          this.timeouts.messagingMs,
-          {
-            service: 'MessagingProvider',
-            operation: 'sendTextFriendlyError',
-            code: 'TIMEOUT',
-          },
+        await this.sendTextOnce(
+          input,
+          turnId,
+          reply,
+          conversation?.id,
+          'sendTextFriendlyError',
         );
-        if (!sendOutcome.ok) {
-          logger.exception(
-            'HandleIncomingMessage — fallo enviando mensaje amable',
-            sendOutcome.error,
-            { requestId },
-          );
-        }
       }
 
       if (input.inboundWamid && input.auditRequestId) {
@@ -514,6 +569,10 @@ export class HandleIncomingMessage {
           error: controlled.message,
         });
       }
+
+      console.log(
+        `[TURN END] turnId=${turnId} ok=false reason=controlled_exception`,
+      );
 
       await tryCallAsync(
         () =>
@@ -675,11 +734,28 @@ export class HandleIncomingMessage {
 }
 
 /**
- * Evita reenviar el mismo texto del bot si el último outbound es idéntico
- * dentro de la ventana (retries Meta / doble entrega con otro wamid).
- * Defensa secundaria; la primaria es serialización por wa_id + save-before-send.
+ * Evita reenviar el mismo texto del bot.
+ *
+ * Capas (defensa en profundidad; claim(wamid) es la primaria en el webhook):
+ * 1) Replay de inbound: mismo texto de cliente dos veces seguidas + misma reply → no send.
+ *    Cubre reintentos Meta tardíos (6–20 min) aunque el claim por instancia falle.
+ * 2) Paso pendiente: reply idéntica al último assistant mientras nextAction sigue
+ *    esperando dato del usuario → no reenviar el mismo prompt.
+ * 3) Ventana corta (3 min) para cualquier reply idéntica.
+ *
  * Exportada para tests unitarios.
  */
+const PENDING_OUTBOUND_ACTIONS = new Set([
+  'ASK_VEHICLE',
+  'ASK_BRAND',
+  'ASK_MODEL',
+  'ASK_YEAR',
+  'ASK_SOUND',
+  'CONFIRM_VEHICLE',
+  'ASK_INTEREST_AFTER_RECOMMENDATION',
+  'ASK_CATEGORY',
+]);
+
 export function isDuplicateRecentAssistantReply(
   conversation: Conversation,
   reply: string,
@@ -689,14 +765,34 @@ export function isDuplicateRecentAssistantReply(
   const normalized = reply.trim();
   if (!normalized) return false;
 
+  let lastAssistant: (typeof conversation.messages)[number] | undefined;
   for (let i = conversation.messages.length - 1; i >= 0; i -= 1) {
     const m = conversation.messages[i]!;
-    if (m.role !== 'assistant') continue;
-    if (m.content.trim() !== normalized) return false;
-    const created = new Date(m.createdAt).getTime();
-    if (Number.isNaN(created)) return false;
-    const age = nowMs - created;
-    return age >= 0 && age < windowMs;
+    if (m.role === 'assistant') {
+      lastAssistant = m;
+      break;
+    }
   }
-  return false;
+  if (!lastAssistant || lastAssistant.content.trim() !== normalized) {
+    return false;
+  }
+
+  const customerMsgs = conversation.messages.filter((m) => m.role === 'customer');
+  if (customerMsgs.length >= 2) {
+    const prev = customerMsgs[customerMsgs.length - 2]!.content.trim().toLowerCase();
+    const curr = customerMsgs[customerMsgs.length - 1]!.content.trim().toLowerCase();
+    if (prev && prev === curr) {
+      return true;
+    }
+  }
+
+  const nextAction = conversation.context.salesFlow?.nextAction;
+  if (nextAction && PENDING_OUTBOUND_ACTIONS.has(nextAction)) {
+    return true;
+  }
+
+  const created = new Date(lastAssistant.createdAt).getTime();
+  if (Number.isNaN(created)) return false;
+  const age = nowMs - created;
+  return age >= 0 && age < windowMs;
 }

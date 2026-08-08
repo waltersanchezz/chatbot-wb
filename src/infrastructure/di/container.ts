@@ -390,6 +390,7 @@ export function buildContainer() {
     metricsService,
     env.timeouts,
     waIdTurnSerializer,
+    whatsappIdempotency,
   );
 
   return {

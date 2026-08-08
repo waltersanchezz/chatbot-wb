@@ -16,6 +16,7 @@ import {
   formatAskBrand,
   formatAskModel,
   formatAskSoundSystem,
+  formatAskSoundReminder,
   formatAskVehicle,
   formatAskYear,
   formatAskYearReminder,
@@ -36,7 +37,7 @@ import {
   isOutboundHandoffEcho,
 } from '../flows/handoffFlow';
 
-import { categoryPrompt, welcomeMessage } from '../flows/welcomeFlow';
+import { categoryPrompt, welcomeMessage, isPureGreetingMessage, midFlowGreetingAck } from '../flows/welcomeFlow';
 import { normalizeWillardText } from '../../domain/willard/normalize';
 import { ContextExtractor } from './ContextExtractor';
 import type {
@@ -232,7 +233,10 @@ export class ConversationEngine {
 
     if (
       intent === 'greeting' &&
-      conversation.messages.filter((m) => m.role === 'customer').length <= 1
+      isPureGreetingMessage(userMessage) &&
+      conversation.messages.filter((m) => m.role === 'customer').length <= 1 &&
+      !conversation.context.needsHumanHandoff &&
+      conversation.context.stage !== 'handoff'
     ) {
       context.stage = 'awaiting_category';
       return {
@@ -242,6 +246,29 @@ export class ConversationEngine {
           conversation.messages[0]?.metadata?.customerName as string | undefined,
         ),
         context,
+      };
+    }
+
+    // Saludo puro con progreso comercial: no reemitir el prompt del paso.
+    // No avanza SalesFlow / nextAction / vehicle.
+    if (
+      isPureGreetingMessage(userMessage) &&
+      this.hasActiveCommercialProgress(conversation.context)
+    ) {
+      const preserved = conversation.context;
+      if (preserved.needsHumanHandoff || preserved.stage === 'handoff') {
+        return {
+          reply: handoffAlreadyActiveMessage(),
+          context: {
+            ...preserved,
+            stage: 'handoff',
+            needsHumanHandoff: true,
+          },
+        };
+      }
+      return {
+        reply: midFlowGreetingAck(),
+        context: preserved,
       };
     }
 
@@ -314,13 +341,6 @@ export class ConversationEngine {
       return this.handleBearing(context, userMessage);
     }
 
-    if (context.needsHumanHandoff) {
-      context.stage = 'handoff';
-      context.handoffReason = context.handoffReason ?? 'Solicitud del cliente';
-      // Ya notificado: no reenviar el bloque largo (Motivo + solicitar asesores).
-      return { reply: handoffAlreadyActiveMessage(), context };
-    }
-
     if (intent === 'otro_producto') {
       context.stage = 'handoff';
       context.needsHumanHandoff = true;
@@ -332,6 +352,24 @@ export class ConversationEngine {
           '👨‍🔧 Uno de nuestros asesores confirmará disponibilidad y el precio actualizado para ayudarte lo antes posible.',
         ].join('\n'),
         context,
+      };
+    }
+
+    // Handoff activo: no reentrar a SalesFlow por category sticky
+    // (excepto start explícito "batería" / "rodamiento", ya manejado arriba).
+    if (
+      conversation.context.needsHumanHandoff ||
+      conversation.context.stage === 'handoff'
+    ) {
+      return {
+        reply: handoffAlreadyActiveMessage(),
+        context: {
+          ...conversation.context,
+          stage: 'handoff',
+          needsHumanHandoff: true,
+          handoffReason:
+            conversation.context.handoffReason ?? 'Solicitud del cliente',
+        },
       };
     }
 
@@ -448,8 +486,9 @@ export class ConversationEngine {
           },
         });
       } else {
+        // No reenviar el prompt largo (Meta retries / ruido): recordatorio corto distinto.
         return {
-          reply: formatAskSoundSystem(),
+          reply: formatAskSoundReminder(),
           context: this.mergeOrchestratorContext(context, { session }),
         };
       }
@@ -807,6 +846,33 @@ export class ConversationEngine {
         operation: 'onTurnCompleted',
       });
     }
+  }
+
+  /**
+   * Progreso comercial activo: saludo mid-flow no debe reemitir prompts.
+   */
+  private hasActiveCommercialProgress(context: ConversationContext): boolean {
+    if (context.needsHumanHandoff || context.stage === 'handoff') return true;
+    if (context.recoveryOfferPending) return true;
+    if (context.vehicle.brand?.trim() || context.vehicle.model?.trim()) return true;
+    const sales = context.salesFlow;
+    if (sales && sales.state !== 'NEW' && sales.state !== 'CLOSED') return true;
+    if (
+      context.stage === 'collecting_vehicle' ||
+      context.stage === 'collecting_product_details' ||
+      context.stage === 'recommending' ||
+      context.stage === 'closing'
+    ) {
+      return true;
+    }
+    if (
+      (context.category === 'baterias' || context.category === 'rodamientos') &&
+      context.stage !== 'welcome' &&
+      context.stage !== 'awaiting_category'
+    ) {
+      return true;
+    }
+    return false;
   }
 
   /**

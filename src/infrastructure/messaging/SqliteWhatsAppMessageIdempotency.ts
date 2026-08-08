@@ -59,6 +59,13 @@ export class SqliteWhatsAppMessageIdempotency implements WhatsAppIdempotencyGate
     return Number(result.changes) === 1;
   }
 
+  /** Mismo store; clave `out:${wamid}` → 1 inboundWamid → máx. 1 sendText. */
+  claimOutbound(messageId: string, now = Date.now()): boolean {
+    const id = messageId.trim();
+    if (!id) return true;
+    return this.claim(`out:${id}`, now);
+  }
+
   size(now = Date.now()): number {
     this.purge(now);
     const row = this.db

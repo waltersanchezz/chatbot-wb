@@ -11,6 +11,10 @@ import {
   formatAskYearReminder,
 } from '../../src/application/flows/batteryFlow';
 import {
+  isPureGreetingMessage,
+  midFlowGreetingAck,
+} from '../../src/application/flows/welcomeFlow';
+import {
   handoffAlreadyActiveMessage,
 } from '../../src/application/flows/handoffFlow';
 import { ConversationEngine } from '../../src/application/services/ConversationEngine';
@@ -75,6 +79,7 @@ function buildUseCase(options?: {
   persistenceMs?: number;
   turnSerializer?: WaIdTurnSerializer;
   logDir?: string;
+  sendGate?: MemoryWhatsAppMessageIdempotency;
 }) {
   const apps = buildApps();
   const { engine } =
@@ -89,6 +94,7 @@ function buildUseCase(options?: {
   const conversations =
     options?.conversations ?? new InMemoryConversationRepository();
   const logDir = options?.logDir ?? tmpDir('wa-turn-');
+  const sendGate = options?.sendGate ?? new MemoryWhatsAppMessageIdempotency();
 
   const useCase = new HandleIncomingMessage(
     new InMemoryCustomerRepository(),
@@ -105,9 +111,10 @@ function buildUseCase(options?: {
     new MetricsService(),
     { persistenceMs: options?.persistenceMs ?? 3_000 },
     options?.turnSerializer ?? new WaIdTurnSerializer(new WaIdTurnQueue()),
+    sendGate,
   );
 
-  return { useCase, messaging, conversations, engine, apps };
+  return { useCase, messaging, conversations, engine, apps, sendGate };
 }
 
 describe('WhatsApp turn isolation — regresión repetición de pasos', () => {
@@ -566,15 +573,134 @@ describe('WhatsApp turn isolation — regresión repetición de pasos', () => {
 
     const fullAsk = formatAskYear('CHEVROLET', 'Esteem 1.3 1.6 SW');
     const reminder = formatAskYearReminder('CHEVROLET', 'Esteem 1.3 1.6 SW');
+    const ack = midFlowGreetingAck();
+
+    expect(isPureGreetingMessage('Hola')).toBe(true);
+    expect(isPureGreetingMessage('Hola, es un Mazda 3 2015')).toBe(false);
+    expect(ack).toBe('¡Hola nuevamente! 👋 Seguimos con tu recomendación.');
 
     const r1 = await engine.process(conv as never, 'Hola');
-    expect(r1.reply).toBe(reminder);
+    expect(r1.reply).toBe(ack);
     expect(r1.reply).not.toBe(fullAsk);
+    expect(r1.reply).not.toBe(reminder);
+    expect(r1.reply).not.toMatch(/¿De qué año es\?/i);
     expect(r1.context.salesFlow?.nextAction).toBe('ASK_YEAR');
+    expect(r1.context.vehicle.model).toBe('Esteem 1.3 1.6 SW');
 
     conv.context = r1.context;
     const r2 = await engine.process(conv as never, 'Hola');
-    expect(r2.reply).toBe(reminder);
+    expect(r2.reply).toBe(ack);
+    expect(r2.context.salesFlow?.nextAction).toBe('ASK_YEAR');
+  });
+
+  it('8b. ASK_SOUND + Hola → ack breve, no reenvía planta de sonido', async () => {
+    const apps = buildApps();
+    const { engine } = buildTestConversationEngine(
+      new FakeWillardBatteryKnowledge(apps),
+      catalogRowsFromHits(apps),
+    );
+
+    const conv = {
+      id: 'c-sound-hola',
+      customerId: 'u1',
+      channel: 'whatsapp' as const,
+      externalId: 'wa:sound-hola',
+      context: {
+        ...createEmptyContext(),
+        category: 'baterias' as const,
+        intent: 'baterias' as const,
+        stage: 'collecting_vehicle' as const,
+        vehicle: { brand: 'KIA', model: 'Sportage Diesel', year: '2015' },
+        salesFlow: {
+          state: 'IDENTIFYING_VEHICLE' as const,
+          nextAction: 'ASK_SOUND' as const,
+          vehicle: {
+            brand: 'KIA',
+            model: 'Sportage Diesel',
+            year: '2015',
+            vehicleConfirmed: true,
+          },
+          hasRecommendation: false,
+          leadScore: 50,
+          readyForAdvisor: false,
+        },
+      },
+      messages: [
+        {
+          id: 'm1',
+          conversationId: 'c-sound-hola',
+          role: 'customer' as const,
+          content: 'batería',
+          createdAt: new Date(),
+        },
+        {
+          id: 'm2',
+          conversationId: 'c-sound-hola',
+          role: 'customer' as const,
+          content: 'Kia Sportage',
+          createdAt: new Date(),
+        },
+      ],
+      createdAt: new Date(),
+      updatedAt: new Date(),
+      expiresAt: new Date(Date.now() + 3_600_000),
+    };
+
+    const r = await engine.process(conv as never, 'Hola');
+    expect(r.reply).toMatch(/Hola nuevamente/i);
+    expect(r.reply).not.toMatch(/Última pregunta para afinar/i);
+    expect(r.reply).not.toBe(
+      'Última pregunta para afinar la recomendación:\n\n¿El vehículo tiene planta de sonido o amplificador?\nResponde *sí* o *no*.',
+    );
+    expect(r.context.salesFlow?.nextAction).toBe('ASK_SOUND');
+  });
+
+  it('8c. Hola + datos útiles sigue procesando (no solo greeting)', async () => {
+    const apps = buildApps();
+    const { engine } = buildTestConversationEngine(
+      new FakeWillardBatteryKnowledge(apps),
+      catalogRowsFromHits(apps),
+    );
+
+    const conv = {
+      id: 'c-hola-data',
+      customerId: 'u1',
+      channel: 'whatsapp' as const,
+      externalId: 'wa:hola-data',
+      context: {
+        ...createEmptyContext(),
+        category: 'baterias' as const,
+        intent: 'baterias' as const,
+        stage: 'collecting_vehicle' as const,
+        salesFlow: {
+          state: 'IDENTIFYING_VEHICLE' as const,
+          nextAction: 'ASK_VEHICLE' as const,
+          vehicle: {},
+          hasRecommendation: false,
+          leadScore: 10,
+          readyForAdvisor: false,
+        },
+      },
+      messages: [
+        {
+          id: 'm1',
+          conversationId: 'c-hola-data',
+          role: 'customer' as const,
+          content: 'batería',
+          createdAt: new Date(),
+        },
+      ],
+      createdAt: new Date(),
+      updatedAt: new Date(),
+      expiresAt: new Date(Date.now() + 3_600_000),
+    };
+
+    const r = await engine.process(
+      conv as never,
+      'Hola, Chevrolet Corsa Evolution 2013',
+    );
+    expect(r.reply).not.toMatch(/Hola nuevamente/i);
+    expect(r.reply).not.toMatch(/¿Para qué vehículo/i);
   });
 
   it('9. mensajes secuenciales avanzan el flujo', async () => {
@@ -672,6 +798,16 @@ describe('WhatsApp turn isolation — regresión repetición de pasos', () => {
     expect(again.reply).not.toContain('Motivo: Cliente aceptó');
     expect(again.context.needsHumanHandoff).toBe(true);
     expect(again.context.stage).toBe('handoff');
+
+    const hola = await engine.process(
+      { ...conv, context: again.context } as never,
+      'Hola',
+    );
+    expect(hola.reply).toBe(handoffAlreadyActiveMessage());
+    expect(hola.context.needsHumanHandoff).toBe(true);
+    expect(hola.context.stage).toBe('handoff');
+    expect(hola.context.salesFlow?.nextAction).toBe('HANDOFF_TO_ADVISOR');
+    expect(hola.reply).not.toMatch(/ASK_|vehículo|planta de sonido|batería/i);
   });
 
   it('11. CRM save proyecta persisted_sessions', async () => {

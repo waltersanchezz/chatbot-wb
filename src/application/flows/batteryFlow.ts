@@ -121,6 +121,11 @@ export function formatAskSoundSystem(): string {
   ].join('\n');
 }
 
+/** Recordatorio corto si la respuesta no es sí/no — distinto del prompt completo. */
+export function formatAskSoundReminder(): string {
+  return 'Responde solo *sí* o *no*: ¿tiene planta de sonido o amplificador?';
+}
+
 /**
  * Siguiente pregunta del flujo de baterías (copy de asesor Rodacenter).
  * Orden: vehículo → modelo → año → confirmación (si aplica) → planta → recomendar.

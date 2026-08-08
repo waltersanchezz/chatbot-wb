@@ -24,6 +24,14 @@ describe('MemoryWhatsAppMessageIdempotency', () => {
     expect(store.claim('wamid.X', 1_500)).toBe(false);
     expect(store.claim('wamid.X', 3_000)).toBe(true);
   });
+  it('claims outbound send once per inbound wamid', () => {
+    const store = new MemoryWhatsAppMessageIdempotency(60_000);
+    expect(store.claim('wamid.ABC')).toBe(true);
+    expect(store.claimOutbound('wamid.ABC')).toBe(true);
+    expect(store.claimOutbound('wamid.ABC')).toBe(false);
+    // inbound claim remains independent of outbound key
+    expect(store.claim('wamid.OTHER')).toBe(true);
+  });
 });
 
 describe('FileWhatsAppMessageIdempotency (survives process restart)', () => {

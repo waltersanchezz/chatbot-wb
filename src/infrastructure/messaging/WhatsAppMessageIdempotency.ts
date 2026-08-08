@@ -18,6 +18,13 @@ export interface WhatsAppIdempotencyGate {
    * @returns true → procesar; false → duplicado, no procesar ni responder.
    */
   claim(messageId: string, now?: number): boolean;
+
+  /**
+   * Garantía de envío: 1 inboundWamid → máximo 1 sendText.
+   * Reusa el mismo store con clave namespaced `out:${wamid}` (no segundo sistema).
+   * @returns true → enviar; false → ya se reclamó el envío para este wamid.
+   */
+  claimOutbound(messageId: string, now?: number): boolean;
 }
 
 const DEFAULT_TTL_MS = 24 * 60 * 60 * 1000; // 24h — retries de Meta pueden espaciarse
@@ -40,6 +47,12 @@ export class MemoryWhatsAppMessageIdempotency implements WhatsAppIdempotencyGate
     if (this.seen.has(id)) return false;
     this.seen.set(id, now);
     return true;
+  }
+
+  claimOutbound(messageId: string, now = Date.now()): boolean {
+    const id = messageId.trim();
+    if (!id) return true;
+    return this.claim(`out:${id}`, now);
   }
 
   size(): number {
@@ -82,6 +95,12 @@ export class FileWhatsAppMessageIdempotency implements WhatsAppIdempotencyGate {
     this.seen.set(id, now);
     this.persist();
     return true;
+  }
+
+  claimOutbound(messageId: string, now = Date.now()): boolean {
+    const id = messageId.trim();
+    if (!id) return true;
+    return this.claim(`out:${id}`, now);
   }
 
   /** Recarga forzada desde disco (tests de “reinicio”). */
