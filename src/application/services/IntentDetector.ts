@@ -19,6 +19,18 @@ function normalize(text: string): string {
     .trim();
 }
 
+/** Solo la categoría, sin vehículo ni más texto: "bateria" / "batería" / "baterias". */
+export function isBareBatteryIntent(message: string): boolean {
+  const text = normalize(message);
+  return /^(baterias?|bateria)$/i.test(text);
+}
+
+/** Solo la categoría, sin más texto: "rodamiento(s)" / "balero(s)". */
+export function isBareBearingIntent(message: string): boolean {
+  const text = normalize(message);
+  return /^(rodamientos?|baleros?)$/i.test(text);
+}
+
 /** Expresiones que activan el flujo de baterías. */
 export function matchesBatteryIntent(message: string): boolean {
   const text = normalize(message);

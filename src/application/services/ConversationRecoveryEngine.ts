@@ -3,7 +3,10 @@ import type {
   ConversationMemorySummary,
 } from '../../domain/conversation/conversationMemory';
 import type { ConversationContext } from '../../domain/entities/Conversation';
-import { createEmptyContext } from '../../domain/entities/Conversation';
+import {
+  createEmptyContext,
+  isTerminalHandoffContext,
+} from '../../domain/entities/Conversation';
 import type { ConversationMemory } from './ConversationMemory';
 
 export type RecoveryDecision =
@@ -133,6 +136,12 @@ export class ConversationRecoveryEngine {
       return { type: 'EXPIRED' };
     }
     if (!this.hasRecoverableProgress(active.context)) {
+      return { type: 'NONE' };
+    }
+
+    // Handoff ya notificado: un "Hola" simple no debe reabrir la oferta de asesor
+    // (deja que el motor envíe bienvenida). "Hola otra vez" sí puede ofrecer.
+    if (!explicit && isTerminalHandoffContext(active.context)) {
       return { type: 'NONE' };
     }
 

@@ -245,13 +245,22 @@ export class HandleIncomingMessage {
       conversation = findOutcome.value;
 
       const now = new Date();
-      if (!conversation || conversation.expiresAt < now) {
+      if (!conversation) {
         conversation = this.newConversation(
           customer.id,
           input.channel,
           externalId,
           now,
         );
+        isNewConversation = true;
+      } else if (conversation.expiresAt < now) {
+        // crm_conversations tiene UNIQUE(tenant_id, external_id). Un id nuevo
+        // hace fallar el save → se bloquea sendText y el cliente no ve respuesta.
+        conversation.context = createEmptyContext();
+        conversation.messages = [];
+        conversation.customerId = customer.id;
+        conversation.updatedAt = now;
+        conversation.expiresAt = this.expiry(now);
         isNewConversation = true;
       }
 

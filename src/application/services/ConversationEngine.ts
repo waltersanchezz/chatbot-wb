@@ -1,5 +1,8 @@
 import type { Conversation, ConversationContext } from '../../domain/entities/Conversation';
-import { createEmptyContext } from '../../domain/entities/Conversation';
+import {
+  createEmptyContext,
+  isTerminalHandoffContext,
+} from '../../domain/entities/Conversation';
 import { fromPersistedConversation } from '../../domain/persistence/persistedSession';
 import type { PersistenceRepository } from '../../domain/ports/PersistenceRepository';
 import type { ProductRepository } from '../../domain/ports/ProductRepository';
@@ -49,6 +52,8 @@ import type {
 import type { ConversationRecoveryEngine } from './ConversationRecoveryEngine';
 import {
   IntentDetector,
+  isBareBatteryIntent,
+  isBareBearingIntent,
   matchesBatteryIntent,
   matchesBearingIntent,
 } from './IntentDetector';
@@ -276,11 +281,15 @@ export class ConversationEngine {
       // Reiniciar solo con mensaje explícito ("batería"), no con "sí"/"no" sticky
       // tras closing (p.ej. confirmación de interés post-recomendación).
       const explicitBatteryStart = matchesBatteryIntent(userMessage);
+      const bareBatteryRestart =
+        isBareBatteryIntent(userMessage) &&
+        this.hasActiveCommercialProgress(conversation.context);
       const restartingAfterHandoff =
         explicitBatteryStart &&
         (conversation.context.needsHumanHandoff ||
           conversation.context.stage === 'handoff' ||
-          conversation.context.stage === 'closing');
+          conversation.context.stage === 'closing' ||
+          bareBatteryRestart);
 
       context.category = 'baterias';
       context.intent = 'baterias';
@@ -312,11 +321,15 @@ export class ConversationEngine {
 
     if (intent === 'rodamientos') {
       const explicitBearingStart = matchesBearingIntent(userMessage);
+      const bareBearingRestart =
+        isBareBearingIntent(userMessage) &&
+        this.hasActiveCommercialProgress(conversation.context);
       const restartingAfterHandoff =
         explicitBearingStart &&
         (conversation.context.needsHumanHandoff ||
           conversation.context.stage === 'handoff' ||
-          conversation.context.stage === 'closing');
+          conversation.context.stage === 'closing' ||
+          bareBearingRestart);
 
       context.category = 'rodamientos';
       context.intent = 'rodamientos';
@@ -402,6 +415,45 @@ export class ConversationEngine {
     // Smart Advisor: duda técnica → KnowledgeEngine (SalesFlow intacto).
     if (this.knowledgeEngine && isTechnicalQuestion(userMessage)) {
       return this.answerTechnicalQuestion(context, userMessage);
+    }
+
+    if (isBareBatteryIntent(userMessage)) {
+      const hadProgress = Boolean(
+        context.vehicle.brand?.trim() ||
+          context.vehicle.model?.trim() ||
+          (context.salesFlow && context.salesFlow.nextAction !== 'ASK_VEHICLE'),
+      );
+      const started = this.runOrchestrator(this.orchestrator.createSession(), {
+        type: 'START_FLOW',
+      });
+      const ask = formatAskVehicle();
+      return {
+        reply: hadProgress
+          ? ['Listo, buscamos la batería de nuevo.', '', ask].join('\n')
+          : ask,
+        context: {
+          ...this.mergeOrchestratorContext(
+            {
+              ...context,
+              category: 'baterias',
+              intent: 'baterias',
+              vehicle: {},
+              battery: {},
+              vehicleConfirmed: undefined,
+              pendingModelOptions: undefined,
+              lastRecommendedReference: undefined,
+              lastRecommendedReferences: undefined,
+              recommendedProductIds: [],
+              needsHumanHandoff: false,
+              handoffReason: undefined,
+            },
+            started,
+          ),
+          vehicle: {},
+          battery: {},
+          stage: 'collecting_vehicle',
+        },
+      };
     }
 
     let session = this.ensureOrchestratorSession(context);
@@ -905,6 +957,11 @@ export class ConversationEngine {
     if (!loaded) return;
 
     const restored = fromPersistedConversation(loaded.conversation);
+    if (isTerminalHandoffContext(restored.context)) {
+      this.recoveryEngine?.clear(conversation.externalId);
+      return;
+    }
+
     conversation.context = restored.context;
 
     const recovery = this.recoveryEngine;
@@ -1136,6 +1193,23 @@ export class ConversationEngine {
     context: ConversationContext,
     userMessage: string,
   ): Promise<EngineResult> {
+    if (isBareBearingIntent(userMessage)) {
+      const empty = {
+        ...context,
+        category: 'rodamientos' as const,
+        intent: 'rodamientos' as const,
+        vehicle: {},
+        bearing: {},
+        needsHumanHandoff: false,
+        handoffReason: undefined,
+      };
+      const next = bearingNextQuestion(empty);
+      return {
+        reply: next.text,
+        context: { ...empty, stage: next.stage },
+      };
+    }
+
     if (context.bearing.referenceHint && /\b(qu[eé] es|medidas?|equivalen|sello|significa)\b/i.test(userMessage)) {
       const found = await tryCallAsync(
         () => this.products.findBySku(context.bearing.referenceHint!),

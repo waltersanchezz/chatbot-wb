@@ -100,3 +100,14 @@ export function createEmptyContext(): ConversationContext {
     needsHumanHandoff: false,
   };
 }
+
+/** Derivación a asesor / flujo ya cerrado: no rebloquear un Hola posterior. */
+export function isTerminalHandoffContext(
+  context: ConversationContext,
+): boolean {
+  return (
+    context.needsHumanHandoff === true ||
+    context.stage === 'handoff' ||
+    context.salesFlow?.state === 'READY_FOR_ADVISOR'
+  );
+}
