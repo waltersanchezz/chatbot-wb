@@ -11,6 +11,15 @@ export interface TurnCompletedInput {
   createdConversation: boolean;
   /** Tenant activo (desde TenantContext). Opcional por compatibilidad. */
   tenantId?: string;
+  /**
+   * true cuando el turno incluye un mensaje entrante del cliente.
+   * El dashboard solo alerta si este flag está presente.
+   */
+  inboundCustomerMessage?: boolean;
+  messageId?: string;
+  inboundWamid?: string | null;
+  customerName?: string | null;
+  phone?: string | null;
 }
 
 /**
@@ -23,13 +32,25 @@ export class RealtimeService {
     private readonly now: () => number = () => Date.now(),
   ) {}
 
-  /** Llamado por ConversationEngine al terminar un turno exitoso. */
+  /**
+   * Publicar tras save/proyección OK (HandleIncomingMessage).
+   * No emitir si el save falló.
+   */
   onTurnCompleted(input: TurnCompletedInput): void {
     const base: RealtimeEventPayload = {
       conversationId: input.conversationId,
       waId: input.waId,
       tenantId: input.tenantId,
       at: new Date(this.now()).toISOString(),
+      ...(input.inboundCustomerMessage === true
+        ? {
+            inboundCustomerMessage: true,
+            messageId: input.messageId,
+            inboundWamid: input.inboundWamid ?? null,
+            customerName: input.customerName ?? null,
+            phone: input.phone ?? null,
+          }
+        : {}),
     };
 
     if (input.createdConversation) {

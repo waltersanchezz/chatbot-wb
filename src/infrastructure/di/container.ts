@@ -362,7 +362,6 @@ export function buildContainer() {
     persistenceRepository,
     env.persistenceTtlMinutes * 60_000,
     learningEngine,
-    realtimeService,
   );
 
   /** Hardening: métricas independientes del flujo conversacional. */
@@ -391,6 +390,8 @@ export function buildContainer() {
     env.timeouts,
     waIdTurnSerializer,
     whatsappIdempotency,
+    realtimeService,
+    notificationService,
   );
 
   return {

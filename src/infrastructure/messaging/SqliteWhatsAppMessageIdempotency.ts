@@ -66,6 +66,13 @@ export class SqliteWhatsAppMessageIdempotency implements WhatsAppIdempotencyGate
     return this.claim(`out:${id}`, now);
   }
 
+  /** Mismo store; clave `tg:${wamid}` → 1 inboundWamid → máx. 1 Telegram inbound. */
+  claimTelegramInbound(messageId: string, now = Date.now()): boolean {
+    const id = messageId.trim();
+    if (!id) return true;
+    return this.claim(`tg:${id}`, now);
+  }
+
   size(now = Date.now()): number {
     this.purge(now);
     const row = this.db

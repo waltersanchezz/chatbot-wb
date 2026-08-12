@@ -32,6 +32,14 @@ describe('MemoryWhatsAppMessageIdempotency', () => {
     // inbound claim remains independent of outbound key
     expect(store.claim('wamid.OTHER')).toBe(true);
   });
+
+  it('claims telegram inbound once per wamid (namespace tg:)', () => {
+    const store = new MemoryWhatsAppMessageIdempotency(60_000);
+    expect(store.claim('wamid.TG')).toBe(true);
+    expect(store.claimTelegramInbound('wamid.TG')).toBe(true);
+    expect(store.claimTelegramInbound('wamid.TG')).toBe(false);
+    expect(store.claimOutbound('wamid.TG')).toBe(true);
+  });
 });
 
 describe('FileWhatsAppMessageIdempotency (survives process restart)', () => {

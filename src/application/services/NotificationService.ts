@@ -4,6 +4,23 @@ import { logger } from '../../infrastructure/logging/logger';
 const MAX_ATTEMPTS = 3;
 const ATTEMPT_TIMEOUT_MS = 8_000;
 const BACKOFF_MS = [0, 800, 2_000] as const;
+/** Margen bajo el límite 4096 de Telegram (plantilla + botón). */
+const MAX_INBOUND_MESSAGE_CHARS = 1_200;
+const MIN_WA_DIGITS = 8;
+
+export interface InboundCustomerTelegramInput {
+  phone: string;
+  customerName?: string | null;
+  messageText: string;
+  /** Marca / modelo / año ya conocidos (omitir si vacío). */
+  vehicleLabel?: string | null;
+  /** Referencia Willard ya recomendada (omitir si vacío). */
+  batteryLabel?: string | null;
+  /** Instantánea del mensaje (default: ahora). */
+  at?: Date;
+  /** Correlación logs (wamid / message id). */
+  correlationId?: string | null;
+}
 
 /**
  * Notificaciones externas (Telegram) — Production Sprint 4.
@@ -44,7 +61,7 @@ export class NotificationService {
           url,
           chatId,
           text,
-          leadId: lead.id,
+          correlationId: lead.id,
           attempt,
         });
 
@@ -82,38 +99,129 @@ export class NotificationService {
     }
   }
 
+  /**
+   * Alerta inmediata: mensaje entrante de cliente (no lead/handoff).
+   * No reemplaza ni altera notifyNewLead.
+   */
+  async notifyInboundCustomerMessage(
+    input: InboundCustomerTelegramInput,
+  ): Promise<boolean> {
+    const correlationId =
+      input.correlationId?.trim() || input.phone.trim() || 'inbound';
+
+    logger.info('[Telegram] Entró a notifyInboundCustomerMessage', {
+      correlationId,
+    });
+
+    try {
+      const token = (process.env.TELEGRAM_BOT_TOKEN ?? '').trim();
+      const chatId = (process.env.TELEGRAM_CHAT_ID ?? '').trim();
+
+      if (!token || !chatId) {
+        logger.error('[Telegram] ABORT inbound: credenciales vacías', {
+          correlationId,
+        });
+        return false;
+      }
+
+      const text = formatInboundCustomerTelegramText(input);
+      const waUrl = buildWhatsAppMeUrl(input.phone);
+      const url = `https://api.telegram.org/bot${token}/sendMessage`;
+
+      for (let attempt = 1; attempt <= MAX_ATTEMPTS; attempt += 1) {
+        const delayMs = BACKOFF_MS[attempt - 1] ?? 0;
+        if (delayMs > 0) {
+          await sleep(delayMs);
+        }
+
+        const result = await this.sendOnce({
+          url,
+          chatId,
+          text,
+          correlationId,
+          attempt,
+          replyMarkup: waUrl
+            ? {
+                inline_keyboard: [
+                  [{ text: '👉 Abrir WhatsApp', url: waUrl }],
+                ],
+              }
+            : undefined,
+        });
+
+        if (result === 'ok') {
+          logger.info('[Telegram] Inbound notificado correctamente', {
+            correlationId,
+            attempt,
+            hasWaButton: Boolean(waUrl),
+          });
+          return true;
+        }
+
+        if (result === 'permanent') {
+          logger.error('[Telegram] Inbound rechazado sin reintento', {
+            correlationId,
+            attempt,
+          });
+          return false;
+        }
+
+        logger.warn('[Telegram] Inbound intento fallido; reintentando si aplica', {
+          correlationId,
+          attempt,
+          maxAttempts: MAX_ATTEMPTS,
+        });
+      }
+
+      return false;
+    } catch (err) {
+      logger.error('[Telegram] Error inbound completo', {
+        correlationId,
+        error: err instanceof Error ? err.message : String(err),
+        stack: err instanceof Error ? err.stack : undefined,
+      });
+      return false;
+    }
+  }
+
   private async sendOnce(input: {
     url: string;
     chatId: string;
     text: string;
-    leadId: string;
+    correlationId: string;
     attempt: number;
+    replyMarkup?: { inline_keyboard: Array<Array<{ text: string; url: string }>> };
   }): Promise<'ok' | 'retry' | 'permanent'> {
     const controller = new AbortController();
     const timeout = setTimeout(() => controller.abort(), ATTEMPT_TIMEOUT_MS);
 
     try {
       logger.info('[Telegram] Enviando petición HTTP', {
-        leadId: input.leadId,
+        leadId: input.correlationId,
         attempt: input.attempt,
       });
+
+      const body = new URLSearchParams({
+        chat_id: input.chatId,
+        text: input.text,
+        disable_web_page_preview: 'true',
+      });
+      if (input.replyMarkup) {
+        body.set('reply_markup', JSON.stringify(input.replyMarkup));
+      }
 
       const response = await fetch(input.url, {
         method: 'POST',
         headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
-        body: new URLSearchParams({
-          chat_id: input.chatId,
-          text: input.text,
-          disable_web_page_preview: 'true',
-        }),
+        body,
         signal: controller.signal,
       });
 
-      const body = await response.text();
+      const responseBody = await response.text();
       logger.info('[Telegram] Respuesta HTTP', {
         status: response.status,
-        bodyPreview: body.slice(0, 200),
-        leadId: input.leadId,
+        bodyPreview: responseBody.slice(0, 200),
+        leadId: input.correlationId,
         attempt: input.attempt,
       });
 
@@ -168,6 +276,96 @@ export class NotificationService {
       '🟢 Nuevo',
     ].join('\n');
   }
+}
+
+/** Solo dígitos; vacío si no hay número usable. */
+export function phoneDigitsForWhatsApp(raw: string | null | undefined): string {
+  if (!raw?.trim()) return '';
+  return raw
+    .replace(/^(whatsapp:|wa:)/i, '')
+    .replace(/\D/g, '');
+}
+
+/** `https://wa.me/<digits>` o null si el número no es válido. */
+export function buildWhatsAppMeUrl(phone: string | null | undefined): string | null {
+  const digits = phoneDigitsForWhatsApp(phone);
+  if (digits.length < MIN_WA_DIGITS) return null;
+  return `https://wa.me/${digits}`;
+}
+
+export function formatInboundCustomerTelegramText(
+  input: InboundCustomerTelegramInput,
+): string {
+  const phone = input.phone.trim();
+  const name = input.customerName?.trim() || phone || 'Cliente WhatsApp';
+  const message = truncateInboundMessage(input.messageText);
+  const at = input.at ?? new Date();
+  const hour = at.toLocaleString('es-CO', {
+    hour: '2-digit',
+    minute: '2-digit',
+    day: '2-digit',
+    month: '2-digit',
+    year: 'numeric',
+  });
+
+  const lines: string[] = [
+    '🔔 NUEVO MENSAJE DE WHATSAPP',
+    '',
+    `👤 Cliente: ${name}`,
+    `📞 WhatsApp: ${phone || '—'}`,
+    '',
+    '💬 Mensaje:',
+    `"${message}"`,
+  ];
+
+  const vehicle = input.vehicleLabel?.trim();
+  if (vehicle) {
+    lines.push('', `🚗 Vehículo: ${vehicle}`);
+  }
+
+  const battery = input.batteryLabel?.trim();
+  if (battery) {
+    lines.push('', `🔋 Batería: ${battery}`);
+  }
+
+  lines.push('', `🕒 Hora: ${hour}`);
+  return lines.join('\n');
+}
+
+export function truncateInboundMessage(
+  text: string,
+  maxChars: number = MAX_INBOUND_MESSAGE_CHARS,
+): string {
+  const normalized = text.replace(/\r\n/g, '\n').trim();
+  if (normalized.length <= maxChars) return normalized;
+  return `${normalized.slice(0, Math.max(0, maxChars - 1))}…`;
+}
+
+/** Construye etiqueta de vehículo solo con datos reales presentes. */
+export function buildVehicleLabelForTelegram(vehicle: {
+  brand?: string | null;
+  model?: string | null;
+  year?: string | null;
+}): string | null {
+  const parts = [vehicle.brand, vehicle.model, vehicle.year]
+    .map((p) => (typeof p === 'string' ? p.trim() : ''))
+    .filter(Boolean);
+  return parts.length > 0 ? parts.join(' ') : null;
+}
+
+/** Primera referencia real conocida; null si no hay. */
+export function buildBatteryLabelForTelegram(context: {
+  lastRecommendedReference?: string | null;
+  lastRecommendedReferences?: string[] | null;
+  recommendedProductIds?: string[] | null;
+}): string | null {
+  const single = context.lastRecommendedReference?.trim();
+  if (single) return single;
+  const fromList = context.lastRecommendedReferences?.find((r) => r?.trim());
+  if (fromList?.trim()) return fromList.trim();
+  const fromIds = context.recommendedProductIds?.find((r) => r?.trim());
+  if (fromIds?.trim()) return fromIds.trim();
+  return null;
 }
 
 function sleep(ms: number): Promise<void> {

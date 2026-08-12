@@ -22,6 +22,19 @@ export interface RealtimeEventPayload {
   waId?: string;
   tenantId?: string;
   at: string;
+  /**
+   * true solo cuando el evento corresponde a un mensaje entrante del cliente
+   * (no a una respuesta del bot ni a fan-out genérico).
+   */
+  inboundCustomerMessage?: boolean;
+  /** Id interno del mensaje customer en el turno. */
+  messageId?: string;
+  /** WhatsApp Cloud API wamid del inbound (si existe). */
+  inboundWamid?: string | null;
+  /** Nombre visible del cliente (si se conoce). */
+  customerName?: string | null;
+  /** Teléfono / wa digits para UI y deep-link. */
+  phone?: string | null;
   /** Contexto opcional para AutomationService (sin tocar ConversationEngine). */
   leadScore?: number | null;
   salesFlowState?: string | null;

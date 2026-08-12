@@ -25,6 +25,12 @@ export interface WhatsAppIdempotencyGate {
    * @returns true → enviar; false → ya se reclamó el envío para este wamid.
    */
   claimOutbound(messageId: string, now?: number): boolean;
+
+  /**
+   * 1 inboundWamid → máximo 1 alerta Telegram de mensaje cliente.
+   * Mismo store; clave `tg:${wamid}` (no tabla nueva).
+   */
+  claimTelegramInbound(messageId: string, now?: number): boolean;
 }
 
 const DEFAULT_TTL_MS = 24 * 60 * 60 * 1000; // 24h — retries de Meta pueden espaciarse
@@ -53,6 +59,12 @@ export class MemoryWhatsAppMessageIdempotency implements WhatsAppIdempotencyGate
     const id = messageId.trim();
     if (!id) return true;
     return this.claim(`out:${id}`, now);
+  }
+
+  claimTelegramInbound(messageId: string, now = Date.now()): boolean {
+    const id = messageId.trim();
+    if (!id) return true;
+    return this.claim(`tg:${id}`, now);
   }
 
   size(): number {
@@ -101,6 +113,12 @@ export class FileWhatsAppMessageIdempotency implements WhatsAppIdempotencyGate {
     const id = messageId.trim();
     if (!id) return true;
     return this.claim(`out:${id}`, now);
+  }
+
+  claimTelegramInbound(messageId: string, now = Date.now()): boolean {
+    const id = messageId.trim();
+    if (!id) return true;
+    return this.claim(`tg:${id}`, now);
   }
 
   /** Recarga forzada desde disco (tests de “reinicio”). */

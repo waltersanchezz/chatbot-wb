@@ -16,13 +16,47 @@ import {
 } from '../../shared/result';
 import { withTimeout } from '../../shared/timeout';
 import type { Channel } from '../../shared/types';
+import { getActiveTenantId } from '../../domain/tenant/TenantContext';
 import { WaIdTurnSerializer } from '../concurrency/WaIdTurnSerializer';
 import type { ConversationEngine } from '../services/ConversationEngine';
 import type { LeadService } from '../services/LeadService';
 import type { MetricsService } from '../services/MetricsService';
+import {
+  buildBatteryLabelForTelegram,
+  buildVehicleLabelForTelegram,
+  type NotificationService,
+} from '../services/NotificationService';
+import type { RealtimeService } from '../services/RealtimeService';
 
 function replyHash(text: string): string {
   return createHash('sha256').update(text).digest('hex').slice(0, 16);
+}
+
+/** Solo DIAG_TURN_LOGS=1 (exacto) habilita trazas detalladas de turno. */
+export function isDiagTurnLogsEnabled(
+  env: NodeJS.ProcessEnv = process.env,
+): boolean {
+  return env.DIAG_TURN_LOGS?.trim() === '1';
+}
+
+/** Enmascara waId / teléfono: whatsapp:57300… → whatsapp:***4567 */
+export function maskWaIdForDiag(waId: string): string {
+  const t = waId.trim();
+  if (!t) return 'none';
+  const colon = t.indexOf(':');
+  if (colon >= 0) {
+    const prefix = t.slice(0, colon);
+    const rest = t.slice(colon + 1);
+    if (rest.length <= 4) return `${prefix}:***`;
+    return `${prefix}:***${rest.slice(-4)}`;
+  }
+  if (t.length <= 4) return '***';
+  return `***${t.slice(-4)}`;
+}
+
+function diagTurnLog(line: string): void {
+  if (!isDiagTurnLogsEnabled()) return;
+  console.log(line);
 }
 
 export interface IncomingMessageInput {
@@ -82,6 +116,10 @@ export class HandleIncomingMessage {
     timeouts?: Partial<HandleIncomingTimeouts>,
     turnSerializer?: WaIdTurnSerializer,
     sendGate?: WhatsAppIdempotencyGate,
+    /** Dashboard SSE: emitir solo tras save OK. */
+    private readonly realtime?: RealtimeService,
+    /** Telegram inbound cliente (aparte de notifyNewLead). */
+    private readonly notifications?: NotificationService,
   ) {
     this.timeouts = { ...DEFAULT_TIMEOUTS, ...timeouts };
     this.turnSerializer = turnSerializer ?? defaultTurnSerializer;
@@ -174,6 +212,10 @@ export class HandleIncomingMessage {
       return 'failed';
     }
 
+    const providerMessageId = providerResult.providerMessageId;
+    diagTurnLog(
+      `[TURN_SEND_OK] ts=${new Date().toISOString()} turnId=${turnId} wamid=${wamid ?? 'none'} providerMessageId=${providerMessageId ?? 'none'}`,
+    );
     return 'sent';
   }
 
@@ -190,19 +232,17 @@ export class HandleIncomingMessage {
     let isNewConversation = false;
     let previousContext = createEmptyContext();
 
-    console.log(
-      `[TURN START] turnId=${turnId} waId=${waId} inboundWamid=${input.inboundWamid ?? 'none'} text=${JSON.stringify(input.text.slice(0, 120))}`,
-    );
-
-    // TEMP DIAG: traza de entrada — no cambia lógica
-    console.log('[DIAG][HandleIncomingMessage.execute] ENTER', {
-      waId,
-      phone: input.phone,
-      channel: input.channel,
-      inboundWamid: input.inboundWamid ?? null,
-      textPreview: input.text.slice(0, 80),
-      requestId,
-    });
+    // TEMP DIAG: solo con DIAG_TURN_LOGS=1; phone/waId enmascarados.
+    if (isDiagTurnLogsEnabled()) {
+      console.log('[DIAG][HandleIncomingMessage.execute] ENTER', {
+        waId: maskWaIdForDiag(waId),
+        phone: maskWaIdForDiag(input.phone),
+        channel: input.channel,
+        inboundWamid: input.inboundWamid ?? null,
+        textPreview: input.text.slice(0, 80),
+        requestId,
+      });
+    }
 
     if (input.inboundWamid && input.auditRequestId) {
       whatsappDeliveryAudit.recordHandleEnter({
@@ -265,6 +305,11 @@ export class HandleIncomingMessage {
       }
 
       previousContext = { ...conversation.context };
+      const stateBefore = {
+        salesState: conversation.context.salesFlow?.state ?? null,
+        nextAction: conversation.context.salesFlow?.nextAction ?? null,
+        stage: conversation.context.stage,
+      };
       const inbound: Message = {
         id: randomUUID(),
         conversationId: conversation.id,
@@ -277,6 +322,10 @@ export class HandleIncomingMessage {
         },
       };
       conversation.messages.push(inbound);
+
+      diagTurnLog(
+        `[TURN_START] ts=${new Date().toISOString()} turnId=${turnId} wamid=${input.inboundWamid ?? 'none'} waId=${maskWaIdForDiag(waId)} salesState=${stateBefore.salesState} nextAction=${stateBefore.nextAction} stage=${stateBefore.stage} handler=HandleIncomingMessage.executeTurn→ConversationEngine.process text=${JSON.stringify(input.text.slice(0, 120))}`,
+      );
 
       const engineOutcome = await withTimeout(
         () => this.engine.process(conversation!, input.text),
@@ -369,17 +418,19 @@ export class HandleIncomingMessage {
           code: 'TIMEOUT',
         },
       );
-      // TEMP DIAG: resultado del save post-turno
-      console.log('[DIAG][HandleIncomingMessage.execute] AFTER conversations.save', {
-        waId: conversation.externalId,
-        conversationId: conversation.id,
-        saveOk: saveOutcome.ok,
-        saveError: saveOutcome.ok
-          ? null
-          : saveOutcome.error instanceof Error
-            ? saveOutcome.error.message
-            : String(saveOutcome.error),
-      });
+      // TEMP DIAG: solo con DIAG_TURN_LOGS=1; waId enmascarado (sin texto/reply).
+      if (isDiagTurnLogsEnabled()) {
+        console.log('[DIAG][HandleIncomingMessage.execute] AFTER conversations.save', {
+          waId: maskWaIdForDiag(conversation.externalId),
+          conversationId: conversation.id,
+          saveOk: saveOutcome.ok,
+          saveError: saveOutcome.ok
+            ? null
+            : saveOutcome.error instanceof Error
+              ? saveOutcome.error.message
+              : String(saveOutcome.error),
+        });
+      }
       if (!saveOutcome.ok) {
         logger.exception(
           'HandleIncomingMessage — save timeout/error; sendText bloqueado',
@@ -432,6 +483,24 @@ export class HandleIncomingMessage {
       console.log(
         `[TURN SAVE OK] turnId=${turnId} conversationId=${conversation.id}`,
       );
+
+      this.publishRealtimeAfterSave({
+        conversation,
+        inboundMessageId: inbound.id,
+        createdConversation: isNewConversation,
+        phone: input.phone,
+        customerName: input.customerName ?? customer.name,
+        inboundWamid: input.inboundWamid,
+      });
+
+      this.dispatchInboundTelegramAfterSave({
+        phone: input.phone,
+        customerName: input.customerName ?? customer.name,
+        messageText: input.text,
+        conversation,
+        inboundWamid: input.inboundWamid,
+        inboundMessageId: inbound.id,
+      });
 
       let sendStatus: 'sent' | 'skipped_duplicate' | 'failed' | 'not_attempted' =
         'not_attempted';
@@ -494,7 +563,9 @@ export class HandleIncomingMessage {
         });
       }
 
-      console.log(`[TURN END] turnId=${turnId} ok=${turnOk}`);
+      diagTurnLog(
+        `[TURN_END] ts=${new Date().toISOString()} turnId=${turnId} wamid=${input.inboundWamid ?? 'none'} waId=${maskWaIdForDiag(waId)} salesState=${conversation.context.salesFlow?.state ?? null} nextAction=${conversation.context.salesFlow?.nextAction ?? null} stage=${conversation.context.stage} reply=${JSON.stringify(reply.slice(0, 160))} ok=${turnOk}`,
+      );
 
       return {
         conversationId: conversation.id,
@@ -565,6 +636,25 @@ export class HandleIncomingMessage {
             { requestId },
           );
         } else {
+          const lastCustomer = [...conversation.messages]
+            .reverse()
+            .find((m) => m.role === 'customer');
+          this.publishRealtimeAfterSave({
+            conversation,
+            inboundMessageId: lastCustomer?.id ?? randomUUID(),
+            createdConversation: isNewConversation,
+            phone: input.phone,
+            customerName: input.customerName ?? undefined,
+            inboundWamid: input.inboundWamid,
+          });
+          this.dispatchInboundTelegramAfterSave({
+            phone: input.phone,
+            customerName: input.customerName,
+            messageText: input.text,
+            conversation,
+            inboundWamid: input.inboundWamid,
+            inboundMessageId: lastCustomer?.id,
+          });
           // Handoff por error: igual debe crear lead + Telegram (no silencioso).
           void this.captureLeadSafe({
             conversation,
@@ -653,6 +743,98 @@ export class HandleIncomingMessage {
         sendSkippedDueToPersistFailure: conversation ? !persistOk : undefined,
       };
     }
+  }
+
+  private publishRealtimeAfterSave(input: {
+    conversation: Conversation;
+    inboundMessageId: string;
+    createdConversation: boolean;
+    phone: string;
+    customerName?: string | null;
+    inboundWamid?: string;
+  }): void {
+    if (!this.realtime) return;
+    try {
+      this.realtime.onTurnCompleted({
+        conversationId: input.conversation.id,
+        waId: input.conversation.externalId,
+        createdConversation: input.createdConversation,
+        tenantId: getActiveTenantId(),
+        inboundCustomerMessage: true,
+        messageId: input.inboundMessageId,
+        inboundWamid: input.inboundWamid ?? null,
+        customerName: input.customerName ?? null,
+        phone: input.phone,
+      });
+    } catch (err) {
+      logger.exception(
+        'RealtimeService.onTurnCompleted — error controlado (post-save)',
+        err,
+        {
+          service: 'RealtimeService',
+          operation: 'onTurnCompleted',
+          conversationId: input.conversation.id,
+        },
+      );
+    }
+  }
+
+  /**
+   * Telegram inbound cliente: fire-and-forget tras save OK.
+   * Dedupe: mismo gate de wamid con namespace `tg:` (claimTelegramInbound).
+   * No bloquea WhatsApp si Telegram falla.
+   */
+  private dispatchInboundTelegramAfterSave(input: {
+    phone: string;
+    customerName?: string | null;
+    messageText: string;
+    conversation: Conversation;
+    inboundWamid?: string;
+    inboundMessageId?: string;
+  }): void {
+    if (!this.notifications) return;
+
+    const wamid = input.inboundWamid?.trim();
+    const dedupeKey = wamid || input.inboundMessageId?.trim() || '';
+    if (dedupeKey && this.sendGate) {
+      const allowed = this.sendGate.claimTelegramInbound(dedupeKey);
+      if (!allowed) {
+        logger.info('Telegram inbound skipped: already claimed for key', {
+          dedupeKey: wamid ? `wamid:${wamid}` : `msg:${dedupeKey}`,
+          conversationId: input.conversation.id,
+        });
+        return;
+      }
+    }
+
+    const vehicleLabel = buildVehicleLabelForTelegram(
+      input.conversation.context.vehicle,
+    );
+    const batteryLabel = buildBatteryLabelForTelegram(
+      input.conversation.context,
+    );
+
+    void this.notifications
+      .notifyInboundCustomerMessage({
+        phone: input.phone,
+        customerName: input.customerName,
+        messageText: input.messageText,
+        vehicleLabel,
+        batteryLabel,
+        at: new Date(),
+        correlationId: wamid || input.inboundMessageId || input.phone,
+      })
+      .catch((err) => {
+        logger.exception(
+          'Telegram inbound — error fire-and-forget (ignorado)',
+          err,
+          {
+            service: 'NotificationService',
+            operation: 'notifyInboundCustomerMessage',
+            conversationId: input.conversation.id,
+          },
+        );
+      });
   }
 
   private async captureLeadSafe(params: {
