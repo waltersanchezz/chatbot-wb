@@ -24,6 +24,8 @@ import type { MetricsService } from '../services/MetricsService';
 import {
   buildBatteryLabelForTelegram,
   buildVehicleLabelForTelegram,
+  buildYearLabelForTelegram,
+  readSoundSystemFromContext,
   type NotificationService,
 } from '../services/NotificationService';
 import type { RealtimeService } from '../services/RealtimeService';
@@ -810,9 +812,13 @@ export class HandleIncomingMessage {
     const vehicleLabel = buildVehicleLabelForTelegram(
       input.conversation.context.vehicle,
     );
+    const yearLabel = buildYearLabelForTelegram(
+      input.conversation.context.vehicle,
+    );
     const batteryLabel = buildBatteryLabelForTelegram(
       input.conversation.context,
     );
+    const soundSystem = readSoundSystemFromContext(input.conversation.context);
 
     void this.notifications
       .notifyInboundCustomerMessage({
@@ -820,6 +826,8 @@ export class HandleIncomingMessage {
         customerName: input.customerName,
         messageText: input.messageText,
         vehicleLabel,
+        yearLabel,
+        soundSystem,
         batteryLabel,
         at: new Date(),
         correlationId: wamid || input.inboundMessageId || input.phone,

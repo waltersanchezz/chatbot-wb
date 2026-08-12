@@ -3,8 +3,10 @@ import {
   buildBatteryLabelForTelegram,
   buildVehicleLabelForTelegram,
   buildWhatsAppMeUrl,
+  formatColombiaDateTime,
   formatInboundCustomerTelegramText,
   NotificationService,
+  readSoundSystemFromContext,
   truncateInboundMessage,
 } from '../../src/application/services/NotificationService';
 import { LeadService } from '../../src/application/services/LeadService';
@@ -63,22 +65,70 @@ describe('formatInboundCustomerTelegramText', () => {
     expect(text).toContain('📞 WhatsApp: 573001112233');
     expect(text).toContain('"Hola"');
     expect(text).not.toContain('🚗 Vehículo');
-    expect(text).not.toContain('🔋 Batería');
+    expect(text).not.toContain('📅 Año');
+    expect(text).not.toContain('🔊 Planta de sonido');
+    expect(text).not.toContain('🔋 Recomendación');
     expect(text).toContain('🕒 Hora:');
   });
 
-  it('incluye vehículo y batería solo cuando existen', () => {
+  it('incluye vehículo, año y recomendación cuando existen', () => {
     const text = formatInboundCustomerTelegramText({
       phone: '573001112233',
       customerName: 'Carlos',
       messageText: 'Ok',
-      vehicleLabel: 'RENAULT Logan 2015',
+      vehicleLabel: 'RENAULT Logan',
+      yearLabel: '2015',
       batteryLabel: 'NS40L',
       at: new Date('2026-08-11T20:00:00.000Z'),
     });
     expect(text).toContain('👤 Cliente: Carlos');
-    expect(text).toContain('🚗 Vehículo: RENAULT Logan 2015');
-    expect(text).toContain('🔋 Batería: NS40L');
+    expect(text).toContain('🚗 Vehículo: RENAULT Logan');
+    expect(text).toContain('📅 Año: 2015');
+    expect(text).toContain('🔋 Recomendación:');
+    expect(text).toContain('NS40L');
+    expect(text).not.toContain('🔊 Planta de sonido');
+  });
+
+  it('formatea hora en America/Bogota (no UTC del servidor)', () => {
+    const utc = new Date('2026-08-12T00:08:00.000Z');
+    const hour = formatColombiaDateTime(utc);
+    expect(hour).toMatch(/11\/08\/2026/);
+    expect(hour.toLowerCase()).toMatch(/7:08/);
+    expect(hour.toLowerCase()).toMatch(/p\.\s*m\./);
+    expect(hour).not.toMatch(/12\/08\/2026/);
+
+    const text = formatInboundCustomerTelegramText({
+      phone: '573108918761',
+      customerName: 'Juliana',
+      messageText: 'no',
+      at: utc,
+    });
+    expect(text).toContain(`🕒 Hora: ${hour}`);
+  });
+
+  it('planta de sonido sí / no / omitida', () => {
+    const yes = formatInboundCustomerTelegramText({
+      phone: '573001112233',
+      messageText: 'sí',
+      soundSystem: true,
+      at: new Date('2026-08-12T00:08:00.000Z'),
+    });
+    expect(yes).toContain('🔊 Planta de sonido: ✅ Sí');
+
+    const no = formatInboundCustomerTelegramText({
+      phone: '573001112233',
+      messageText: 'no',
+      soundSystem: false,
+      at: new Date('2026-08-12T00:08:00.000Z'),
+    });
+    expect(no).toContain('🔊 Planta de sonido: ❌ No');
+
+    const pending = formatInboundCustomerTelegramText({
+      phone: '573001112233',
+      messageText: 'Hola',
+      at: new Date('2026-08-12T00:08:00.000Z'),
+    });
+    expect(pending).not.toContain('🔊 Planta de sonido');
   });
 
   it('trunca mensajes largos', () => {
@@ -109,11 +159,25 @@ describe('buildWhatsAppMeUrl / labels', () => {
     expect(buildVehicleLabelForTelegram({})).toBeNull();
     expect(
       buildVehicleLabelForTelegram({ brand: 'MAZDA', model: '2', year: '2008' }),
-    ).toBe('MAZDA 2 2008');
+    ).toBe('MAZDA 2');
     expect(buildBatteryLabelForTelegram({})).toBeNull();
     expect(
       buildBatteryLabelForTelegram({ lastRecommendedReference: ' 75D23L ' }),
     ).toBe('75D23L');
+    expect(
+      buildBatteryLabelForTelegram({
+        lastRecommendedReferences: ['24BD-900', '36D-750'],
+      }),
+    ).toBe('24BD-900\n36D-750');
+    expect(readSoundSystemFromContext({})).toBeUndefined();
+    expect(
+      readSoundSystemFromContext({ battery: { soundSystem: false } }),
+    ).toBe(false);
+    expect(
+      readSoundSystemFromContext({
+        salesFlow: { vehicle: { soundSystem: true } },
+      }),
+    ).toBe(true);
   });
 });
 
@@ -431,6 +495,7 @@ describe('HandleIncomingMessage → Telegram inbound', () => {
       year: '2008',
     };
     conv!.context.lastRecommendedReference = 'NS40L';
+    conv!.context.battery = { soundSystem: false };
     await repo.save(conv!);
 
     await useCase.execute({
@@ -444,7 +509,9 @@ describe('HandleIncomingMessage → Telegram inbound', () => {
 
     expect(spy).toHaveBeenCalledTimes(2);
     const second = spy.mock.calls[1]?.[0];
-    expect(second?.vehicleLabel).toBe('MAZDA 2 2008');
+    expect(second?.vehicleLabel).toBe('MAZDA 2');
+    expect(second?.yearLabel).toBe('2008');
+    expect(second?.soundSystem).toBe(false);
     expect(second?.batteryLabel).toBe('NS40L');
   });
 });

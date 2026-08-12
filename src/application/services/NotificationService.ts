@@ -12,8 +12,15 @@ export interface InboundCustomerTelegramInput {
   phone: string;
   customerName?: string | null;
   messageText: string;
-  /** Marca / modelo / año ya conocidos (omitir si vacío). */
+  /** Marca / modelo ya conocidos (omitir si vacío). */
   vehicleLabel?: string | null;
+  /** Año del vehículo si ya existe. */
+  yearLabel?: string | null;
+  /**
+   * Planta de sonido / amplificador (`context.battery.soundSystem`).
+   * undefined = aún no se preguntó → omitir línea.
+   */
+  soundSystem?: boolean;
   /** Referencia Willard ya recomendada (omitir si vacío). */
   batteryLabel?: string | null;
   /** Instantánea del mensaje (default: ahora). */
@@ -293,6 +300,18 @@ export function buildWhatsAppMeUrl(phone: string | null | undefined): string | n
   return `https://wa.me/${digits}`;
 }
 
+export function formatColombiaDateTime(at: Date): string {
+  return at.toLocaleString('es-CO', {
+    timeZone: 'America/Bogota',
+    day: '2-digit',
+    month: '2-digit',
+    year: 'numeric',
+    hour: 'numeric',
+    minute: '2-digit',
+    hour12: true,
+  });
+}
+
 export function formatInboundCustomerTelegramText(
   input: InboundCustomerTelegramInput,
 ): string {
@@ -300,13 +319,7 @@ export function formatInboundCustomerTelegramText(
   const name = input.customerName?.trim() || phone || 'Cliente WhatsApp';
   const message = truncateInboundMessage(input.messageText);
   const at = input.at ?? new Date();
-  const hour = at.toLocaleString('es-CO', {
-    hour: '2-digit',
-    minute: '2-digit',
-    day: '2-digit',
-    month: '2-digit',
-    year: 'numeric',
-  });
+  const hour = formatColombiaDateTime(at);
 
   const lines: string[] = [
     '🔔 NUEVO MENSAJE DE WHATSAPP',
@@ -323,9 +336,20 @@ export function formatInboundCustomerTelegramText(
     lines.push('', `🚗 Vehículo: ${vehicle}`);
   }
 
+  const year = input.yearLabel?.trim();
+  if (year) {
+    lines.push(`📅 Año: ${year}`);
+  }
+
+  if (typeof input.soundSystem === 'boolean') {
+    lines.push(
+      `🔊 Planta de sonido: ${input.soundSystem ? '✅ Sí' : '❌ No'}`,
+    );
+  }
+
   const battery = input.batteryLabel?.trim();
   if (battery) {
-    lines.push('', `🔋 Batería: ${battery}`);
+    lines.push('', '🔋 Recomendación:', battery);
   }
 
   lines.push('', `🕒 Hora: ${hour}`);
@@ -341,30 +365,62 @@ export function truncateInboundMessage(
   return `${normalized.slice(0, Math.max(0, maxChars - 1))}…`;
 }
 
-/** Construye etiqueta de vehículo solo con datos reales presentes. */
+/** Marca + modelo; el año va en línea aparte. */
 export function buildVehicleLabelForTelegram(vehicle: {
   brand?: string | null;
   model?: string | null;
   year?: string | null;
 }): string | null {
-  const parts = [vehicle.brand, vehicle.model, vehicle.year]
+  const parts = [vehicle.brand, vehicle.model]
     .map((p) => (typeof p === 'string' ? p.trim() : ''))
     .filter(Boolean);
   return parts.length > 0 ? parts.join(' ') : null;
 }
 
-/** Primera referencia real conocida; null si no hay. */
+export function buildYearLabelForTelegram(vehicle: {
+  year?: string | null;
+}): string | null {
+  const year = vehicle.year?.trim();
+  return year ? year : null;
+}
+
+/**
+ * Valor real de planta de sonido (`boolean`).
+ * undefined si todavía no se preguntó / no hay dato.
+ */
+export function readSoundSystemFromContext(context: {
+  battery?: { soundSystem?: boolean };
+  salesFlow?: { vehicle?: { soundSystem?: boolean } };
+}): boolean | undefined {
+  if (typeof context.battery?.soundSystem === 'boolean') {
+    return context.battery.soundSystem;
+  }
+  if (typeof context.salesFlow?.vehicle?.soundSystem === 'boolean') {
+    return context.salesFlow.vehicle.soundSystem;
+  }
+  return undefined;
+}
+
+function stripWillardPrefix(raw: string): string {
+  return raw.replace(/^willard:/i, '').trim();
+}
+
+/** Referencias reales conocidas; null si no hay. */
 export function buildBatteryLabelForTelegram(context: {
   lastRecommendedReference?: string | null;
   lastRecommendedReferences?: string[] | null;
   recommendedProductIds?: string[] | null;
 }): string | null {
-  const single = context.lastRecommendedReference?.trim();
+  const fromList = (context.lastRecommendedReferences ?? [])
+    .map((r) => stripWillardPrefix(r ?? ''))
+    .filter(Boolean);
+  if (fromList.length > 0) return fromList.join('\n');
+  const single = stripWillardPrefix(context.lastRecommendedReference ?? '');
   if (single) return single;
-  const fromList = context.lastRecommendedReferences?.find((r) => r?.trim());
-  if (fromList?.trim()) return fromList.trim();
-  const fromIds = context.recommendedProductIds?.find((r) => r?.trim());
-  if (fromIds?.trim()) return fromIds.trim();
+  const fromIds = (context.recommendedProductIds ?? [])
+    .map((r) => stripWillardPrefix(r ?? ''))
+    .filter(Boolean);
+  if (fromIds.length > 0) return fromIds.join('\n');
   return null;
 }
 
