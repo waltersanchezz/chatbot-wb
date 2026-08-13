@@ -195,6 +195,40 @@ export function isNegativeReply(text: string): boolean {
   return /^(no|nop|incorrecto|mal|negativo)$/i.test(text.trim());
 }
 
+/**
+ * Cierre / rechazo de servicio (no solo “no” corto).
+ * En WAITING_CONFIRMATION no debe re-preguntar ASK_INTEREST ni reiniciar vehículo.
+ */
+export function isServiceDeclineReply(text: string): boolean {
+  const t = text.trim();
+  if (!t) return false;
+  if (isNegativeReply(t)) return true;
+  return /^(ya\s+no\s+necesito(?:\s+el\s+servicio)?|no\s+necesito|ya\s+no\s+quiero|no\s+quiero\s+continuar|d[eé]jalo\s+as[ií]|gracias,?\s+ya\s+no|ya\s+no\s+me\s+interesa)(?:\s*[!?.…])*$/i.test(
+    t,
+  );
+}
+
+/**
+ * Intención explícita de buscar otra opción/batería.
+ * Única vía válida para reiniciar START_FLOW tras una recomendación.
+ */
+export function isExplicitSearchAnotherReply(text: string): boolean {
+  const t = text.trim();
+  if (!t) return false;
+  return /^(quiero\s+buscar\s+otra|buscar\s+otra(?:\s+bater[ií]a)?|quiero\s+otra\s+opci[oó]n|s[ií],?\s+quiero\s+buscar\s+otra|quiero\s+otra(?:\s+bater[ií]a)?|otra\s+opci[oó]n|busquemos\s+otra)(?:\s*[!?.…])*$/i.test(
+    t,
+  );
+}
+
+/** Cierre tras rechazar recomendación / declinar servicio (END_CONVERSATION). */
+export function recommendationRejectedCloseMessage(): string {
+  return [
+    'Entiendo 👍',
+    '',
+    'Si más adelante quieres buscar otra batería, escríbeme.',
+  ].join('\n');
+}
+
 function formatSpecDetails(option: WillardRecommendedOption): string[] {
   const spec = option.spec;
   if (!spec) return [];
