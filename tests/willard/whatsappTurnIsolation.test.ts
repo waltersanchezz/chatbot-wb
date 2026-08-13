@@ -803,11 +803,11 @@ describe('WhatsApp turn isolation — regresión repetición de pasos', () => {
       { ...conv, context: again.context } as never,
       'Hola',
     );
-    expect(hola.reply).toBe(handoffAlreadyActiveMessage());
-    expect(hola.context.needsHumanHandoff).toBe(true);
-    expect(hola.context.stage).toBe('handoff');
-    expect(hola.context.salesFlow?.nextAction).toBe('HANDOFF_TO_ADVISOR');
-    expect(hola.reply).not.toMatch(/ASK_|vehículo|planta de sonido|batería/i);
+    // Tras handoff, "Hola" reabre (welcome) para no quedar mudo por dedup WhatsApp.
+    expect(hola.reply).toMatch(/Bienvenido|baterías|Rodacenter/i);
+    expect(hola.context.needsHumanHandoff).toBe(false);
+    expect(hola.context.stage).toBe('awaiting_category');
+    expect(hola.context.salesFlow).toBeUndefined();
   });
 
   it('11. CRM save proyecta persisted_sessions', async () => {

@@ -27,6 +27,9 @@ import {
   formatVehicleConfirmation,
   isAffirmativeReply,
   isNegativeReply,
+  isServiceDeclineReply,
+  isExplicitSearchAnotherReply,
+  recommendationRejectedCloseMessage,
   matchPendingModelOption,
 } from '../flows/batteryFlow';
 import {
@@ -58,9 +61,7 @@ import {
   matchesBearingIntent,
 } from './IntentDetector';
 import type { KnowledgeEngine } from './KnowledgeEngine';
-import { getActiveTenantId } from '../../domain/tenant/TenantContext';
 import type { LearningEngine } from './LearningEngine';
-import type { RealtimeService } from './RealtimeService';
 import type { RecommendationService } from './RecommendationService';
 import { SecurityGuard } from './SecurityGuard';
 import {
@@ -122,15 +123,10 @@ export class ConversationEngine {
     _persistenceTtlMs: number = 24 * 60 * 60_000,
     /** Learning Engine: analítica local (SQLite), sin APIs externas. */
     private readonly learningEngine?: LearningEngine,
-    /** Realtime (SSE): publica eventos al terminar un turno. */
-    private readonly realtime?: RealtimeService,
   ) {}
 
   async process(conversation: Conversation, userMessage: string): Promise<EngineResult> {
     const previousContext = structuredClone(conversation.context);
-    const customerMessagesBefore = conversation.messages.filter(
-      (m) => m.role === 'customer',
-    ).length;
 
     const outcome = await tryCallAsync(
       () => this.processTurn(conversation, userMessage),
@@ -140,7 +136,8 @@ export class ConversationEngine {
     if (outcome.ok) {
       this.persistRecoveryMemory(conversation, outcome.value.context);
       this.recordLearning(conversation, outcome.value.context, previousContext, userMessage);
-      this.publishRealtimeTurn(conversation, customerMessagesBefore);
+      // Realtime SSE se emite en HandleIncomingMessage DESPUÉS de save OK
+      // (evita carrera refetch vs SQLite y permite marcar inboundCustomerMessage).
       return outcome.value;
     }
 
@@ -262,12 +259,20 @@ export class ConversationEngine {
     ) {
       const preserved = conversation.context;
       if (preserved.needsHumanHandoff || preserved.stage === 'handoff') {
+        // Reabrir canal: repetir handoffAlreadyActiveMessage lo silencia el dedup
+        // de WhatsApp (mismo texto) mientras Telegram sí notifica → chat mudo.
+        this.recoveryEngine?.clear(conversation.externalId);
         return {
-          reply: handoffAlreadyActiveMessage(),
+          reply: welcomeMessage(
+            this.config.companyName,
+            this.config.appName,
+            conversation.messages.find((m) => m.role === 'customer')?.metadata
+              ?.customerName as string | undefined,
+          ),
           context: {
-            ...preserved,
-            stage: 'handoff',
-            needsHumanHandoff: true,
+            ...createEmptyContext(),
+            stage: 'awaiting_category',
+            intent: 'greeting',
           },
         };
       }
@@ -281,6 +286,8 @@ export class ConversationEngine {
       // Reiniciar solo con mensaje explícito ("batería"), no con "sí"/"no" sticky
       // tras closing (p.ej. confirmación de interés post-recomendación).
       const explicitBatteryStart = matchesBatteryIntent(userMessage);
+      // "Bateria" a secas mid-flow no es el modelo/marca: el cliente pide el flujo.
+      // Si no reiniciamos, USER_TEXT reemite el mismo prompt y el dedup silencia WhatsApp.
       const bareBatteryRestart =
         isBareBatteryIntent(userMessage) &&
         this.hasActiveCommercialProgress(conversation.context);
@@ -417,6 +424,7 @@ export class ConversationEngine {
       return this.answerTechnicalQuestion(context, userMessage);
     }
 
+    // "bateria" a secas nunca es un dato de vehículo / sí-no de interés.
     if (isBareBatteryIntent(userMessage)) {
       const hadProgress = Boolean(
         context.vehicle.brand?.trim() ||
@@ -491,24 +499,84 @@ export class ConversationEngine {
     let correctionReset = false;
 
     if (sales.state === 'WAITING_CONFIRMATION') {
-      if (isAffirmativeReply(cleaned)) {
-        result = this.runOrchestrator(session, {
-          type: 'SALES_EVENT',
-          event: { type: 'CUSTOMER_ACCEPTS_RECOMMENDATION' },
-        });
-      } else if (isNegativeReply(cleaned)) {
+      // Nueva búsqueda solo con intención explícita (no inferir de un simple "No").
+      if (isExplicitSearchAnotherReply(cleaned)) {
         result = this.runOrchestrator(session, {
           type: 'SALES_EVENT',
           event: { type: 'CUSTOMER_REJECTS_RECOMMENDATION' },
         });
         result = this.runOrchestrator(result.session, { type: 'START_FLOW' });
-        correctionReset = true;
+        const merged = this.mergeOrchestratorContext(context, result);
+        return {
+          reply: formatAskVehicle(),
+          context: {
+            ...merged,
+            vehicle: {},
+            battery: {},
+            vehicleConfirmed: undefined,
+            pendingModelOptions: undefined,
+            stage: 'collecting_vehicle',
+            needsHumanHandoff: false,
+            handoffReason: undefined,
+            recommendedProductIds: [],
+          },
+        };
+      }
+
+      if (isAffirmativeReply(cleaned)) {
+        result = this.runOrchestrator(session, {
+          type: 'SALES_EVENT',
+          event: { type: 'CUSTOMER_ACCEPTS_RECOMMENDATION' },
+        });
+      } else if (isServiceDeclineReply(cleaned)) {
+        // CLOSED + END_CONVERSATION. Sin START_FLOW / ASK_VEHICLE.
+        result = this.runOrchestrator(session, {
+          type: 'SALES_EVENT',
+          event: { type: 'CUSTOMER_REJECTS_RECOMMENDATION' },
+        });
+        const merged = this.mergeOrchestratorContext(context, result);
+        return {
+          reply: recommendationRejectedCloseMessage(),
+          context: {
+            ...merged,
+            needsHumanHandoff: false,
+            handoffReason: undefined,
+          },
+        };
       } else {
         return {
           reply: ASK_INTEREST,
           context: this.mergeOrchestratorContext(context, { session }),
         };
       }
+    } else if (sales.state === 'CLOSED') {
+      if (isExplicitSearchAnotherReply(cleaned)) {
+        result = this.runOrchestrator(session, { type: 'START_FLOW' });
+        const merged = this.mergeOrchestratorContext(context, result);
+        return {
+          reply: formatAskVehicle(),
+          context: {
+            ...merged,
+            vehicle: {},
+            battery: {},
+            vehicleConfirmed: undefined,
+            pendingModelOptions: undefined,
+            stage: 'collecting_vehicle',
+            needsHumanHandoff: false,
+            handoffReason: undefined,
+            recommendedProductIds: [],
+          },
+        };
+      }
+      // Ya cerrado: no reiniciar por "No" ni re-preguntar interés.
+      return {
+        reply: recommendationRejectedCloseMessage(),
+        context: {
+          ...this.mergeOrchestratorContext(context, { session }),
+          needsHumanHandoff: false,
+          handoffReason: undefined,
+        },
+      };
     } else if (sales.nextAction === 'CONFIRM_VEHICLE') {
       if (isAffirmativeReply(cleaned)) {
         result = this.runOrchestrator(session, {
@@ -886,31 +954,6 @@ export class ConversationEngine {
   }
 
   /**
-   * Dashboard realtime: solo al terminar un turno exitoso.
-   * tenantId viene de TenantContext (ALS); los motores internos no lo reciben.
-   */
-  private publishRealtimeTurn(
-    conversation: Conversation,
-    customerMessagesBefore: number,
-  ): void {
-    if (!this.realtime) return;
-    try {
-      const tenantId = getActiveTenantId();
-      this.realtime.onTurnCompleted({
-        conversationId: conversation.id,
-        waId: conversation.externalId,
-        createdConversation: customerMessagesBefore <= 1,
-        tenantId,
-      });
-    } catch (err) {
-      logger.exception('RealtimeService.onTurnCompleted — error controlado', err, {
-        service: 'RealtimeService',
-        operation: 'onTurnCompleted',
-      });
-    }
-  }
-
-  /**
    * Progreso comercial activo: saludo mid-flow no debe reemitir prompts.
    */
   private hasActiveCommercialProgress(context: ConversationContext): boolean {
@@ -957,6 +1000,8 @@ export class ConversationEngine {
     if (!loaded) return;
 
     const restored = fromPersistedConversation(loaded.conversation);
+    // Sesión nueva/vacía no debe heredar un handoff ya cerrado: el cliente
+    // vuelve (Hola / bateria) y el canal tiene que responder de nuevo.
     if (isTerminalHandoffContext(restored.context)) {
       this.recoveryEngine?.clear(conversation.externalId);
       return;
@@ -1307,7 +1352,7 @@ function replyFromNextAction(sales: SalesFlowSnapshot): string {
     case 'CLARIFY_VEHICLE':
       return handoffMessage(WILLARD_NOT_FOUND);
     case 'END_CONVERSATION':
-      return 'Gracias por escribirnos. Cuando quieras, pedimos otra batería Willard.';
+      return recommendationRejectedCloseMessage();
     case 'SHOW_RECOMMENDATION':
       return formatAskSoundSystem();
     default:

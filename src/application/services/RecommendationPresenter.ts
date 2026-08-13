@@ -82,9 +82,12 @@ export class RecommendationPresenter {
 }
 
 function formatVehicle(query: BatteryRecommendationQuery): string {
-  const parts = [query.marca?.trim(), query.modelo?.trim(), query.year?.trim()].filter(
-    Boolean,
-  );
+  const marca = query.marca?.trim();
+  const parts = [
+    marca ? marca.toUpperCase() : undefined,
+    query.modelo?.trim(),
+    query.year?.trim(),
+  ].filter(Boolean);
   return parts.join(' ') || 'tu vehículo';
 }
 

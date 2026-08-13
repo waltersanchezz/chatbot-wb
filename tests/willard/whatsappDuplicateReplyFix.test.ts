@@ -284,7 +284,7 @@ describe('WhatsApp duplicate reply fix — Part 6', () => {
     expect(no.context.salesFlow?.nextAction).not.toBe('ASK_SOUND');
   });
 
-  it('Handoff + Hola → no reabre flujo', async () => {
+  it('Handoff + Hola → reabre con welcome (evita WhatsApp mudo por dedup)', async () => {
     const { engine } = buildStack();
     const conv = askYearConv('ASK_SOUND');
     conv.context.needsHumanHandoff = true;
@@ -299,10 +299,10 @@ describe('WhatsApp duplicate reply fix — Part 6', () => {
     };
 
     const r = await engine.process(conv as never, 'Hola');
-    expect(r.reply).toBe(handoffAlreadyActiveMessage());
-    expect(r.context.needsHumanHandoff).toBe(true);
-    expect(r.context.stage).toBe('handoff');
-    expect(r.reply).not.toMatch(/planta de sonido|ASK_|bienvenido/i);
+    expect(r.reply).toMatch(/Bienvenido|baterías|Rodacenter/i);
+    expect(r.context.needsHumanHandoff).toBe(false);
+    expect(r.context.stage).toBe('awaiting_category');
+    expect(r.reply).not.toBe(handoffAlreadyActiveMessage());
   });
 
   it('mismo wamid procesado dos veces → máximo un sendText', async () => {

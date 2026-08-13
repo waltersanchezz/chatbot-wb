@@ -2,7 +2,7 @@
   "version": "1.0",
   "marca": "Willard",
   "descripcion": "Aplicaciones por vehiculo, transcritas del catalogo oficial Willard. Las referencias se agrupan por linea de producto tal como aparecen en las columnas del catalogo (Willard AGM/EFB, Increible Titanio, Willard, Extrema). Celda vacia en el catalogo = arreglo vacio. Campo no presente en el catalogo = null. Este archivo NO contiene especificaciones tecnicas: amperaje, dimensiones, polaridad y terminal viven en willardReferences.json y se combinan por el campo referencia.",
-  "reglaDeConsumo": "El motor de recomendacion DEBE ignorar las aplicaciones con revisionPendiente true al responder a un cliente: son datos leidos del catalogo pero sin cotejar contra el impreso, y recomendar sobre ellos puede dar una bateria que no encaja. Los registros marcados NO se borran del archivo: se conservan como registro oficial del catalogo y se filtran en el momento de consultar. Cuando una fila se coteje, se corrige si hace falta y se pone revisionPendiente en false, con lo que entra a produccion sin necesidad de reprocesar nada mas. Hoy esta regla deja 620 de 744 aplicaciones utilizables y 0 marcas sin ninguna recomendacion posible; el detalle esta en docs/WILLARD_COBERTURA.md.",
+  "reglaDeConsumo": "El motor de recomendacion DEBE ignorar las aplicaciones con revisionPendiente true al responder a un cliente: son datos leidos del catalogo pero sin cotejar contra el impreso, y recomendar sobre ellos puede dar una bateria que no encaja. Los registros marcados NO se borran del archivo: se conservan como registro oficial del catalogo y se filtran en el momento de consultar. Cuando una fila se coteje, se corrige si hace falta y se pone revisionPendiente en false, con lo que entra a produccion sin necesidad de reprocesar nada mas. Hoy esta regla deja 624 de 744 aplicaciones utilizables y 0 marcas sin ninguna recomendacion posible; el detalle esta en docs/WILLARD_COBERTURA.md.",
   "cobertura": {
     "lote": 1,
     "carpetaImagenes": "data/catalogo-willard/lote1",
@@ -46,7 +46,7 @@
   "totales": {
     "registros": 744,
     "marcas": 66,
-    "pendientesRevision": 124
+    "pendientesRevision": 120
   },
   "marcas": [
     "AGRALE",
@@ -11164,7 +11164,7 @@
         "imagen": "lote1-img-13.jpeg",
         "fila": 28
       },
-      "revisionPendiente": true
+      "revisionPendiente": false
     },
     {
       "marca": "KIA",
@@ -12292,7 +12292,7 @@
         "imagen": "lote1-img-14.jpeg",
         "fila": 19
       },
-      "revisionPendiente": true
+      "revisionPendiente": false
     },
     {
       "marca": "MAZDA",
@@ -14778,7 +14778,7 @@
         "imagen": "lote1-img-17.jpeg",
         "fila": 6
       },
-      "revisionPendiente": true
+      "revisionPendiente": false
     },
     {
       "marca": "RENAULT",
@@ -14901,7 +14901,7 @@
         "imagen": "lote1-img-17.jpeg",
         "fila": 11
       },
-      "revisionPendiente": true
+      "revisionPendiente": false
     },
     {
       "marca": "RENAULT",
@@ -15320,23 +15320,24 @@
       "marca": "RENAULT",
       "categoria": "Autos y camionetas",
       "modelo": "Twingo",
-      "version": null,
+      "version": "8 y 16 válvulas",
       "textoCatalogo": "Twingo",
       "referencias": {
         "willardAgmEfb": [],
-        "increibleTitanio": [
-          "48D-1000",
-          "48-1100"
+        "increibleTitanio": [],
+        "willard": [
+          "36D-750"
         ],
-        "willard": [],
-        "extrema": []
+        "extrema": [
+          "36D-600"
+        ]
       },
       "fuente": {
         "lote": 1,
         "imagen": "lote1-img-17.jpeg",
         "fila": 26
       },
-      "revisionPendiente": true
+      "revisionPendiente": false
     },
     {
       "marca": "RENAULT",

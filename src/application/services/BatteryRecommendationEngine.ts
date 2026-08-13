@@ -235,14 +235,10 @@ function toItem(opt: WillardRecommendedOption): BatteryRecommendationItem {
     spec?.linea?.trim() ||
     productLineLabel(opt.productLine);
 
+  // Solo notas explícitas del catálogo; no inventar "Terminal/Aplicación"
+  // para que el mensaje WhatsApp quede alineado al formato comercial.
   const notes: string[] = [];
   if (spec?.notas?.trim()) notes.push(spec.notas.trim());
-  if (opt.application.version?.trim()) {
-    notes.push(`Aplicación: ${opt.application.textoCatalogo}`);
-  }
-  if (spec?.terminal?.trim()) {
-    notes.push(`Terminal ${spec.terminal.trim()}`);
-  }
 
   return {
     reference: normalizeReferenceLiteral(opt.reference),
